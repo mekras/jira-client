@@ -1,3 +1,28 @@
+# Changes from original jira-client
+
+All changes gathered in branch `main`.
+
+- [PSR-18 HTTP client support](#psr-18-http-client-support)
+
+## PSR-18 HTTP client support
+
+You can use any [PSR-18](https://www.php-fig.org/psr/psr-18/) compatible HTTP client instead of
+builtin cURL-based. This can be useful for testing.
+
+```php
+$adapter = new PsrHttpClient(
+    $httpClient,
+    $requestFactory,
+    $streamFactory
+);
+
+ClientRaw::instance()->setHttpClient($adapter);
+```
+
+---
+
+# Original README
+
 * [Introduction](#introduction)
 * [Quick start](#quick-start)
   * [Install](#install)
