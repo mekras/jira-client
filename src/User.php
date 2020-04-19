@@ -8,10 +8,13 @@ namespace Badoo\Jira;
 
 class User
 {
-    const AVATAR_L      = '48x48';
-    const AVATAR_M      = '32x32';
-    const AVATAR_S      = '24x24';
-    const AVATAR_XS     = '16x16';
+    public const AVATAR_L = '48x48';
+
+    public const AVATAR_M = '32x32';
+
+    public const AVATAR_S = '24x24';
+
+    public const AVATAR_XS = '16x16';
 
     /** @var \Badoo\Jira\REST\Client */
     protected $Jira;
@@ -184,6 +187,22 @@ class User
     public function __toString()
     {
         return "{$this->getDisplayName()} ({$this->getName()})";
+    }
+
+    /**
+     * Return user picture URL.
+     *
+     * @param string $size Image size (see AVATAR_* constants).
+     *
+     * @return string|null
+     *
+     * @throws REST\Exception
+     *
+     * @since x.x
+     */
+    public function getAvatarUrl(string $size = self::AVATAR_M): ?string
+    {
+        return $this->getOriginalObject()->avatarUrls->{$size} ?? null;
     }
 
     public function getKey() : string
