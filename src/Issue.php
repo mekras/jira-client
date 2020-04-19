@@ -769,7 +769,7 @@ class Issue
             return null;
         }
 
-        return static::byKey($this->getFieldValue('parent')->key);
+        return static::byKey($this->getFieldValue('parent')->key, [], [], $this->Jira);
     }
 
     /**
