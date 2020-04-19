@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added method `User::getAvatarUrl()`.
+
 
 ## [1.1.0](https://github.com/badoo/jira-client/compare/v1.0.0...v1.1.0) (2020-02-04)
 
