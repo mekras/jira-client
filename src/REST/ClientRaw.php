@@ -6,6 +6,11 @@
 
 namespace Badoo\Jira\REST;
 
+use Badoo\Jira\Cache\NullCache;
+use Badoo\Jira\REST\HTTP\CurlClient;
+use Badoo\Jira\REST\HTTP\HttpClient;
+use Psr\SimpleCache\CacheInterface;
+
 /**
  * Class ClientRaw
  * Raw client to JIRA REST API. Provides the most direct access to API possible, without any bindings.
@@ -38,6 +43,20 @@ class ClientRaw
 
     protected $request_timeout = 60;
 
+    /**
+     * HTTP client.
+     *
+     * @var HttpClient
+     */
+    private $http_client;
+
+    /**
+     * Cache for HTTP responses.
+     *
+     * @var CacheInterface
+     */
+    private $request_cache;
+
     public static function instance() : ClientRaw
     {
         if (empty(self::$instance)) {
@@ -53,6 +72,8 @@ class ClientRaw
     ) {
         $this->setJiraUrl($jira_url);
         $this->setApiPrefix($api_prefix);
+        $this->http_client = new CurlClient();
+        $this->request_cache = new NullCache();
     }
 
     //
@@ -205,6 +226,32 @@ class ClientRaw
     }
 
     /**
+     * Set client for HTTP requests.
+     *
+     * @param HttpClient $http_client
+     */
+    public function setHttpClient(HttpClient $http_client): void
+    {
+        $this->http_client = $http_client;
+    }
+
+    /**
+     * Set cache for HTTP requests results.
+     *
+     * @param CacheInterface $cache
+     *
+     * @return $this
+     *
+     * @since x.x
+     */
+    public function setCache(CacheInterface $cache): self
+    {
+        $this->request_cache = $cache;
+
+        return $this;
+    }
+
+    /**
      * Make a request to Jira REST API and parse response.
      * Return array with response data parsed as JSON or null for empty response body.
      *
@@ -222,75 +269,47 @@ class ClientRaw
     {
         $url = $this->getJiraUrl() . $this->getApiPrefix() . ltrim($api_method, '/');
         if (in_array($http_method, [self::REQ_GET, self::REQ_DELETE]) && !empty($arguments)) {
-            $url = $url . '?' . http_build_query($arguments);
+            $url .= '?' . http_build_query($arguments);
         }
 
-        $curl_options = [
-            CURLOPT_USERPWD        => $this->login . ':' . $this->secret,
-            CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => $this->request_timeout,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-        ];
+        $cache_key = in_array($http_method, [self::REQ_GET], true)
+            ? sha1($http_method.$url)
+            : null;
 
-        $header_options = [
-            'Accept'            => 'application/json',
-            'Content-Type'      => 'application/json',
-        ];
+        if ($cache_key && $this->request_cache->has($cache_key)) {
+            $cached = $this->request_cache->get($cache_key);
+            $result_raw = $cached['body'];
+            $http_code = $cached['http_code'];
+            $content_type = $cached['content_type'];
+            $is_success = true;
+        } else {
+            $result_raw = $this->http_client->request(
+                $http_method,
+                $url,
+                $this->login,
+                $this->secret,
+                $arguments,
+                $info
+            );
 
-        switch ($http_method) {
-            case self::REQ_POST:
-                $arguments = json_encode($arguments);
-                $curl_options[CURLOPT_POST]       = true;
-                $curl_options[CURLOPT_POSTFIELDS] = $arguments;
-                break;
+            $http_code = (int) $info['http_code'];
+            $content_type = $info['content_type'];
 
-            case self::REQ_MULTIPART:
-                $header_options['Content-Type']         = 'multipart/form-data';
-                $header_options['X-Atlassian-Token']    = 'no-check';
+            $is_success = in_array($http_code, [200, 201, 204], true);
 
-                $curl_options[CURLOPT_POST]       = true;
-                $curl_options[CURLOPT_POSTFIELDS] = $arguments;
-                break;
-
-            case self::REQ_PUT:
-                $arguments = json_encode($arguments);
-                $curl_options[CURLOPT_CUSTOMREQUEST] = self::REQ_PUT;
-                $curl_options[CURLOPT_POST]          = true;
-                $curl_options[CURLOPT_POSTFIELDS]    = $arguments;
-                break;
-
-            case self::REQ_DELETE:
-                $curl_options[CURLOPT_CUSTOMREQUEST] = self::REQ_DELETE;
-                break;
-
-            default:
+            if ($is_success) {
+                $this->request_cache->set(
+                    $cache_key,
+                    [
+                        'body' => $result_raw,
+                        'content_type' => $content_type,
+                        'http_code' => $http_code,
+                    ]
+                );
+            }
         }
 
-        $headers = [];
-        foreach ($header_options as $opt_name => $opt_value) {
-            $headers[] = "$opt_name: $opt_value";
-        }
-        $curl_options[CURLOPT_HTTPHEADER] = $headers;
-
-        $ch = curl_init();
-        curl_setopt_array($ch, $curl_options);
-
-        $result_raw = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        curl_close($ch);
-
-        if ($result_raw === false) {
-            throw new \Badoo\Jira\REST\Exception("Request to '{$url}' timeouted after {$this->getRequestTimeout()} seconds");
-        }
-
-        $http_code = $info['http_code'];
-        $content_type = $info['content_type'];
-
-        $is_json = strpos($content_type, 'application/json') === 0;
-
-        if (in_array($http_code, [200, 201, 204]) and empty($result_raw)) {
+        if ($is_success && (string) $result_raw === '') {
             return null; // empty response body is OK of some API methods
         }
 
@@ -298,6 +317,7 @@ class ClientRaw
         $error      = json_last_error();
         $json_error = $error !== JSON_ERROR_NONE;
 
+        $is_json = strpos($content_type, 'application/json') === 0;
         if ($is_json && $json_error) {
             throw new \Badoo\Jira\REST\Exception(
                 "Jira REST API interaction error, failed to parse JSON: " . json_last_error_msg()
@@ -305,7 +325,7 @@ class ClientRaw
             );
         }
 
-        $this->handleAPIError($info, $result_raw, $result);
+        $this->handleAPIError($http_code, $content_type, $result_raw, $result);
 
         if ($raw) {
             return $result_raw;
@@ -335,11 +355,12 @@ class ClientRaw
         return "Jira REST API returned an error:\n\t" . implode("\n\t", $errors);
     }
 
-    protected function handleAPIError(array $response_info, string $response_raw, $response)
-    {
-        $http_code    = $response_info['http_code'];
-        $content_type = $response_info['content_type'];
-
+    protected function handleAPIError(
+        int $http_code,
+        string $content_type,
+        string $response_raw,
+        $response
+    ): void {
         $is_html = strpos($content_type, 'text/html') === 0;
         $is_json = strpos($content_type, 'application/json') === 0;
 
