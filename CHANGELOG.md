@@ -4,7 +4,9 @@
 
 ### Fixed
 
-- Jira client not passed to `byKey()` in `Issue::getParentIssue()`. 
+- Jira client not passed to called methods in:
+  - `Issue::getParentIssue()`; 
+  - `Issue::getSubIssues()`. 
 
 ### Added
 
