@@ -6,12 +6,14 @@
 
 namespace Badoo\Jira\REST;
 
-class Client extends \Badoo\Jira\REST\Section\Section
+use Badoo\Jira\REST\Section\Section;
+
+class Client extends Section
 {
     /**
      * @var static|null
      */
-    protected static $instance = null;
+    protected static $instance;
 
     /**
      * @return static
@@ -27,16 +29,22 @@ class Client extends \Badoo\Jira\REST\Section\Section
 
     /**
      * Client constructor.
-     * @param string $jira_url
-     * @param string $api_prefix
+     *
+     * @param string         $jira_url
+     * @param string         $api_prefix
+     * @param ClientRaw|null $Jira Instance of ClientRaw to use instead of default one.
      */
     public function __construct(
         $jira_url   = ClientRaw::DEFAULT_JIRA_URL,
-        $api_prefix = ClientRaw::DEFAULT_JIRA_API_PREFIX
+        $api_prefix = ClientRaw::DEFAULT_JIRA_API_PREFIX,
+        ClientRaw $Jira = null
     ) {
-        $Jira = ClientRaw::instance()
-            ->setJiraUrl($jira_url)
-            ->setApiPrefix($api_prefix);
+        if ($Jira === null) {
+            $Jira = ClientRaw::instance()
+                ->setJiraUrl($jira_url)
+                ->setApiPrefix($api_prefix);
+        }
+
         parent::__construct($Jira);
     }
 
