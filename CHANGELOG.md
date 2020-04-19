@@ -1,5 +1,12 @@
 # Changelog
 
+# Unreleased
+
+## Fixed
+
+- Jira client not passed to `byKey()` in `Issue::getParentIssue()`. 
+
+
 
 ## [1.1.0](https://github.com/badoo/jira-client/compare/v1.0.0...v1.1.0) (2020-02-04)
 
