@@ -3,6 +3,7 @@
 All changes gathered in branch `main`.
 
 - [PSR-18 HTTP client support](#psr-18-http-client-support)
+- [PSR-16 cache support](#psr-16-cache-support)
 
 ## PSR-18 HTTP client support
 
@@ -17,6 +18,16 @@ $adapter = new PsrHttpClient(
 );
 
 ClientRaw::instance()->setHttpClient($adapter);
+```
+
+## PSR-16 cache support
+
+You can use any [PSR-16](https://www.php-fig.org/psr/psr-16/) compatible cache to reduce number of
+HTTP requests.
+
+```php
+/** @var \Psr\SimpleCache\CacheInterface $ache */
+ClientRaw::instance()->setCache($cache);
 ```
 
 ---
