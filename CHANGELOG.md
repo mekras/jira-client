@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+**Renamed to `mekras/jira-client`.**
+
 ### Fixed
 
 - Jira client not passed to called methods in:
