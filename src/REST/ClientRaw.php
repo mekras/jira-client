@@ -272,12 +272,12 @@ class ClientRaw
             $url .= '?' . http_build_query($arguments);
         }
 
-        $cache_key = in_array($http_method, [self::REQ_GET], true)
-            ? sha1($http_method.$url)
+        $cacheKey = in_array($http_method, [self::REQ_GET/* , TODO ??? */], true)
+            ? sha1($http_method . $url)
             : null;
 
-        if ($cache_key && $this->request_cache->has($cache_key)) {
-            $cached = $this->request_cache->get($cache_key);
+        if ($cacheKey && $this->request_cache->has($cacheKey)) {
+            $cached = $this->request_cache->get($cacheKey);
             $result_raw = $cached['body'];
             $http_code = $cached['http_code'];
             $content_type = $cached['content_type'];
@@ -297,9 +297,9 @@ class ClientRaw
 
             $is_success = in_array($http_code, [200, 201, 204], true);
 
-            if ($is_success) {
+            if ($cacheKey !== null && $is_success) {
                 $this->request_cache->set(
-                    $cache_key,
+                    $cacheKey,
                     [
                         'body' => $result_raw,
                         'content_type' => $content_type,

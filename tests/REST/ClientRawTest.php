@@ -17,6 +17,53 @@ use Psr\SimpleCache\CacheInterface;
 class ClientRawTest extends TestCase
 {
     /**
+     * Tests that specified HTTP requests are not cached.
+     *
+     * @throws \Throwable
+     */
+    public function testNonCacheableRequest(): void
+    {
+        $httpClient = $this->createMock(HttpClient::class);
+        $cache = $this->createMock(CacheInterface::class);
+
+        // To store used cache key.
+        $cacheKey = null;
+
+        $client = new ClientRaw();
+        $client
+            ->setCache($cache)
+            ->setHttpClient($httpClient);
+
+        $cache->expects(self::never())->method('get');
+        $cache->expects(self::never())->method('has');
+        $cache->expects(self::never())->method('set');
+
+        $httpClient
+            ->expects(self::once())
+            ->method('request')
+            ->with(
+                self::equalTo('POST'),
+                self::equalTo('https://jira.localhost/rest/api/latest/foo'),
+                self::equalTo(''),
+                self::equalTo(''),
+                self::equalTo([])
+            )
+            ->willReturnCallback(
+                static function ($a, $b, $c, $d, $e, &$info): string {
+                    $info['http_code'] = 200;
+                    $info['content_type'] = 'application/json';
+
+                    return '{"foo":"bar"}';
+                }
+            );
+
+        $expected = new \stdClass();
+        $expected->foo = 'bar';
+
+        self::assertEquals($expected, $client->post('/foo'));
+    }
+
+    /**
      * Tests that HTTP requests results are cached.
      *
      * @throws \Throwable
