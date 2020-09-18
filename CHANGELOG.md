@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## 1.3.0 - 18.09.2020
+
 **Renamed to `mekras/jira-client`.**
 
 ### Fixed
