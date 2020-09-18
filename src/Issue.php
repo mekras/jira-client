@@ -734,7 +734,7 @@ class Issue
      */
     public function getSubIssues() : array
     {
-        return static::search("parent = '{$this->getKey()}'");
+        return static::search("parent = '{$this->getKey()}'", [], [], 1000, 0, $this->Jira);
     }
 
     /**
@@ -769,7 +769,7 @@ class Issue
             return null;
         }
 
-        return static::byKey($this->getFieldValue('parent')->key);
+        return static::byKey($this->getFieldValue('parent')->key, [], [], $this->Jira);
     }
 
     /**
