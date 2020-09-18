@@ -28,7 +28,8 @@
         "symfony/yaml": "^4.2|^5.0",
         "league/climate": "^3.5",
         "psr/http-client": "^1.0",
-        "psr/http-factory": "^1.0"
+        "psr/http-factory": "^1.0",
+        "psr/simple-cache": "^1.0"
     },
     "suggest": {
         "php-http/multipart-stream-builder": "Required for using PsrHttpClient"

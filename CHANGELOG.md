@@ -6,6 +6,7 @@
 
 - Added support for setting [PSR-18](https://www.php-fig.org/psr/psr-18/) HTTP client in
   `ClientRaw`.
+- Added support for [PSR-16](https://www.php-fig.org/psr/psr-16/) simple cache in `ClientRaw`.
 
 
 ## 1.2.0 - 27.03.2020

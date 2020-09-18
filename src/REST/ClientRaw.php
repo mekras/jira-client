@@ -6,8 +6,10 @@
 
 namespace Badoo\Jira\REST;
 
+use Badoo\Jira\Cache\NullCache;
 use Badoo\Jira\REST\HTTP\CurlClient;
 use Badoo\Jira\REST\HTTP\HttpClient;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * Class ClientRaw
@@ -48,6 +50,13 @@ class ClientRaw
      */
     private $http_client;
 
+    /**
+     * Cache for HTTP responses.
+     *
+     * @var CacheInterface
+     */
+    private $request_cache;
+
     public static function instance() : ClientRaw
     {
         if (empty(self::$instance)) {
@@ -64,6 +73,7 @@ class ClientRaw
         $this->setJiraUrl($jira_url);
         $this->setApiPrefix($api_prefix);
         $this->http_client = new CurlClient();
+        $this->request_cache = new NullCache();
     }
 
     //
@@ -226,6 +236,22 @@ class ClientRaw
     }
 
     /**
+     * Set cache for HTTP requests results.
+     *
+     * @param CacheInterface $cache
+     *
+     * @return $this
+     *
+     * @since x.x
+     */
+    public function setCache(CacheInterface $cache): self
+    {
+        $this->request_cache = $cache;
+
+        return $this;
+    }
+
+    /**
      * Make a request to Jira REST API and parse response.
      * Return array with response data parsed as JSON or null for empty response body.
      *
@@ -246,21 +272,44 @@ class ClientRaw
             $url .= '?' . http_build_query($arguments);
         }
 
-        $result_raw = $this->http_client->request(
-            $http_method,
-            $url,
-            $this->login,
-            $this->secret,
-            $arguments,
-            $info
-        );
+        $cache_key = in_array($http_method, [self::REQ_GET], true)
+            ? sha1($http_method.$url)
+            : null;
 
-        $http_code = (int) $info['http_code'];
-        $content_type = $info['content_type'];
+        if ($cache_key && $this->request_cache->has($cache_key)) {
+            $cached = $this->request_cache->get($cache_key);
+            $result_raw = $cached['body'];
+            $http_code = $cached['http_code'];
+            $content_type = $cached['content_type'];
+            $is_success = true;
+        } else {
+            $result_raw = $this->http_client->request(
+                $http_method,
+                $url,
+                $this->login,
+                $this->secret,
+                $arguments,
+                $info
+            );
 
-        $is_json = strpos($content_type, 'application/json') === 0;
+            $http_code = (int) $info['http_code'];
+            $content_type = $info['content_type'];
 
-        if (in_array($http_code, [200, 201, 204]) and empty($result_raw)) {
+            $is_success = in_array($http_code, [200, 201, 204], true);
+
+            if ($is_success) {
+                $this->request_cache->set(
+                    $cache_key,
+                    [
+                        'body' => $result_raw,
+                        'content_type' => $content_type,
+                        'http_code' => $http_code,
+                    ]
+                );
+            }
+        }
+
+        if ($is_success && (string) $result_raw === '') {
             return null; // empty response body is OK of some API methods
         }
 
@@ -268,6 +317,7 @@ class ClientRaw
         $error      = json_last_error();
         $json_error = $error !== JSON_ERROR_NONE;
 
+        $is_json = strpos($content_type, 'application/json') === 0;
         if ($is_json && $json_error) {
             throw new \Badoo\Jira\REST\Exception(
                 "Jira REST API interaction error, failed to parse JSON: " . json_last_error_msg()
