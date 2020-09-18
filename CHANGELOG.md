@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.2.0
+## Unreleased
+
+### Added
+
+- Added support for setting [PSR-18](https://www.php-fig.org/psr/psr-18/) HTTP client in
+  `ClientRaw`.
+
+
+## 1.2.0 - 27.03.2020
 
 Unreleased changes from original project.
 
