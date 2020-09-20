@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## 1.3.1 - 20.09.2020
+
 ### Fixed
 
 - Fixed "Cache key must be string, "null" given." error in `ClientRaw`.
