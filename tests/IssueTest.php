@@ -5,7 +5,9 @@
 
 namespace Badoo\Jira\Tests;
 
-class IssueTest extends \PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+
+class IssueTest extends TestCase
 {
     public static function getBaseIssue(string $key) : \stdClass
     {
@@ -152,12 +154,12 @@ class IssueTest extends \PHPUnit\Framework\TestCase
         self::assertEquals($jira_id, $Issue->getId());
     }
 
-    public function testUpdateKey()
+    public function testUpdateKey(): void
     {
         $key_before_update = 'IS-1';
         $key_after_update = 'EX-1';
 
-        $BaseIssue = $this->getBaseIssue($key_after_update);
+        $BaseIssue = self::getBaseIssue($key_after_update);
         $Issue = $this->getIssueMock($BaseIssue, $key_before_update);
 
         self::assertEquals($key_before_update, $Issue->getKey());
