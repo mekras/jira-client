@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\UTests;
+namespace Badoo\Jira\Tests;
 
 use Badoo\Jira\User;
 

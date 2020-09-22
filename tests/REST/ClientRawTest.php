@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\UTests\REST;
+namespace Badoo\Jira\Tests\REST;
 
 use Badoo\Jira\REST\ClientRaw;
 use Badoo\Jira\REST\HTTP\HttpClient;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\UTests\REST\HTTP;
+namespace Badoo\Jira\Tests\REST\HTTP;
 
 use Badoo\Jira\REST\HTTP\PsrHttpClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
