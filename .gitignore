@@ -1,5 +1,6 @@
-/vendor/
 /.idea/
-/test.php
 /.php_cs.cache
+/composer.lock
 /composer.phar
+/test.php
+/vendor/
