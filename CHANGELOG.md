@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Add some logging to `ClientRaw` to debug cache usage.
+
 
 ## 1.3.1 - 20.09.2020
 

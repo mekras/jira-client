@@ -8,6 +8,8 @@ namespace Badoo\Jira\REST;
 use Badoo\Jira\Cache\NullCache;
 use Badoo\Jira\REST\HTTP\CurlClient;
 use Badoo\Jira\REST\HTTP\HttpClient;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -21,30 +23,73 @@ use Psr\SimpleCache\CacheInterface;
  */
 class ClientRaw
 {
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const DEFAULT_JIRA_URL = 'https://jira.localhost/';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const DEFAULT_JIRA_API_PREFIX = '/rest/api/latest/';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const REQ_GET = 'GET';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const REQ_POST = 'POST';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const REQ_PUT = 'PUT';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const REQ_DELETE = 'DELETE';
 
+    /**
+     * TODO Describe this.
+     *
+     * @deprecated Will be changed to private in 2.0.
+     */
     public const REQ_MULTIPART = 'MULTIPART';
 
-    protected static $instance = null;
+    protected static $instance;
 
     protected $jira_url;
 
     protected $api_prefix;
 
-    /** @var string - login of user to use in API requests */
+    /**
+     * User name to use in API requests.
+     *
+     * @var string
+     */
     private $login = '';
 
-    /** @var string - login's authentication secret. It can be API token (good) or bare user password (deprecated) */
+    /**
+     * Authentication secret. It can be API token (good) or bare user password (deprecated).
+     *
+     * @var string
+     */
     private $secret = '';
 
     protected $request_timeout = 60;
@@ -54,43 +99,62 @@ class ClientRaw
      *
      * @var HttpClient
      */
-    private $http_client;
+    private $httpClient;
+
+    /**
+     * Logger.
+     *
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * Cache for HTTP responses.
      *
      * @var CacheInterface
      */
-    private $request_cache;
+    private $requestCache;
 
+    /**
+     * Return singleton instance.
+     *
+     * @return ClientRaw
+     *
+     * @deprecated Will be removed in 2.0.
+     */
     public static function instance(): ClientRaw
     {
-        if (empty(self::$instance)) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 
         return self::$instance;
     }
 
+    /**
+     * Create client.
+     *
+     * @param string               $jiraUrl   TODO Describe.
+     * @param string               $apiPrefix TODO Describe.
+     * @param LoggerInterface|null $logger
+     */
     public function __construct(
-        $jira_url = self::DEFAULT_JIRA_URL,
-        $api_prefix = self::DEFAULT_JIRA_API_PREFIX
+        $jiraUrl = self::DEFAULT_JIRA_URL,
+        $apiPrefix = self::DEFAULT_JIRA_API_PREFIX,
+        LoggerInterface $logger = null
     ) {
-        $this->setJiraUrl($jira_url);
-        $this->setApiPrefix($api_prefix);
-        $this->http_client = new CurlClient();
-        $this->request_cache = new NullCache();
+        $this->setJiraUrl($jiraUrl);
+        $this->setApiPrefix($apiPrefix);
+        $this->logger = $logger ?: new NullLogger();
+        $this->httpClient = new CurlClient();
+        $this->requestCache = new NullCache();
     }
-
-    //
-    // BEGIN - API client settings
-    //
 
     /**
      * Set credentials to use in each request to Jira REST API.
      *
      * @param string $login  - user login
-     * @param string $secret - raw user passowrd (deprecated) or API token (good)
+     * @param string $secret - raw user password (deprecated) or API token (good)
      *
      * @return ClientRaw
      */
@@ -243,11 +307,11 @@ class ClientRaw
     /**
      * Set client for HTTP requests.
      *
-     * @param HttpClient $http_client
+     * @param HttpClient $httpClient
      */
-    public function setHttpClient(HttpClient $http_client): void
+    public function setHttpClient(HttpClient $httpClient): void
     {
-        $this->http_client = $http_client;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -257,11 +321,11 @@ class ClientRaw
      *
      * @return $this
      *
-     * @since x.x
+     * @since 1.3
      */
     public function setCache(CacheInterface $cache): self
     {
-        $this->request_cache = $cache;
+        $this->requestCache = $cache;
 
         return $this;
     }
@@ -270,7 +334,7 @@ class ClientRaw
      * Make a request to Jira REST API and parse response.
      * Return array with response data parsed as JSON or null for empty response body.
      *
-     * @param string $http_method - HTTP request method (e.g. HEAD/PUT/GET...)
+     * @param string $httpMethod  - HTTP request method (e.g. HEAD/PUT/GET...)
      * @param string $api_method  - API method path (e.g. issue/<key>)
      * @param mixed  $arguments   - request data (parameters)
      * @param bool   $raw         - don't parse response as JSON, just return raw response body
@@ -284,29 +348,32 @@ class ClientRaw
      *                                    errors.
      */
     private function request(
-        string $http_method,
+        string $httpMethod,
         string $api_method,
         $arguments = [],
         bool $raw = false
     ) {
         $url = $this->getJiraUrl() . $this->getApiPrefix() . ltrim($api_method, '/');
-        if (in_array($http_method, [self::REQ_GET, self::REQ_DELETE]) && !empty($arguments)) {
+        if (in_array($httpMethod, [self::REQ_GET, self::REQ_DELETE]) && !empty($arguments)) {
             $url .= '?' . http_build_query($arguments);
         }
 
-        $cacheKey = in_array($http_method, [self::REQ_GET/* , TODO ??? */], true)
-            ? sha1($http_method . $url)
+        $cacheKey = in_array($httpMethod, [self::REQ_GET/* , TODO ??? */], true)
+            ? sha1($httpMethod . $url)
             : null;
 
-        if ($cacheKey && $this->request_cache->has($cacheKey)) {
-            $cached = $this->request_cache->get($cacheKey);
-            $result_raw = $cached['body'];
-            $http_code = $cached['http_code'];
-            $content_type = $cached['content_type'];
+        $this->logger->debug(sprintf('Method "%s %s" requested.', $httpMethod, $url));
+        if ($cacheKey && $this->requestCache->has($cacheKey)) {
+            $this->logger->debug('Using cached response.');
+            $cached = $this->requestCache->get($cacheKey);
+            $resultRaw = $cached['body'];
+            $httpCode = $cached['http_code'];
+            $contentType = $cached['content_type'];
             $is_success = true;
         } else {
-            $result_raw = $this->http_client->request(
-                $http_method,
+            $this->logger->debug('Sending request to Jira API…');
+            $resultRaw = $this->httpClient->request(
+                $httpMethod,
                 $url,
                 $this->login,
                 $this->secret,
@@ -314,43 +381,43 @@ class ClientRaw
                 $info
             );
 
-            $http_code = (int) $info['http_code'];
-            $content_type = $info['content_type'];
+            $httpCode = (int) $info['http_code'];
+            $contentType = $info['content_type'];
 
-            $is_success = in_array($http_code, [200, 201, 204], true);
+            $is_success = in_array($httpCode, [200, 201, 204], true);
 
             if ($cacheKey !== null && $is_success) {
-                $this->request_cache->set(
+                $this->requestCache->set(
                     $cacheKey,
                     [
-                        'body' => $result_raw,
-                        'content_type' => $content_type,
-                        'http_code' => $http_code,
+                        'body' => $resultRaw,
+                        'content_type' => $contentType,
+                        'http_code' => $httpCode,
                     ]
                 );
             }
         }
 
-        if ($is_success && (string) $result_raw === '') {
+        if ($is_success && (string) $resultRaw === '') {
             return null; // empty response body is OK of some API methods
         }
 
-        $result = json_decode($result_raw);
+        $result = json_decode($resultRaw);
         $error = json_last_error();
         $json_error = $error !== JSON_ERROR_NONE;
 
-        $is_json = strpos($content_type, 'application/json') === 0;
+        $is_json = strpos($contentType, 'application/json') === 0;
         if ($is_json && $json_error) {
             throw new \Badoo\Jira\REST\Exception(
                 "Jira REST API interaction error, failed to parse JSON: " . json_last_error_msg()
-                . ". Raw API response: " . var_export($result_raw, 1)
+                . ". Raw API response: " . var_export($resultRaw, 1)
             );
         }
 
-        $this->handleAPIError($http_code, $content_type, $result_raw, $result);
+        $this->handleAPIError($httpCode, $contentType, $resultRaw, $result);
 
         if ($raw) {
-            return $result_raw;
+            return $resultRaw;
         }
 
         if ($json_error) {

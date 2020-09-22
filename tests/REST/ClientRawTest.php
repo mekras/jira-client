@@ -7,6 +7,7 @@ namespace Badoo\Jira\UTests\REST;
 use Badoo\Jira\REST\ClientRaw;
 use Badoo\Jira\REST\HTTP\HttpClient;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\Test\TestLogger;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -25,11 +26,17 @@ class ClientRawTest extends TestCase
     {
         $httpClient = $this->createMock(HttpClient::class);
         $cache = $this->createMock(CacheInterface::class);
+        $logger = new TestLogger();
 
         // To store used cache key.
         $cacheKey = null;
 
-        $client = new ClientRaw();
+        $client = new ClientRaw(
+            ClientRaw::DEFAULT_JIRA_URL,
+            ClientRaw::DEFAULT_JIRA_API_PREFIX,
+            $logger
+        );
+
         $client
             ->setCache($cache)
             ->setHttpClient($httpClient);
@@ -61,6 +68,22 @@ class ClientRawTest extends TestCase
         $expected->foo = 'bar';
 
         self::assertEquals($expected, $client->post('/foo'));
+
+        self::assertEquals(
+            [
+                [
+                    'level' => 'debug',
+                    'message' => 'Method "POST https://jira.localhost/rest/api/latest/foo" requested.',
+                    'context' => [],
+                ],
+                [
+                    'level' => 'debug',
+                    'message' => 'Sending request to Jira API…',
+                    'context' => [],
+                ],
+            ],
+            $logger->records
+        );
     }
 
     /**
@@ -72,11 +95,16 @@ class ClientRawTest extends TestCase
     {
         $httpClient = $this->createMock(HttpClient::class);
         $cache = $this->createMock(CacheInterface::class);
+        $logger = new TestLogger();
 
         // To store used cache key.
         $cacheKey = null;
 
-        $client = new ClientRaw();
+        $client = new ClientRaw(
+            ClientRaw::DEFAULT_JIRA_URL,
+            ClientRaw::DEFAULT_JIRA_API_PREFIX,
+            $logger
+        );
         $client
             ->setCache($cache)
             ->setHttpClient($httpClient);
@@ -165,5 +193,31 @@ class ClientRawTest extends TestCase
 
         self::assertEquals($expected, $client->get('/foo'));
         self::assertEquals($expected, $client->get('/foo'));
+
+        self::assertEquals(
+            [
+                [
+                    'level' => 'debug',
+                    'message' => 'Method "GET https://jira.localhost/rest/api/latest/foo" requested.',
+                    'context' => [],
+                ],
+                [
+                    'level' => 'debug',
+                    'message' => 'Sending request to Jira API…',
+                    'context' => [],
+                ],
+                [
+                    'level' => 'debug',
+                    'message' => 'Method "GET https://jira.localhost/rest/api/latest/foo" requested.',
+                    'context' => [],
+                ],
+                [
+                    'level' => 'debug',
+                    'message' => 'Using cached response.',
+                    'context' => [],
+                ],
+            ],
+            $logger->records
+        );
     }
 }

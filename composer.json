@@ -19,12 +19,16 @@
             "role": "Developer"
         }
     ],
+    "config": {
+        "preferred-install": "source",
+        "sort-packages": true
+    },
     "bin": [
         "bin/find-field",
         "bin/generate"
     ],
     "require": {
-        "php": ">=7.2",
+        "php": "^7.2",
         "ext-json": "*",
         "ext-curl": "*",
         "psr/log": "^1.0",
@@ -48,8 +52,5 @@
             "Badoo\\Jira\\": "src/",
             "Badoo\\Jira\\UTests\\": "tests/"
         }
-    },
-    "config": {
-        "preferred-install": "source"
     }
 }
