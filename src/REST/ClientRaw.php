@@ -1,6 +1,5 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
@@ -12,32 +11,39 @@ use Badoo\Jira\REST\HTTP\HttpClient;
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * Class ClientRaw
- * Raw client to JIRA REST API. Provides the most direct access to API possible, without any bindings.
- * Supports authorization, allows to just send HTTP requests to API and get responses parsed as JSON or raw
- * response data when needed.
+ * Raw client to JIRA REST API.
+ *
+ * Provides the most direct access to API possible, without any bindings. Supports authorization,
+ * allows to just send HTTP requests to API and get responses parsed as JSON or raw response data
+ * when needed.
  *
  * Treats API error responses and throws exceptions. That's all.
  */
 class ClientRaw
 {
-    const DEFAULT_JIRA_URL          = 'https://jira.localhost/';
-    const DEFAULT_JIRA_API_PREFIX   = '/rest/api/latest/';
+    public const DEFAULT_JIRA_URL = 'https://jira.localhost/';
 
-    const
-        REQ_GET       = 'GET',
-        REQ_POST      = 'POST',
-        REQ_PUT       = 'PUT',
-        REQ_DELETE    = 'DELETE',
-        REQ_MULTIPART = 'MULTIPART';
+    public const DEFAULT_JIRA_API_PREFIX = '/rest/api/latest/';
+
+    public const REQ_GET = 'GET';
+
+    public const REQ_POST = 'POST';
+
+    public const REQ_PUT = 'PUT';
+
+    public const REQ_DELETE = 'DELETE';
+
+    public const REQ_MULTIPART = 'MULTIPART';
 
     protected static $instance = null;
 
     protected $jira_url;
+
     protected $api_prefix;
 
     /** @var string - login of user to use in API requests */
     private $login = '';
+
     /** @var string - login's authentication secret. It can be API token (good) or bare user password (deprecated) */
     private $secret = '';
 
@@ -57,7 +63,7 @@ class ClientRaw
      */
     private $request_cache;
 
-    public static function instance() : ClientRaw
+    public static function instance(): ClientRaw
     {
         if (empty(self::$instance)) {
             self::$instance = new self();
@@ -67,7 +73,7 @@ class ClientRaw
     }
 
     public function __construct(
-        $jira_url   = self::DEFAULT_JIRA_URL,
+        $jira_url = self::DEFAULT_JIRA_URL,
         $api_prefix = self::DEFAULT_JIRA_API_PREFIX
     ) {
         $this->setJiraUrl($jira_url);
@@ -82,20 +88,21 @@ class ClientRaw
 
     /**
      * Set credentials to use in each request to Jira REST API.
+     *
      * @param string $login  - user login
      * @param string $secret - raw user passowrd (deprecated) or API token (good)
      *
      * @return ClientRaw
      */
-    public function setAuth(string $login, string $secret) : ClientRaw
+    public function setAuth(string $login, string $secret): ClientRaw
     {
-        $this->login    = $login;
-        $this->secret   = $secret;
+        $this->login = $login;
+        $this->secret = $secret;
 
         return $this;
     }
 
-    public function getLogin() : string
+    public function getLogin(): string
     {
         return $this->login;
     }
@@ -105,15 +112,16 @@ class ClientRaw
      *
      * Jira URL always ends with '/' character.
      */
-    public function getJiraUrl() : string
+    public function getJiraUrl(): string
     {
         return $this->jira_url;
     }
 
-    public function setJiraUrl(string $url) : ClientRaw
+    public function setJiraUrl(string $url): ClientRaw
     {
         // force URL to end with '/': e.g. 'https://jira.example.com/'
         $this->jira_url = rtrim($url, '/') . '/';
+
         return $this;
     }
 
@@ -123,26 +131,28 @@ class ClientRaw
      *
      * API prefix always ends with '/' character.
      */
-    public function getApiPrefix() : string
+    public function getApiPrefix(): string
     {
         return $this->api_prefix;
     }
 
-    public function setApiPrefix(string $api_prefix) : ClientRaw
+    public function setApiPrefix(string $api_prefix): ClientRaw
     {
         // force URI to have no '/' at the beginning and to HAVE '/' at the end: e.g. 'rest/api/latest/'
         $this->api_prefix = trim($api_prefix, '/') . '/';
+
         return $this;
     }
 
-    public function getRequestTimeout() : int
+    public function getRequestTimeout(): int
     {
         return $this->request_timeout;
     }
 
-    public function setRequestTimeout(int $request_timeout) : ClientRaw
+    public function setRequestTimeout(int $request_timeout): ClientRaw
     {
         $this->request_timeout = $request_timeout;
+
         return $this;
     }
 
@@ -155,7 +165,8 @@ class ClientRaw
      *
      * @param string $api_method - API method path (e.g. issue/<key>)
      * @param array  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw        - don't parse response as JSON, just return raw response body
+     *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
      * @throws \Badoo\Jira\REST\Exception
@@ -170,7 +181,8 @@ class ClientRaw
      *
      * @param string $api_method - API method path (e.g. issue/<key>)
      * @param mixed  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw        - don't parse response as JSON, just return raw response body
+     *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
      * @throws \Badoo\Jira\REST\Exception
@@ -185,7 +197,8 @@ class ClientRaw
      *
      * @param string $api_method - API method path (e.g. issue/<key>)
      * @param array  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw        - don't parse response as JSON, just return raw response body
+     *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
      * @throws \Badoo\Jira\REST\Exception
@@ -200,7 +213,8 @@ class ClientRaw
      *
      * @param string $api_method - API method path (e.g. issue/<key>)
      * @param array  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw        - don't parse response as JSON, just return raw response body
+     *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
      * @throws \Badoo\Jira\REST\Exception
@@ -215,7 +229,8 @@ class ClientRaw
      *
      * @param string $api_method - API method path (e.g. issue/<key>)
      * @param array  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw        - don't parse response as JSON, just return raw response body
+     *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
      * @throws \Badoo\Jira\REST\Exception
@@ -258,15 +273,22 @@ class ClientRaw
      * @param string $http_method - HTTP request method (e.g. HEAD/PUT/GET...)
      * @param string $api_method  - API method path (e.g. issue/<key>)
      * @param mixed  $arguments   - request data (parameters)
-     * @param bool   $raw         - don't parse response as JSON, just return raw response body string.
+     * @param bool   $raw         - don't parse response as JSON, just return raw response body
+     *                            string.
      *
-     * @return string|\stdClass|\stdClass[]|null - raw response (string), response parsed as JSON (array, \stdClass) or
-     *                                             null for responses with empty body
+     * @return string|\stdClass|\stdClass[]|null - raw response (string), response parsed as JSON
+     *                                           (array, \stdClass) or null for responses with
+     *                                           empty body
      *
-     * @throws \Badoo\Jira\REST\Exception - on JSON parse errors, on warning HTTP codes and other errors.
+     * @throws \Badoo\Jira\REST\Exception - on JSON parse errors, on warning HTTP codes and other
+     *                                    errors.
      */
-    private function request(string $http_method, string $api_method, $arguments = [], bool $raw = false)
-    {
+    private function request(
+        string $http_method,
+        string $api_method,
+        $arguments = [],
+        bool $raw = false
+    ) {
         $url = $this->getJiraUrl() . $this->getApiPrefix() . ltrim($api_method, '/');
         if (in_array($http_method, [self::REQ_GET, self::REQ_DELETE]) && !empty($arguments)) {
             $url .= '?' . http_build_query($arguments);
@@ -313,8 +335,8 @@ class ClientRaw
             return null; // empty response body is OK of some API methods
         }
 
-        $result     = json_decode($result_raw);
-        $error      = json_last_error();
+        $result = json_decode($result_raw);
+        $error = json_last_error();
         $json_error = $error !== JSON_ERROR_NONE;
 
         $is_json = strpos($content_type, 'application/json') === 0;
@@ -341,15 +363,15 @@ class ClientRaw
         return $result;
     }
 
-    protected function renderExceptionMessage(\stdClass $ErrorResponse) : string
+    protected function renderExceptionMessage(\stdClass $ErrorResponse): string
     {
         if (!empty($ErrorResponse->message)) {
             return "Jira REST API returned an error: " . $ErrorResponse->message;
         }
 
         $errors = array_merge(
-            (array)$ErrorResponse->errorMessages ?? [],
-            (array)$ErrorResponse->errors ?? []
+            (array) $ErrorResponse->errorMessages ?? [],
+            (array) $ErrorResponse->errors ?? []
         );
 
         return "Jira REST API returned an error:\n\t" . implode("\n\t", $errors);
@@ -378,7 +400,10 @@ class ClientRaw
 
         if ($http_code >= 400 && !$is_json) {
             throw new \Badoo\Jira\REST\Exception(
-                "Jira REST API responded with code {$http_code} and content type {$content_type}. API answer: " . var_export($response_raw, 1)
+                "Jira REST API responded with code {$http_code} and content type {$content_type}. API answer: " . var_export(
+                    $response_raw,
+                    1
+                )
             );
         }
 
@@ -387,7 +412,9 @@ class ClientRaw
         }
 
         if (!empty($response->errorMessages)) {
-            $Error = new \Badoo\Jira\REST\Exception("Jira REST API call error: " . implode('; ', $response->errorMessages));
+            $Error = new \Badoo\Jira\REST\Exception(
+                "Jira REST API call error: " . implode('; ', $response->errorMessages)
+            );
             $Error->setApiResponse($response);
             throw $Error;
         }
