@@ -36,7 +36,7 @@ class Issue extends Section
      */
     public function assign($issue_key, ?string $user_name = null): void
     {
-        $this->Jira->put("issue/{$issue_key}/assignee", ['name' => $user_name]);
+        $this->jira->put("issue/{$issue_key}/assignee", ['name' => $user_name]);
     }
 
     public function attachment(): IssueAttachment
@@ -97,12 +97,12 @@ class Issue extends Section
             $create_request['historyMetadata'] = $history_meta;
         }
 
-        return $this->Jira->post('/issue', $create_request);
+        return $this->jira->post('/issue', $create_request);
     }
 
     public function delete(string $issue_key): void
     {
-        $this->Jira->delete("/issue/{$issue_key}");
+        $this->jira->delete("/issue/{$issue_key}");
     }
 
     /**
@@ -171,7 +171,7 @@ class Issue extends Section
 
         $update_request['notifyUsers'] = $notify_users;
 
-        $this->Jira->put("issue/{$issue_key}", $update_request);
+        $this->jira->put("issue/{$issue_key}", $update_request);
     }
 
     /**
@@ -212,7 +212,7 @@ class Issue extends Section
             $args['properties'] = $properties;
         }
 
-        return $this->Jira->get("issue/{$issue_key}", $args);
+        return $this->jira->get("issue/{$issue_key}", $args);
     }
 
     /**
@@ -277,7 +277,7 @@ class Issue extends Section
             $parameters['expand'] = 'projects.issuetypes.fields';
         }
 
-        $response = $this->Jira->get('issue/createmeta', $parameters);
+        $response = $this->jira->get('issue/createmeta', $parameters);
 
         return $response->projects;
     }
@@ -297,7 +297,7 @@ class Issue extends Section
     public function getEditMeta(string $issue_key): array
     {
         if (!isset($this->edit_meta[$issue_key])) {
-            $response = $this->Jira->get("issue/{$issue_key}/editmeta");
+            $response = $this->jira->get("issue/{$issue_key}/editmeta");
             $this->edit_meta[$issue_key] = get_object_vars($response->fields);
         }
 
@@ -349,7 +349,7 @@ class Issue extends Section
         if ($expand_fields) {
             $request_data = ['expand' => 'transitions.fields'];
         }
-        $actions_info = $this->Jira->get("issue/{$issue_key}/transitions", $request_data);
+        $actions_info = $this->jira->get("issue/{$issue_key}/transitions", $request_data);
 
         return $actions_info->transitions;
     }
@@ -394,7 +394,7 @@ class Issue extends Section
             $args['expand'] = $expand;
         }
 
-        $result = $this->Jira->post('/search', $args);
+        $result = $this->jira->post('/search', $args);
 
         return $result->issues;
     }

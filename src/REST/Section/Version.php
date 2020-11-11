@@ -39,7 +39,7 @@ class Version extends Section
 
         $parameters = array_merge($optional_fields, $parameters);
 
-        return $this->Jira->post('/version', $parameters);
+        return $this->jira->post('/version', $parameters);
     }
 
     /**
@@ -58,7 +58,7 @@ class Version extends Section
         int $id,
         array $update
     ) : \stdClass {
-        return $this->Jira->put("/version/{$id}", $update);
+        return $this->jira->put("/version/{$id}", $update);
     }
 
     /**
@@ -86,7 +86,7 @@ class Version extends Section
             $parameters['moveAffectedIssuesTo'] = $move_affected_to;
         }
 
-        $this->Jira->delete("/version/${id}", $parameters);
+        $this->jira->delete("/version/${id}", $parameters);
     }
 
     /**
@@ -112,7 +112,7 @@ class Version extends Section
             $parameters['after'] = $after;
         }
 
-        return $this->Jira->post("/version/${id}/move", $parameters);
+        return $this->jira->post("/version/${id}/move", $parameters);
     }
 
     /**
@@ -128,6 +128,6 @@ class Version extends Section
      */
     public function get(int $id) : \stdClass
     {
-        return $this->Jira->get("/version/${id}");
+        return $this->jira->get("/version/${id}");
     }
 }

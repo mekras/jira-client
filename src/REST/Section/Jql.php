@@ -42,7 +42,7 @@ class Jql extends Section
             $parameters['predicateValue'] = $predicate_value;
         }
 
-        $Response = $this->Jira->get('jql/autocompletedata/suggestions', $parameters);
+        $Response = $this->jira->get('jql/autocompletedata/suggestions', $parameters);
         return $Response->results;
     }
 }

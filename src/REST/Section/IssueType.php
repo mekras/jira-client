@@ -33,7 +33,7 @@ class IssueType extends Section
     {
         if (!$this->all_cached || $reload_cache) {
             $this->types_list = [];
-            foreach ($this->Jira->get("/issuetype") as $TypeInfo) {
+            foreach ($this->jira->get("/issuetype") as $TypeInfo) {
                 $this->cacheTypeInfo($TypeInfo);
             }
             $this->all_cached = true;
@@ -58,7 +58,7 @@ class IssueType extends Section
     {
         $TypeInfo = $this->types_list[$id] ?? null;
         if (!isset($TypeInfo) || $reload_cache) {
-            $TypeInfo = $this->Jira->get("/issuetype/{$id}");
+            $TypeInfo = $this->jira->get("/issuetype/{$id}");
         }
 
         $this->cacheTypeInfo($TypeInfo);

@@ -33,7 +33,7 @@ class Priority extends Section
     {
         if (!$this->all_cached || $reload_cache) {
             $this->priorities_list = [];
-            foreach ($this->Jira->get('priority') as $PriorityInfo) {
+            foreach ($this->jira->get('priority') as $PriorityInfo) {
                 $this->cachePriority($PriorityInfo);
             }
             $this->all_cached = true;
@@ -59,7 +59,7 @@ class Priority extends Section
         $PriorityInfo = $this->priorities_list[$id] ?? null;
 
         if (!isset($PriorityInfo) || $reload_cache) {
-            $PriorityInfo = $this->Jira->get("priority/{$id}");
+            $PriorityInfo = $this->jira->get("priority/{$id}");
             $this->cachePriority($PriorityInfo);
         }
 

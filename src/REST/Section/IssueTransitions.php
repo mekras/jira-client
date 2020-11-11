@@ -29,7 +29,7 @@ class IssueTransitions extends Section
             $args = ['expand' => 'transitions.fields'];
         }
 
-        return $this->Jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
+        return $this->jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
     }
 
     /**
@@ -56,10 +56,10 @@ class IssueTransitions extends Section
             $args = ['expand' => 'transitions.fields'];
         }
 
-        $transitions = $this->Jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
+        $transitions = $this->jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
 
         if (empty($transitions)) {
-            $user = $this->Jira->getLogin();
+            $user = $this->jira->getLogin();
             throw new \Badoo\Jira\REST\Exception(
                 "Transition '{$transition_id}' of '{$issue_key}' is not available for '{$user}' in current issue status"
             );
@@ -95,7 +95,7 @@ class IssueTransitions extends Section
             $args['update'] = $update;
         }
 
-        $this->Jira->post("issue/{$issue_key}/transitions", $args);
+        $this->jira->post("issue/{$issue_key}/transitions", $args);
     }
 
     /**
@@ -152,7 +152,7 @@ class IssueTransitions extends Section
      */
     public function step(string $issue_key, string $step_name, array $fields = [], array $update = [], $use_do_safe = false, bool $step_same_status = false) : void
     {
-        $IssueInfo = $this->Jira->get("/issue/{$issue_key}", ['fields' => 'status']);
+        $IssueInfo = $this->jira->get("/issue/{$issue_key}", ['fields' => 'status']);
 
         $issue_status_id = $IssueInfo->fields->status->id;
 

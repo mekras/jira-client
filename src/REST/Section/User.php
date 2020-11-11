@@ -55,7 +55,7 @@ class User extends Section
         string $display_name,
         array $applications = ["jira-software"]
     ) : \stdClass {
-        $UserInfo = $this->Jira->post(
+        $UserInfo = $this->jira->post(
             'user',
             [
                 "name"              => $name,
@@ -108,7 +108,7 @@ class User extends Section
             $request["name"] = $new_name;
         }
 
-        $UserInfo = $this->Jira->put('user?' . http_build_query(['username' => $name]), $request);
+        $UserInfo = $this->jira->put('user?' . http_build_query(['username' => $name]), $request);
         $this->cacheUser($UserInfo);
         return $UserInfo;
     }
@@ -124,7 +124,7 @@ class User extends Section
      */
     public function remove(string $name) : void
     {
-        $this->Jira->delete('user', ['username' => $name]);
+        $this->jira->delete('user', ['username' => $name]);
         $this->dropCached($name);
     }
 
@@ -157,7 +157,7 @@ class User extends Section
             $parameters['expand'] = implode(',', $expand);
         }
 
-        $UserInfo = $this->Jira->get('user', $parameters);
+        $UserInfo = $this->jira->get('user', $parameters);
         $this->cacheUser($UserInfo);
         return $UserInfo;
     }
@@ -182,7 +182,7 @@ class User extends Section
         bool $include_active = true,
         bool $include_inactive = false
     ) : array {
-        $users = $this->Jira->get(
+        $users = $this->jira->get(
             'user/search',
             [
                 'username'        => $pattern,

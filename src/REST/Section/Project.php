@@ -28,7 +28,7 @@ class Project extends Section
             $parameters['expand'] = implode(',', $expand);
         }
 
-        return $this->Jira->get("project/{$project}", $parameters);
+        return $this->jira->get("project/{$project}", $parameters);
     }
 
     /**
@@ -43,7 +43,7 @@ class Project extends Section
      */
     public function list() : array
     {
-        return $this->Jira->get('project');
+        return $this->jira->get('project');
     }
 
     /**
@@ -60,7 +60,7 @@ class Project extends Section
      */
     public function listComponents($project) : array
     {
-        return $this->Jira->get("project/{$project}/components");
+        return $this->jira->get("project/{$project}/components");
     }
 
     /**
@@ -76,7 +76,7 @@ class Project extends Section
      */
     public function listVersions($project) : array
     {
-        return $this->Jira->get("project/{$project}/versions");
+        return $this->jira->get("project/{$project}/versions");
     }
 
     /**
@@ -120,6 +120,6 @@ class Project extends Section
      */
     public function listStatuses($project) : array
     {
-        return $this->Jira->get("project/{$project}/statuses");
+        return $this->jira->get("project/{$project}/statuses");
     }
 }

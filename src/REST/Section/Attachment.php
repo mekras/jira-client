@@ -21,7 +21,7 @@ class Attachment extends \Badoo\Jira\REST\Section\Section
      */
     public function get(int $id) : \stdClass
     {
-        return $this->Jira->get("attachment/{$id}");
+        return $this->jira->get("attachment/{$id}");
     }
 
     /**
@@ -35,6 +35,6 @@ class Attachment extends \Badoo\Jira\REST\Section\Section
      */
     public function delete(int $id) : void
     {
-        $this->Jira->delete("attachment/{$id}");
+        $this->jira->delete("attachment/{$id}");
     }
 }

@@ -1,47 +1,63 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Badoo\Jira\REST\Section;
 
+use Badoo\Jira\REST\ClientRaw;
+
+/**
+ * TODO Describe.
+ *
+ * @since x.x
+ */
 class Section
 {
-    /** @var \Badoo\Jira\REST\ClientRaw */
-    protected $Jira;
+    /**
+     * Raw jira client.
+     *
+     * @var ClientRaw
+     */
+    protected $jira;
 
-    /** @var \Badoo\Jira\REST\Section\Section[] $sections */
+    /**
+     * TODO ???
+     *
+     * @var Section[]
+     */
     protected $sections = [];
 
     /**
-     * ASection constructor.
+     * Construct section.
      *
-     * @param \Badoo\Jira\REST\ClientRaw $Jira
+     * @param ClientRaw $jira Raw jira client.
      */
-    public function __construct(\Badoo\Jira\REST\ClientRaw $Jira)
+    public function __construct(ClientRaw $jira)
     {
-        $this->Jira = $Jira;
+        $this->jira = $jira;
     }
 
     /**
-     * @param string $section_key     - the unique section key for cache. This prevents twin
-     *                                objects creation for the same section on each method call.
+     * @param string $sectionKey   The unique section key for cache. This prevents twin
+     *                             objects creation for the same section on each method call.
+     * @param string $sectionClass Use special custom class for given section. E. g.
+     *                             ->getSubSection('/issue',
+     *                             '\Badoo\Jira\REST\Section\Issue') will initialize and return
+     *                             \Badoo\Jira\REST\Section\Issue class for section /issue.
      *
-     * @param string $section_class   - use special custom class for given section.
-     *                                E.g. ->getSubSection('/issue',
-     *                                '\Badoo\Jira\REST\Section\Issue') will initialize and return
-     *                                \Badoo\Jira\REST\Section\Issue class for section /issue.
-     *
-     * @return Section
+     * @return self
      */
-    protected function getSection(string $section_key, string $section_class)
+    protected function getSection(string $sectionKey, string $sectionClass): self
     {
-        if (!isset($this->sections[$section_key])) {
-            $Section = new $section_class($this->Jira, $section_key);
-            $this->sections[$section_key] = $Section;
+        if (!isset($this->sections[$sectionKey])) {
+            $Section = new $sectionClass($this->jira, $sectionKey);
+            $this->sections[$sectionKey] = $Section;
         }
 
-        return $this->sections[$section_key];
+        return $this->sections[$sectionKey];
     }
 }

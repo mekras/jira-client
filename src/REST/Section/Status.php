@@ -32,7 +32,7 @@ class Status extends Section
     public function list(bool $reload_cache = false) : array
     {
         if (!$this->all_cached || $reload_cache) {
-            foreach ($this->Jira->get('/status') as $StatusInfo) {
+            foreach ($this->jira->get('/status') as $StatusInfo) {
                 $this->cachestatusInfo($StatusInfo);
             }
             $this->all_cached = true;
@@ -58,7 +58,7 @@ class Status extends Section
         $statusInfo = $this->statuses_list[$id] ?? null;
 
         if (!isset($statusInfo) || $reload_cache) {
-            $statusInfo = $this->Jira->get("/status/{$id}");
+            $statusInfo = $this->jira->get("/status/{$id}");
             $this->cachestatusInfo($statusInfo);
         }
 

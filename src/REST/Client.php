@@ -53,7 +53,7 @@ class Client extends Section
      */
     public function getRawClient() : ClientRaw
     {
-        return $this->Jira;
+        return $this->jira;
     }
 
     /**
@@ -181,7 +181,7 @@ class Client extends Section
             $args['expand'] = $expand;
         }
 
-        return $this->Jira->post('/search', $args);
+        return $this->jira->post('/search', $args);
     }
 
     /**
