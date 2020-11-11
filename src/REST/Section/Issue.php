@@ -24,6 +24,28 @@ class Issue extends Section
     protected $edit_meta = [];
 
     /**
+     * Assign issue to a user
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-assign
+     *
+     * @param string      $issue_key
+     * @param string|null $user_name   -   '-1' = default assignee for project.
+     *                                 'null' = unassigned
+     *
+     * @throws \Badoo\Jira\REST\Exception
+     */
+    public function assign($issue_key, ?string $user_name = null): void
+    {
+        $this->Jira->put("issue/{$issue_key}/assignee", ['name' => $user_name]);
+    }
+
+    public function attachment(): IssueAttachment
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('attachment', IssueAttachment::class);
+    }
+
+    /**
      * Get interface for operations with issue comments
      */
     public function comment(): Comment
@@ -33,24 +55,123 @@ class Issue extends Section
     }
 
     /**
-     * Get interface for operations with issue watchers
+     * Create new issue
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-createIssue
+     *
+     * @param array $fields
+     * @param array $update
+     * @param array $transition
+     * @param array $properties
+     * @param array $history_meta
+     *
+     * @return \stdClass
+     * @throws \Badoo\Jira\REST\Exception
      */
-    public function watchers(): Watchers
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('watchers', Watchers::class);
+    public function create(
+        array $fields,
+        array $update = [],
+        array $transition = [],
+        array $properties = [],
+        array $history_meta = []
+    ): \stdClass {
+        $create_request = [];
+
+        if (!empty($fields)) {
+            $create_request['fields'] = $fields;
+        }
+
+        if (!empty($update)) {
+            $create_request['update'] = $update;
+        }
+
+        if (!empty($transition)) {
+            $create_request['transition'] = $transition;
+        }
+
+        if (!empty($properties)) {
+            $create_request['properties'] = $properties;
+        }
+
+        if (!empty($history_meta)) {
+            $create_request['historyMetadata'] = $history_meta;
+        }
+
+        return $this->Jira->post('/issue', $create_request);
     }
 
-    public function attachment(): IssueAttachment
+    public function delete(string $issue_key): void
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('attachment', IssueAttachment::class);
+        $this->Jira->delete("/issue/{$issue_key}");
     }
 
-    public function transitions(): IssueTransitions
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('transitions', IssueTransitions::class);
+    /**
+     * Update issue fields
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-editIssue
+     *
+     * @param string $issue_key             - update this issue
+     * @param array  $fields                - a shorthand for issue update rules. Has simpler
+     *                                      structure:
+     *                                      [
+     *                                      "summary": "This is a shorthand for a set operation on
+     *                                      the summary field",
+     *                                      "customfield_10010": 1,
+     *                                      "customfield_10000": "This is a shorthand for a set
+     *                                      operation on a text custom field",
+     *                                      ]
+     * @param array  $update                - issue update rules.
+     *                                      Accepts the following data structure:
+     *                                      [
+     *                                      "summary": [
+     *                                      [ "set": "Bug in business logic" ]
+     *                                      ],
+     *                                      "timetracking": [
+     *                                      [
+     *                                      "edit": [
+     *                                      "originalEstimate": "1w 1d",
+     *                                      "remainingEstimate": "4d"
+     *                                      ]
+     *                                      ]
+     *                                      ],
+     *                                      "labels": [
+     *                                      [ "add": "triaged" ],
+     *                                      [ "remove": "blocker" ]
+     *                                      ],
+     *                                      "components": [
+     *                                      [ "set": "" ]
+     *                                      ],
+     *                                      ]
+     * @param array  $properties            - set issue properties
+     * @param bool   $notify_users          - notify watchers about the update. Requires
+     *                                      administrator privileges in issue's project.
+     *
+     * @throws \Badoo\Jira\REST\Exception
+     */
+    public function edit(
+        string $issue_key,
+        array $fields,
+        array $update,
+        array $properties = [],
+        $notify_users = true
+    ): void {
+        $update_request = [];
+
+        if (!empty($fields)) {
+            $update_request['fields'] = $fields;
+        }
+
+        if (!empty($update)) {
+            $update_request['update'] = $update;
+        }
+
+        if (!empty($properties)) {
+            $update_request['properties'] = $properties;
+        }
+
+        $update_request['notifyUsers'] = $notify_users;
+
+        $this->Jira->put("issue/{$issue_key}", $update_request);
     }
 
     /**
@@ -92,117 +213,6 @@ class Issue extends Section
         }
 
         return $this->Jira->get("issue/{$issue_key}", $args);
-    }
-
-    /**
-     * Search for issues using JQL.
-     * This method is the same to Client->search() one with some differences:
-     *  - it returns the list of issues from 'issues' response field.
-     *  - it has much higher max_results default value
-     *  - it always validates your query, you can't disable it
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/search-search
-     *
-     * @param string   $jql
-     * @param string[] $fields
-     * @param string[] $expand
-     * @param int      $max_results
-     * @param int      $start_at
-     *
-     * @return \stdClass[] - list of issues
-     *
-     * @throws \Badoo\Jira\REST\Exception
-     */
-    public function search(
-        string $jql,
-        $fields = [],
-        $expand = [],
-        int $max_results = 1000,
-        int $start_at = 0
-    ): array {
-        $args = [
-            'jql' => $jql,
-            'startAt' => $start_at,
-            'maxResults' => $max_results,
-            'validateQuery' => true,
-        ];
-
-        if (!empty($fields)) {
-            $args['fields'] = $fields;
-        }
-        if (!empty($expand)) {
-            $args['expand'] = $expand;
-        }
-
-        $result = $this->Jira->post('/search', $args);
-
-        return $result->issues;
-    }
-
-    /**
-     * Assign issue to a user
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-assign
-     *
-     * @param string      $issue_key
-     * @param string|null $user_name   -   '-1' = default assignee for project.
-     *                                 'null' = unassigned
-     *
-     * @throws \Badoo\Jira\REST\Exception
-     */
-    public function assign($issue_key, ?string $user_name = null): void
-    {
-        $this->Jira->put("issue/{$issue_key}/assignee", ['name' => $user_name]);
-    }
-
-    /**
-     * List transitions available for issue in it's current state.
-     * NOTE: 'fields' section with available/required fields exists only when <expand_fields> is
-     * set to true.
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-getTransitions
-     *
-     * @param string $issue_key
-     * @param bool   $expand_fields - add list of fields available for modification during each
-     *                              transition to response
-     *
-     * @return array[][] - list of possible transitions.
-     *                       Transition format sample (some of data is not shown)
-     *                         [
-     *                           'id'   => <transition id>,
-     *                           'name' => <transition textual name shown in UI>,
-     *                           'to' => [
-     *                             'id'             => <target status ID, like 1234>,
-     *                             'name'           => <target status name shown in UI>,
-     *                             'description'    => <target status textual description>,
-     *                             'statusCategory' => [
-     *                                 'id'    => <category ID, like 4>
-     *                                 'key'   => <category key, like 'indeterminate'>
-     *                                 'name'  => <status category name, like 'In Progress'>
-     *                                 ...
-     *                             ],
-     *                             ...
-     *                           ],
-     *                           'fields' => [
-     *                             <field ID (e.g. 'description' or 'customfield_11111')> => [
-     *                               'required' => <bool>
-     *                               'name'     => <field textual name shown in UI>
-     *                               ...
-     *                             ]
-     *                           ],
-     *                         ]
-     *
-     * @throws \Badoo\Jira\REST\Exception
-     */
-    public function getTransitions(string $issue_key, bool $expand_fields = false)
-    {
-        $request_data = [];
-        if ($expand_fields) {
-            $request_data = ['expand' => 'transitions.fields'];
-        }
-        $actions_info = $this->Jira->get("issue/{$issue_key}/transitions", $request_data);
-
-        return $actions_info->transitions;
     }
 
     /**
@@ -295,122 +305,112 @@ class Issue extends Section
     }
 
     /**
-     * Update issue fields
+     * List transitions available for issue in it's current state.
+     * NOTE: 'fields' section with available/required fields exists only when <expand_fields> is
+     * set to true.
      *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-editIssue
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-getTransitions
      *
-     * @param string $issue_key             - update this issue
-     * @param array  $fields                - a shorthand for issue update rules. Has simpler
-     *                                      structure:
-     *                                      [
-     *                                      "summary": "This is a shorthand for a set operation on
-     *                                      the summary field",
-     *                                      "customfield_10010": 1,
-     *                                      "customfield_10000": "This is a shorthand for a set
-     *                                      operation on a text custom field",
-     *                                      ]
-     * @param array  $update                - issue update rules.
-     *                                      Accepts the following data structure:
-     *                                      [
-     *                                      "summary": [
-     *                                      [ "set": "Bug in business logic" ]
-     *                                      ],
-     *                                      "timetracking": [
-     *                                      [
-     *                                      "edit": [
-     *                                      "originalEstimate": "1w 1d",
-     *                                      "remainingEstimate": "4d"
-     *                                      ]
-     *                                      ]
-     *                                      ],
-     *                                      "labels": [
-     *                                      [ "add": "triaged" ],
-     *                                      [ "remove": "blocker" ]
-     *                                      ],
-     *                                      "components": [
-     *                                      [ "set": "" ]
-     *                                      ],
-     *                                      ]
-     * @param array  $properties            - set issue properties
-     * @param bool   $notify_users          - notify watchers about the update. Requires
-     *                                      administrator privileges in issue's project.
+     * @param string $issue_key
+     * @param bool   $expand_fields - add list of fields available for modification during each
+     *                              transition to response
+     *
+     * @return array[][] - list of possible transitions.
+     *                       Transition format sample (some of data is not shown)
+     *                         [
+     *                           'id'   => <transition id>,
+     *                           'name' => <transition textual name shown in UI>,
+     *                           'to' => [
+     *                             'id'             => <target status ID, like 1234>,
+     *                             'name'           => <target status name shown in UI>,
+     *                             'description'    => <target status textual description>,
+     *                             'statusCategory' => [
+     *                                 'id'    => <category ID, like 4>
+     *                                 'key'   => <category key, like 'indeterminate'>
+     *                                 'name'  => <status category name, like 'In Progress'>
+     *                                 ...
+     *                             ],
+     *                             ...
+     *                           ],
+     *                           'fields' => [
+     *                             <field ID (e.g. 'description' or 'customfield_11111')> => [
+     *                               'required' => <bool>
+     *                               'name'     => <field textual name shown in UI>
+     *                               ...
+     *                             ]
+     *                           ],
+     *                         ]
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function edit(
-        string $issue_key,
-        array $fields,
-        array $update,
-        array $properties = [],
-        $notify_users = true
-    ): void {
-        $update_request = [];
-
-        if (!empty($fields)) {
-            $update_request['fields'] = $fields;
+    public function getTransitions(string $issue_key, bool $expand_fields = false)
+    {
+        $request_data = [];
+        if ($expand_fields) {
+            $request_data = ['expand' => 'transitions.fields'];
         }
+        $actions_info = $this->Jira->get("issue/{$issue_key}/transitions", $request_data);
 
-        if (!empty($update)) {
-            $update_request['update'] = $update;
-        }
-
-        if (!empty($properties)) {
-            $update_request['properties'] = $properties;
-        }
-
-        $update_request['notifyUsers'] = $notify_users;
-
-        $this->Jira->put("issue/{$issue_key}", $update_request);
+        return $actions_info->transitions;
     }
 
     /**
-     * Create new issue
+     * Search for issues using JQL.
+     * This method is the same to Client->search() one with some differences:
+     *  - it returns the list of issues from 'issues' response field.
+     *  - it has much higher max_results default value
+     *  - it always validates your query, you can't disable it
      *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-createIssue
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/search-search
      *
-     * @param array $fields
-     * @param array $update
-     * @param array $transition
-     * @param array $properties
-     * @param array $history_meta
+     * @param string   $jql
+     * @param string[] $fields
+     * @param string[] $expand
+     * @param int      $max_results
+     * @param int      $start_at
      *
-     * @return \stdClass
+     * @return \stdClass[] - list of issues
+     *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function create(
-        array $fields,
-        array $update = [],
-        array $transition = [],
-        array $properties = [],
-        array $history_meta = []
-    ): \stdClass {
-        $create_request = [];
+    public function search(
+        string $jql,
+        $fields = [],
+        $expand = [],
+        int $max_results = 1000,
+        int $start_at = 0
+    ): array {
+        $args = [
+            'jql' => $jql,
+            'startAt' => $start_at,
+            'maxResults' => $max_results,
+            'validateQuery' => true,
+        ];
 
         if (!empty($fields)) {
-            $create_request['fields'] = $fields;
+            $args['fields'] = $fields;
+        }
+        if (!empty($expand)) {
+            $args['expand'] = $expand;
         }
 
-        if (!empty($update)) {
-            $create_request['update'] = $update;
-        }
+        $result = $this->Jira->post('/search', $args);
 
-        if (!empty($transition)) {
-            $create_request['transition'] = $transition;
-        }
-
-        if (!empty($properties)) {
-            $create_request['properties'] = $properties;
-        }
-
-        if (!empty($history_meta)) {
-            $create_request['historyMetadata'] = $history_meta;
-        }
-
-        return $this->Jira->post('/issue', $create_request);
+        return $result->issues;
     }
 
-    public function delete(string $issue_key): void
+    public function transitions(): IssueTransitions
     {
-        $this->Jira->delete("/issue/{$issue_key}");
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('transitions', IssueTransitions::class);
+    }
+
+    /**
+     * Get interface for operations with issue watchers
+     */
+    public function watchers(): Watchers
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('watchers', Watchers::class);
     }
 }
