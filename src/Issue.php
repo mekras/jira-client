@@ -1,7 +1,7 @@
 <?php
 /**
  * @package Jira
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Badoo\Jira;
@@ -28,12 +28,14 @@ class Issue
     protected $cached_data = [];
 
     /** @var string[] - list of expands for issue. REST API request with 'expand' parameter makes API to add additional
-     *                  information about issue to response, like issue history, rendered fields and so on. */
+     *                  information about issue to response, like issue history, rendered fields
+     *                  and so on. */
     protected $expands = [];
 
     /**
      * @var array - list of field updates to be sent to JIRA API on ->save() call
-     * @see \Badoo\Jira\REST\Section\Issue::edit for more info on structure of data stored here ($update parameter)
+     * @see \Badoo\Jira\REST\Section\Issue::edit for more info on structure of data stored here
+     *      ($update parameter)
      */
     protected $update_fields = [];
 
@@ -48,18 +50,22 @@ class Issue
      */
     /** @var string */
     protected $key;
+
     /** @var string */
     protected $project;
 
     /**
-     * Perform brief check of given \stdClass object for correctness and initialize \Badoo\Jira\Issue object on it.
+     * Perform brief check of given \stdClass object for correctness and initialize
+     * \Badoo\Jira\Issue object on it.
      *
-     * @param \stdClass $BaseIssue
-     * @param string[] $fields - <BaseIssue> object was loaded only with this fields
-     * @param string[] $expand - <BaseIssue> object was loaded with this info expanded
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param \stdClass               $BaseIssue
+     * @param string[]                $fields - <BaseIssue> object was loaded only with this fields
+     * @param string[]                $expand - <BaseIssue> object was loaded with this info
+     *                                        expanded
+     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      *
      * @return static
      *
@@ -70,7 +76,7 @@ class Issue
         array $fields = [],
         array $expand = [],
         \Badoo\Jira\REST\Client $Jira = null
-    ) : Issue {
+    ): Issue {
         if (empty($BaseIssue->key)) {
             throw new \Badoo\Jira\Exception\Issue('Provided data does not contain attribute "key"');
         }
@@ -84,9 +90,9 @@ class Issue
         }
 
         static $hack_fields = [
-            'key'   => false, // field is not in ->fields, but we don't want to cache it anyway.
-            'id'    => true, // field is not in ->fields, cache with hack
-            'self'  => true
+            'key' => false, // field is not in ->fields, but we don't want to cache it anyway.
+            'id' => true, // field is not in ->fields, cache with hack
+            'self' => true,
         ];
 
         $Issue = new static($BaseIssue->key, $Jira);
@@ -108,7 +114,7 @@ class Issue
             // This is done to prevent code from requesting API each time we want to get empty issue field.
             // This also preventes from returning 'null' about field that is not empty but we just don't have info on it.
             $Issue->BaseIssue = $BaseIssue;
-            $Issue->expands   = $expand;
+            $Issue->expands = $expand;
         } else {
             // We can't store BaseIssue object because we know it does not contain the full fields information.
             // Store all loaded fields in cache to use their values when we need and to not break other field getters.
@@ -127,21 +133,22 @@ class Issue
     /**
      * Load list of issues using search query in Jira Query Language.
      *
-     * @see \Badoo\Jira\REST\Section\Issue::search()
-     *
-     * @param string   $jql    - search query string
-     * @param string[] $fields - load only listed field values
-     * @param string[] $expand - load additional issues info
-     * @param int      $limit  - return at most <limit> issues
-     * @param int      $offset - skip first <offset> issues found
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                  $jql    - search query string
+     * @param string[]                $fields - load only listed field values
+     * @param string[]                $expand - load additional issues info
+     * @param int                     $limit  - return at most <limit> issues
+     * @param int                     $offset - skip first <offset> issues found
+     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      *
      * @return static[] - list of issues are fit the search request.
      *
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
+     * @see \Badoo\Jira\REST\Section\Issue::search()
+     *
      */
     public static function search(
         string $jql,
@@ -150,7 +157,7 @@ class Issue
         int $limit = 1000,
         int $offset = 0,
         \Badoo\Jira\REST\Client $Jira = null
-    ) : array {
+    ): array {
         if (!isset($Jira)) {
             $Jira = \Badoo\Jira\REST\Client::instance();
         }
@@ -171,26 +178,27 @@ class Issue
     /**
      * Load info for issue identified by key from Jira using REST API
      *
-     * @see \Badoo\Jira\REST\Section\Issue::get()
-     *
-     * @param string $issue_key
-     * @param string[] $fields - request only fields listed
-     * @param string[] $expand - provide additional info for issue
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                  $issue_key
+     * @param string[]                $fields - request only fields listed
+     * @param string[]                $expand - provide additional info for issue
+     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      *
      * @return static
      *
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
+     * @see \Badoo\Jira\REST\Section\Issue::get()
+     *
      */
     public static function byKey(
         string $issue_key,
         array $fields = [],
         array $expand = [],
         \Badoo\Jira\REST\Client $Jira = null
-    ) : Issue {
+    ): Issue {
         if (!isset($Jira)) {
             $Jira = \Badoo\Jira\REST\Client::instance();
         }
@@ -198,49 +206,53 @@ class Issue
         $IssueInfo = $Jira->issue()->get($issue_key, $fields, $expand);
 
         $Issue = static::fromStdClass($IssueInfo, $fields, $expand, $Jira);
+
         return $Issue;
     }
 
     /**
      * Load list of issues by their keys from Jira REST API
      *
-     * @see \Badoo\Jira\REST\Section\Issue::search()
-     *
-     * @param string[] $issue_keys - list of issue keys for issues load
-     * @param string[] $fields     - load only listed field values
-     * @param string[] $expand     - provide additional info for each issue
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string[]                $issue_keys - list of issue keys for issues load
+     * @param string[]                $fields     - load only listed field values
+     * @param string[]                $expand     - provide additional info for each issue
+     * @param \Badoo\Jira\REST\Client $Jira       - JIRA API client to use instead of global one.
+     *                                            Enables you to access several JIRA instances from
+     *                                            one piece of code, or use different users for
+     *                                            different actions.
      *
      * @return static[]
      *
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
+     * @see \Badoo\Jira\REST\Section\Issue::search()
+     *
      */
     public static function byKeys(
         array $issue_keys,
         array $fields = [],
         array $expand = [],
         \Badoo\Jira\REST\Client $Jira = null
-    ) : array {
+    ): array {
         if (empty($issue_keys)) {
             return [];
         }
 
         $query = "key IN (" . implode(',', $issue_keys) . ")";
+
         return static::search($query, $fields, $expand, 1000, 0, $Jira);
     }
 
     /**
-     * @see \Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG
-     *
      * @param string[] $expand - load extra information for issue
+     *
      * @return \stdClass
      *
      * @throws \Badoo\Jira\REST\Exception
+     * @see \Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG
+     *
      */
-    protected function getBaseIssue(array $expand = []) : \stdCLass
+    protected function getBaseIssue(array $expand = []): \stdCLass
     {
         foreach ($expand as $group) {
             if (!in_array($group, $this->expands)) {
@@ -260,26 +272,31 @@ class Issue
 
     /**
      * Put data portion into internal object cache, storing it under <key> key
-     * NOTE: if another portion of data already exists under the same key, it will be silently overwritten.
+     * NOTE: if another portion of data already exists under the same key, it will be silently
+     * overwritten.
      *
-     * @param string $key - key to store data
+     * @param string $key   - key to store data
      * @param mixed  $value - data to be stored
+     *
      * @return $this
      */
-    protected function cacheData($key, $value) : Issue
+    protected function cacheData($key, $value): Issue
     {
         $this->cached_data[$key] = $value;
+
         return $this;
     }
 
     /**
      * Check if data under key <key> is available in cache.
-     * NOTE: checks only for key existence, returns true even when value associated with key is 'null' or 'false'.
+     * NOTE: checks only for key existence, returns true even when value associated with key is
+     * 'null' or 'false'.
      *
      * @param string $key - key to check in cache
+     *
      * @return bool - true when key with name <key> exists in cache
      */
-    protected function isCached($key) : bool
+    protected function isCached($key): bool
     {
         return array_key_exists($key, $this->cached_data);
     }
@@ -287,7 +304,8 @@ class Issue
     /**
      * @param string $key
      *
-     * @return mixed - returns cached data when given key exists, null when no data was cached with given key
+     * @return mixed - returns cached data when given key exists, null when no data was cached with
+     *               given key
      */
     protected function getCachedData($key)
     {
@@ -299,22 +317,24 @@ class Issue
      */
     protected function dropCache()
     {
-        $this->BaseIssue     = null;
+        $this->BaseIssue = null;
         $this->custom_fields = [];
-        $this->cached_data   = [];
+        $this->cached_data = [];
     }
 
     /**
      * Issue constructor.
      *
      * WARNING: new Issue(<key>) can be used in many places to return lists of issues.
-     *          This means \Badoo\Jira\Issue class constructor should be 'light' and should not perform full
-     *          initialization with REST API requests within to not cause performance degradation.
+     *          This means \Badoo\Jira\Issue class constructor should be 'light' and should not
+     *          perform full initialization with REST API requests within to not cause performance
+     *          degradation.
      *
-     * @param string $issue_key
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                  $issue_key
+     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      *
      * @throws \Badoo\Jira\Exception\Issue
      */
@@ -333,12 +353,12 @@ class Issue
         $this->key = $issue_key;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return "[{$this->getKey()}]: {$this->getSummary()}";
     }
 
-    public function getJira() : \Badoo\Jira\REST\Client
+    public function getJira(): \Badoo\Jira\REST\Client
     {
         return $this->Jira;
     }
@@ -346,11 +366,12 @@ class Issue
     /**
      * Get value of custom or system field, checking cache first
      *
-     * IMPORTANT: cache is used for field-limited initialization, when issue was loaded from API with only selected
-     *            fields data instead of default 'all fields info'. Don't bypass it unless you know what you do.
+     * IMPORTANT: cache is used for field-limited initialization, when issue was loaded from API
+     * with only selected fields data instead of default 'all fields info'. Don't bypass it unless
+     * you know what you do.
      *
-     * @param string $field_id - custom field id (e.g. 'customfield_12345' or 'summary')
-     * @param string[] $expand - load extra information for issue before getting field value
+     * @param string   $field_id - custom field id (e.g. 'customfield_12345' or 'summary')
+     * @param string[] $expand   - load extra information for issue before getting field value
      *
      * @return mixed
      *
@@ -367,8 +388,8 @@ class Issue
 
     /**
      * Get rendered field value, as it will be shown in JIRA Web interface.
-     * This is useful e.g. for text fields with formatters (e.g. wiki-), to get the same layout as in issue view page
-     * without tricks and hacks.
+     * This is useful e.g. for text fields with formatters (e.g. wiki-), to get the same layout as
+     * in issue view page without tricks and hacks.
      *
      * @param string $field_id - ID of field to get (e.g. 'customfield_12345' or 'summary')
      *
@@ -376,21 +397,25 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getRenderedField(string $field_id) : ?string
+    public function getRenderedField(string $field_id): ?string
     {
-        return $this->getBaseIssue([\Badoo\Jira\REST\Section\Issue::EXP_RENDERED_FIELDS])->renderedFields->{$field_id} ?? null;
+        return $this->getBaseIssue(
+                [\Badoo\Jira\REST\Section\Issue::EXP_RENDERED_FIELDS]
+            )->renderedFields->{$field_id} ?? null;
     }
 
     /**
-     * Get date/time field value as UNIX timestamp. strtotime() is used to parse the value of the field.
+     * Get date/time field value as UNIX timestamp. strtotime() is used to parse the value of the
+     * field.
      *
      * @param string $field_id - ID of field to parse, e.g. 'created', 'updated' and so on
-     * @param array $expand
+     * @param array  $expand
+     *
      * @return int
      * @throws \Badoo\Jira\REST\Exception
      * @throws \Badoo\Jira\Exception\Issue
      */
-    public function getDateField(string $field_id, array $expand = []) : int
+    public function getDateField(string $field_id, array $expand = []): int
     {
         $time = $this->getFieldValue($field_id, $expand);
 
@@ -416,6 +441,7 @@ class Issue
 
     /**
      * @param string $field_class - class name of CustomField to get
+     *
      * @return \Badoo\Jira\CustomFields\CustomField
      */
     public function getCustomField($field_class)
@@ -436,20 +462,20 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getEditMeta() : array
+    public function getEditMeta(): array
     {
         return $this->Jira->issue()->getEditMeta($this->getKey());
     }
 
     /**
-     * @param string $field_id - ID of system (e.g. 'description') or custom (e.g. customfield_12345) field you want
-     *                           to check
+     * @param string $field_id   - ID of system (e.g. 'description') or custom (e.g.
+     *                           customfield_12345) field you want to check
      *
      * @return bool - true means you can update this issue field's value
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function isEditable(string $field_id) : bool
+    public function isEditable(string $field_id): bool
     {
         return isset($this->getEditMeta()[$field_id]);
     }
@@ -458,35 +484,38 @@ class Issue
      * Edit issue fields
      * NOTE: the changes are actually applied only after ->save() call.
      *
-     * @param string $field_id - ID of field to update. E.g. 'summary' or 'customfield_12345'
-     * @param array $update - update request
+     * @param string $field_id  - ID of field to update. E.g. 'summary' or 'customfield_12345'
+     * @param array  $update    - update request
      *                          Example: [ [ 'set' => [ 'id' => 1234' ] ]
-     *                        @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info
      *
      * @return $this
+     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info
+     *
      */
-    public function edit(string $field_id, array $update) : \Badoo\Jira\Issue
+    public function edit(string $field_id, array $update): \Badoo\Jira\Issue
     {
         $this->update_fields[$field_id] = $update;
+
         return $this;
     }
 
     /**
      * Apply all changes planned with ->edit() calls.
      * Actually updated JIRA issue fields
-     * NOTE: this method call results in internal issue object cache drop. Any get<Field> call will cause single JIRA
-     *       API request to refresh the cache. All get<Field> calls will cause new wrapper objects creation
-     *
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
+     * NOTE: this method call results in internal issue object cache drop. Any get<Field> call will
+     * cause single JIRA API request to refresh the cache. All get<Field> calls will cause new
+     * wrapper objects creation
      *
      * @param array $properties
-     * @param bool $notify_users
+     * @param bool  $notify_users
      *
      * @return $this
      *
      * @throws \Badoo\Jira\REST\Exception
+     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
+     *
      */
-    public function save(array $properties = [], $notify_users = true) : \Badoo\Jira\Issue
+    public function save(array $properties = [], $notify_users = true): \Badoo\Jira\Issue
     {
         if (empty($this->update_fields)) {
             return $this;
@@ -510,49 +539,74 @@ class Issue
     }
 
     /**
-     * Perform a transition on issue. All changes you scheduled by Issue->edit() will be applied during transition if
-     * you not  called ->save() yet.
+     * Perform a transition on issue. All changes you scheduled by Issue->edit() will be applied
+     * during transition if you not  called ->save() yet.
      *
-     * @param int $transition_id - ID of transition to do
-     * @param bool $safe_transition - perform safe transition: siletly filter out field changes,
+     * @param int  $transition_id     - ID of transition to do
+     * @param bool $safe_transition   - perform safe transition: siletly filter out field changes,
      *                                that are not allowed by transition screen.
+     *
      * @return $this
      *
      * @throws \Badoo\Jira\REST\Exception - when JIRA rejected to do issue transition.
      */
-    public function transition(int $transition_id, $safe_transition = false) : \Badoo\Jira\Issue
+    public function transition(int $transition_id, $safe_transition = false): \Badoo\Jira\Issue
     {
         if ($safe_transition) {
-            $this->Jira->issue()->transitions()->do_safe($this->getKey(), $transition_id, [], $this->update_fields);
+            $this->Jira->issue()->transitions()->do_safe(
+                $this->getKey(),
+                $transition_id,
+                [],
+                $this->update_fields
+            );
         } else {
-            $this->Jira->issue()->transitions()->do($this->getKey(), $transition_id, [], $this->update_fields);
+            $this->Jira->issue()->transitions()->do(
+                $this->getKey(),
+                $transition_id,
+                [],
+                $this->update_fields
+            );
         }
 
         $this->update_fields = [];
         $this->dropCache();
+
         return $this;
     }
 
     /**
-     * Perform a transition on issue using step name instead of ID (the one displayed on button in Web UI).
-     * All changes you scheduled by Issue->edit() will be applied during transition if you not  called ->save() yet.
+     * Perform a transition on issue using step name instead of ID (the one displayed on button in
+     * Web UI). All changes you scheduled by Issue->edit() will be applied during transition if you
+     * not  called ->save() yet.
      *
-     * @param string $step_name - name of step you want to do
-     * @param bool $step_same_status - true: do transition even when it leads to the same status
-     *                                 false: throw an exception if issue is already in target status
-     * @param bool $safe_transition - drop changes for fields that can't be set during transition because of transition
-     *                                screen configuration.
+     * @param string $step_name        - name of step you want to do
+     * @param bool   $step_same_status - true: do transition even when it leads to the same status
+     *                                 false: throw an exception if issue is already in target
+     *                                 status
+     * @param bool   $safe_transition  - drop changes for fields that can't be set during
+     *                                 transition because of transition screen configuration.
      *
      * @return $this
      *
      * @throws \Badoo\Jira\REST\Exception - when JIRA rejected to do issue transition.
      */
-    public function step(string $step_name, bool $step_same_status = false, bool $safe_transition = false) : \Badoo\Jira\Issue
-    {
-        $this->Jira->issue()->transitions()->step($this->getKey(), $step_name, [], $this->update_fields, $safe_transition, $step_same_status);
+    public function step(
+        string $step_name,
+        bool $step_same_status = false,
+        bool $safe_transition = false
+    ): \Badoo\Jira\Issue {
+        $this->Jira->issue()->transitions()->step(
+            $this->getKey(),
+            $step_name,
+            [],
+            $this->update_fields,
+            $safe_transition,
+            $step_same_status
+        );
 
         $this->update_fields = [];
         $this->dropCache();
+
         return $this;
     }
 
@@ -560,7 +614,7 @@ class Issue
      * Delete issue from Jira.
      * DANGER: This action is applied immediately and can't be undone. Be careful.
      */
-    public function delete() : void
+    public function delete(): void
     {
         $this->Jira->issue()->delete($this->getKey());
     }
@@ -570,25 +624,26 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getId() : int
+    public function getId(): int
     {
         if ($this->isCached('id')) {
             return $this->getCachedData('id');
         }
 
-        $id = (int)$this->getBaseIssue()->id;
+        $id = (int) $this->getBaseIssue()->id;
         $this->cacheData('id', $id);
+
         return $id;
     }
 
     /**
      * Issue key is not changed automatically once object is initialized for the first time.
-     * This allows you to 'trust' issue key and use it in arrays as index even when issue actually was moved between
-     * projects during your code execution.
+     * This allows you to 'trust' issue key and use it in arrays as index even when issue actually
+     * was moved between projects during your code execution.
      *
      * @see Issue::updateKey()
      */
-    public function getKey() : string
+    public function getKey(): string
     {
         return $this->key;
     }
@@ -598,24 +653,26 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getSelfUrl() : string
+    public function getSelfUrl(): string
     {
         if ($this->isCached('self')) {
             return $this->getCachedData('self');
         }
 
-        $self = (string)$this->getBaseIssue()->self;
+        $self = (string) $this->getBaseIssue()->self;
         $this->cacheData('self', $self);
+
         return $self;
     }
 
     /**
      * Update issue key to the latest one.
-     * This is not done automatically each time fresh data is loaded from API to prevent unexpected changes of key
-     * during execution, when code silently updates data from API
+     * This is not done automatically each time fresh data is loaded from API to prevent unexpected
+     * changes of key during execution, when code silently updates data from API
      *
-     * @param bool $reload_cache - drop all internal caches of Issue object before getting fresh key.
-     *                             This causes full data reload from API, with the same expands issue had before drop.
+     * @param bool $reload_cache   - drop all internal caches of Issue object before getting fresh
+     *                             key. This causes full data reload from API, with the same
+     *                             expands issue had before drop.
      *
      * @throws REST\Exception
      */
@@ -638,7 +695,7 @@ class Issue
      *                     - the key issue had at the moment of creation is listed first
      *                     - the key issue had before the current one is listed last
      */
-    public function getPrevKeys() : array
+    public function getPrevKeys(): array
     {
         $previous_keys = [];
 
@@ -651,12 +708,13 @@ class Issue
         return $previous_keys;
     }
 
-    public function getProject() : string
+    public function getProject(): string
     {
         if (!isset($this->project)) {
-            list($project_key) = explode('-', $this->getKey());
+            [$project_key] = explode('-', $this->getKey());
             $this->project = $project_key;
         }
+
         return $this->project;
     }
 
@@ -665,12 +723,12 @@ class Issue
      *
      * @return bool
      */
-    public function isInProject(array $check_projects) : bool
+    public function isInProject(array $check_projects): bool
     {
         return in_array($this->getProject(), $check_projects);
     }
 
-    public function getUrl() : string
+    public function getUrl(): string
     {
         return $this->Jira->getRawClient()->getJiraUrl() . 'browse/' . $this->getKey();
     }
@@ -680,21 +738,22 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getSummary() : string
+    public function getSummary(): string
     {
-        return (string)$this->getFieldValue('summary');
+        return (string) $this->getFieldValue('summary');
     }
 
     /**
      * @param string $summary
+     *
      * @return $this
      */
-    public function setSummary(string $summary) : Issue
+    public function setSummary(string $summary): Issue
     {
         return $this->edit(
             'summary',
             [
-                ['set' => $summary]
+                ['set' => $summary],
             ]
         );
     }
@@ -704,9 +763,9 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getDescription() : string
+    public function getDescription(): string
     {
-        return (string)$this->getFieldValue('description');
+        return (string) $this->getFieldValue('description');
     }
 
     /**
@@ -714,12 +773,12 @@ class Issue
      *
      * @return $this
      */
-    public function setDescription(string $description) : Issue
+    public function setDescription(string $description): Issue
     {
         return $this->edit(
             'description',
             [
-                ['set' => $description]
+                ['set' => $description],
             ]
         );
     }
@@ -732,7 +791,7 @@ class Issue
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getSubIssues() : array
+    public function getSubIssues(): array
     {
         return static::search("parent = '{$this->getKey()}'", [], [], 1000, 0, $this->Jira);
     }
@@ -742,7 +801,7 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function isSubIssue() : bool
+    public function isSubIssue(): bool
     {
         return $this->getFieldValue('parent') !== null;
     }
@@ -752,7 +811,7 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function hasSubIssues() : bool
+    public function hasSubIssues(): bool
     {
         return count($this->getFieldValue('subtasks')) > 0;
     }
@@ -763,7 +822,7 @@ class Issue
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getParentIssue() : ?Issue
+    public function getParentIssue(): ?Issue
     {
         if (!$this->isSubIssue()) {
             return null;
@@ -778,7 +837,7 @@ class Issue
      * @throws \Badoo\Jira\REST\Exception
      * @throws \Badoo\Jira\Exception\Issue
      */
-    public function getCreatedDate() : int
+    public function getCreatedDate(): int
     {
         return $this->getDateField('created');
     }
@@ -800,7 +859,7 @@ class Issue
      * @throws \Badoo\Jira\REST\Exception
      * @throws \Badoo\Jira\Exception\Issue
      */
-    public function getResolutionDate() : int
+    public function getResolutionDate(): int
     {
         return $this->getDateField('resolutiondate');
     }
@@ -811,7 +870,7 @@ class Issue
      * @throws \Badoo\Jira\REST\Exception
      * @throws \Badoo\Jira\Exception\Issue
      */
-    public function getDueDate() : int
+    public function getDueDate(): int
     {
         return $this->getDateField('duedate');
     }
@@ -821,9 +880,9 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getLabels() : array
+    public function getLabels(): array
     {
-        return (array)($this->getFieldValue('labels'));
+        return (array) ($this->getFieldValue('labels'));
     }
 
     /**
@@ -833,14 +892,15 @@ class Issue
      *
      * @return $this
      */
-    public function setLabels(string ...$labels) : Issue
+    public function setLabels(string ...$labels): Issue
     {
         // We need array_values() here to drop keys preserving from array_unique()
         $new_value = array_values(array_unique($labels));
+
         return $this->edit(
             'labels',
             [
-                ['set' => $new_value]
+                ['set' => $new_value],
             ]
         );
     }
@@ -852,7 +912,7 @@ class Issue
      *
      * @return $this
      */
-    public function addLabels(string ...$labels) : Issue
+    public function addLabels(string ...$labels): Issue
     {
         $to_add = array_values(array_unique($labels));
 
@@ -872,15 +932,20 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getType() : \Badoo\Jira\Issue\Type
+    public function getType(): \Badoo\Jira\Issue\Type
     {
         $cache_key = 'Type';
 
         $Type = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
-            $Type = \Badoo\Jira\Issue\Type::fromStdClass($this->getFieldValue('issuetype'), $this, $this->Jira);
+            $Type = \Badoo\Jira\Issue\Type::fromStdClass(
+                $this->getFieldValue('issuetype'),
+                $this,
+                $this->Jira
+            );
             $this->cacheData($cache_key, $Type);
         }
+
         return $Type;
     }
 
@@ -889,15 +954,20 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getStatus() : \Badoo\Jira\Issue\Status
+    public function getStatus(): \Badoo\Jira\Issue\Status
     {
         $cache_key = 'Status';
 
         $Status = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
-            $Status = \Badoo\Jira\Issue\Status::fromStdClass($this->getFieldValue('status'), $this, $this->Jira);
+            $Status = \Badoo\Jira\Issue\Status::fromStdClass(
+                $this->getFieldValue('status'),
+                $this,
+                $this->Jira
+            );
             $this->cacheData($cache_key, $Status);
         }
+
         return $Status;
     }
 
@@ -906,7 +976,7 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getPriority() : ?\Badoo\Jira\Issue\Priority
+    public function getPriority(): ?\Badoo\Jira\Issue\Priority
     {
         $cache_key = 'Priority';
 
@@ -915,7 +985,11 @@ class Issue
             $PriorityInfo = $this->getFieldValue('priority');
 
             if (isset($PriorityInfo)) {
-                $Priority = \Badoo\Jira\Issue\Priority::fromStdClass($PriorityInfo, $this, $this->Jira);
+                $Priority = \Badoo\Jira\Issue\Priority::fromStdClass(
+                    $PriorityInfo,
+                    $this,
+                    $this->Jira
+                );
             } else {
                 // Issue has no priority. Yes, this is possible.
                 $Priority = null;
@@ -923,6 +997,7 @@ class Issue
 
             $this->cacheData($cache_key, $Priority);
         }
+
         return $Priority;
     }
 
@@ -931,12 +1006,12 @@ class Issue
      *
      * @return $this
      */
-    public function setPriority(int $id) : Issue
+    public function setPriority(int $id): Issue
     {
         return $this->edit(
             "priority",
             [
-                ["set" => ["id" => (string)$id]]
+                ["set" => ["id" => (string) $id]],
             ]
         );
     }
@@ -946,7 +1021,7 @@ class Issue
      *
      * @throws REST\Exception
      */
-    public function getSecurity() : ?\Badoo\Jira\Security
+    public function getSecurity(): ?\Badoo\Jira\Security
     {
         $cache_key = 'Security';
 
@@ -963,6 +1038,7 @@ class Issue
 
             $this->cacheData($cache_key, $Security);
         }
+
         return $Security;
     }
 
@@ -971,12 +1047,12 @@ class Issue
      *
      * @return $this
      */
-    public function setSecurity(int $id) : \Badoo\Jira\Issue
+    public function setSecurity(int $id): \Badoo\Jira\Issue
     {
         return $this->edit(
             "security",
             [
-                ["set" => ["id" => (string)$id]],
+                ["set" => ["id" => (string) $id]],
             ]
         );
     }
@@ -988,7 +1064,7 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getResolution() : ?\Badoo\Jira\Issue\Resolution
+    public function getResolution(): ?\Badoo\Jira\Issue\Resolution
     {
         $cache_key = 'Resolution';
 
@@ -997,7 +1073,11 @@ class Issue
             $ResolutionInfo = $this->getFieldValue('resolution');
 
             if (isset($ResolutionInfo)) {
-                $Resolution = \Badoo\Jira\Issue\Resolution::fromStdClass($ResolutionInfo, $this, $this->Jira);
+                $Resolution = \Badoo\Jira\Issue\Resolution::fromStdClass(
+                    $ResolutionInfo,
+                    $this,
+                    $this->Jira
+                );
             } else {
                 // Issue has no resolution yet (unresolved)
                 $Resolution = null;
@@ -1005,6 +1085,7 @@ class Issue
 
             $this->cacheData($cache_key, $Resolution);
         }
+
         return $Resolution;
     }
 
@@ -1015,12 +1096,12 @@ class Issue
      *
      * @return $this
      */
-    public function setResolution(int $id) : \Badoo\Jira\Issue
+    public function setResolution(int $id): \Badoo\Jira\Issue
     {
         return $this->edit(
             'resolution',
             [
-                ['set' => ['id' => (string)$id]],
+                ['set' => ['id' => (string) $id]],
             ]
         );
     }
@@ -1039,7 +1120,7 @@ class Issue
         if (!isset($components)) {
             $components = [];
 
-            foreach ((array)$this->getFieldValue('components') as $ComponentInfo) {
+            foreach ((array) $this->getFieldValue('components') as $ComponentInfo) {
                 $Component = Component::fromStdClass($ComponentInfo, $this, $this->Jira);
                 $components[$Component->getID()] = $Component;
             }
@@ -1062,7 +1143,7 @@ class Issue
         $set_components = [];
         foreach ($components as $component) {
             if (is_numeric($component)) {
-                $component = (int)$component;
+                $component = (int) $component;
                 $set_components[] = ['id' => "$component"];
             } else {
                 $set_components[] = ['name' => $component];
@@ -1082,13 +1163,13 @@ class Issue
      *
      * @return $this
      */
-    public function addComponents(...$components) : Issue
+    public function addComponents(...$components): Issue
     {
         $components_update = $this->update_fields['components'] ?? [];
 
         foreach ($components as $component) {
             if (is_numeric($component)) {
-                $component = (int)$component;
+                $component = (int) $component;
                 $components_update[] = ['add' => ['id' => "$component"]];
             } else {
                 $components_update[] = ['add' => ['name' => $component]];
@@ -1111,7 +1192,7 @@ class Issue
 
         foreach ($components as $component) {
             if (is_numeric($component)) {
-                $component = (int)$component;
+                $component = (int) $component;
                 $components_update[] = ['remove' => ['id' => "$component"]];
             } else {
                 $components_update[] = ['remove' => ['name' => $component]];
@@ -1126,20 +1207,25 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getVersions() : array
+    public function getVersions(): array
     {
         $Versions = $this->getCachedData('Versions');
         if (!isset($Versions)) {
             $Versions = [];
 
             $project_id = $this->getBaseIssue()->fields->project->id;
-            foreach ((array)$this->getFieldValue('fixVersions') as $VersionInfo) {
+            foreach ((array) $this->getFieldValue('fixVersions') as $VersionInfo) {
                 // Don't know why, but list of versions associated with issue has no 'projectId' field.
                 $VersionInfo->projectId = $project_id;
-                $Versions[] = \Badoo\Jira\Version::fromStdClass($VersionInfo, $this, $this->getJira());
+                $Versions[] = \Badoo\Jira\Version::fromStdClass(
+                    $VersionInfo,
+                    $this,
+                    $this->getJira()
+                );
             }
             $this->cacheData('Versions', $Versions);
         }
+
         return $Versions;
     }
 
@@ -1167,11 +1253,19 @@ class Issue
         }
 
         // Create a new version in Jira project if it is needed.
-        if ($create && !\Badoo\Jira\Version::exists($this->getProject(), $version_name, $this->getJira())) {
+        if ($create && !\Badoo\Jira\Version::exists(
+                $this->getProject(),
+                $version_name,
+                $this->getJira()
+            )) {
             $VersionToAdd = new \Badoo\Jira\Version(0, $this->getJira());
             $VersionToAdd->setProject($this->getProject())->setName($version_name)->save();
         } else {
-            $VersionToAdd = \Badoo\Jira\Version::byName($this->getProject(), $version_name, $this->getJira());
+            $VersionToAdd = \Badoo\Jira\Version::byName(
+                $this->getProject(),
+                $version_name,
+                $this->getJira()
+            );
         }
 
         // Update list of versions for issue
@@ -1179,7 +1273,7 @@ class Issue
         $this->edit(
             "fixVersions",
             [
-                ['set' => $versions_to_set]
+                ['set' => $versions_to_set],
             ]
         );
         $this->save();
@@ -1190,13 +1284,14 @@ class Issue
     /**
      * Get list of issue comments
      *
-     * @param bool $reload_cache - request API for fresh issue comments ignoring internal class cache
+     * @param bool $reload_cache - request API for fresh issue comments ignoring internal class
+     *                           cache
      *
      * @return \Badoo\Jira\Issue\Comment[]
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getComments(bool $reload_cache = false) : array
+    public function getComments(bool $reload_cache = false): array
     {
         $cache_key = 'Comments';
 
@@ -1225,7 +1320,7 @@ class Issue
      *
      * @return \Badoo\Jira\Issue\Comment
      */
-    public function getComment(int $id) : \Badoo\Jira\Issue\Comment
+    public function getComment(int $id): \Badoo\Jira\Issue\Comment
     {
         return new \Badoo\Jira\Issue\Comment($id, $this);
     }
@@ -1233,13 +1328,14 @@ class Issue
     /**
      * Get the most recent comment attached to issue
      *
-     * @param bool $reload_cache - force data update. Get the freshest data possible from Jira API, instead of using cache.
+     * @param bool $reload_cache - force data update. Get the freshest data possible from Jira API,
+     *                           instead of using cache.
      *
      * @return \Badoo\Jira\Issue\Comment|null
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getLastComment($reload_cache = false) : ?\Badoo\Jira\Issue\Comment
+    public function getLastComment($reload_cache = false): ?\Badoo\Jira\Issue\Comment
     {
         $comments = $this->getComments($reload_cache);
         $LastComment = end($comments);
@@ -1250,28 +1346,42 @@ class Issue
         return $LastComment;
     }
 
-    public function addComment(string $text, ?array $visibility = [], bool $expand_rendered = false) : \Badoo\Jira\Issue\Comment
-    {
-        $CommentInfo = $this->Jira->issue()->comment()->create($this->getKey(), $text, $visibility, $expand_rendered);
+    public function addComment(
+        string $text,
+        ?array $visibility = [],
+        bool $expand_rendered = false
+    ): \Badoo\Jira\Issue\Comment {
+        $CommentInfo = $this->Jira->issue()->comment()->create(
+            $this->getKey(),
+            $text,
+            $visibility,
+            $expand_rendered
+        );
         $this->dropCache();
 
         $Comment = \Badoo\Jira\Issue\Comment::fromStdClass($CommentInfo, $this);
+
         return $Comment;
     }
 
     /**
-     * Get issue's reporter user information. 'null' is returned for issues, where reporter is not displayed.
+     * Get issue's reporter user information. 'null' is returned for issues, where reporter is not
+     * displayed.
      *
      * @return \Badoo\Jira\User|null
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getReporter() : ?User
+    public function getReporter(): ?User
     {
         $Reporter = $this->getCachedData('Reporter');
 
         if (!isset($Reporter) && $this->getFieldValue('reporter') !== null) {
-            $Reporter = \Badoo\Jira\User::fromStdClass($this->getFieldValue('reporter'), $this, $this->Jira);
+            $Reporter = \Badoo\Jira\User::fromStdClass(
+                $this->getFieldValue('reporter'),
+                $this,
+                $this->Jira
+            );
             $this->cacheData('Reporter', $Reporter);
         }
 
@@ -1285,7 +1395,7 @@ class Issue
      *
      * @return $this
      */
-    public function setReporter($user) : Issue
+    public function setReporter($user): Issue
     {
         if ($user instanceof User) {
             $user = $user->getName();
@@ -1306,12 +1416,16 @@ class Issue
      *
      * @throws \Badoo\Jira\REST\Exception
      */
-    public function getAssignee() : ?User
+    public function getAssignee(): ?User
     {
         $Assignee = $this->getCachedData('Assignee');
 
         if (!isset($Assignee) && isset($this->getBaseIssue()->fields->assignee)) {
-            $Assignee = \Badoo\Jira\User::fromStdClass($this->getFieldValue('assignee'), $this, $this->Jira);
+            $Assignee = \Badoo\Jira\User::fromStdClass(
+                $this->getFieldValue('assignee'),
+                $this,
+                $this->Jira
+            );
             $this->cacheData('Assignee', $Assignee);
         }
 
@@ -1321,13 +1435,13 @@ class Issue
     /**
      * Assign issue to a user
      *
-     * @param string|User|null $user - user to set as assignee of issue.
+     * @param string|User|null $user   - user to set as assignee of issue.
      *                                 null - unassign issue
      *                                 "-1" - set assignee to project default
      *
      * @return $this
      */
-    public function setAssignee($user) : Issue
+    public function setAssignee($user): Issue
     {
         if ($user instanceof User) {
             $user = $user->getName();
@@ -1349,7 +1463,7 @@ class Issue
      * @throws \Badoo\Jira\REST\Exception
      * @throws \Badoo\Jira\Exception
      */
-    public function getWatchers() : \Badoo\Jira\Issue\WatchersList
+    public function getWatchers(): \Badoo\Jira\Issue\WatchersList
     {
         $cache_key = 'Watchers';
 
@@ -1357,7 +1471,11 @@ class Issue
         if (!isset($WatchersList)) {
             $watchers = $this->Jira->issue()->watchers()->list($this->getKey());
 
-            $WatchersList = \Badoo\Jira\Issue\WatchersList::fromStdClass($watchers, $this, $this->getJira());
+            $WatchersList = \Badoo\Jira\Issue\WatchersList::fromStdClass(
+                $watchers,
+                $this,
+                $this->getJira()
+            );
 
             $this->cacheData($cache_key, $WatchersList);
         }
@@ -1365,7 +1483,7 @@ class Issue
         return $WatchersList;
     }
 
-    public function getAttachments() : \Badoo\Jira\Issue\Attachments
+    public function getAttachments(): \Badoo\Jira\Issue\Attachments
     {
         $cache_key = 'Attachments';
         $Attachments = $this->getCachedData($cache_key);
@@ -1379,34 +1497,40 @@ class Issue
         return $Attachments;
     }
 
-    public function attachFile(string $file_path, ?string $file_name = null, ?string $file_type = null) : \Badoo\Jira\Issue\File
-    {
+    public function attachFile(
+        string $file_path,
+        ?string $file_name = null,
+        ?string $file_type = null
+    ): \Badoo\Jira\Issue\File {
         return $this->getAttachments()->attach($file_path, $file_name, $file_type);
     }
 
-    public function getHistory() : \Badoo\Jira\Issue\History
+    public function getHistory(): \Badoo\Jira\Issue\History
     {
         $cache_key = 'History';
         $History = $this->getCachedData($cache_key);
         if (!isset($History)) {
-            $records = $this->getBaseIssue([\Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG])->changelog->histories;
+            $records = $this->getBaseIssue(
+                [\Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG]
+            )->changelog->histories;
             $History = \Badoo\Jira\Issue\History::fromStdClass($records, $this);
             $this->cacheData($cache_key, $History);
         }
+
         return $History;
     }
 
-    public function getTimeInLastStatus() : int
+    public function getTimeInLastStatus(): int
     {
         return $this->getHistory()->getTimeInLastStatus();
     }
 
-    public function getWorkdaysInStatus(string $status) : float
+    public function getWorkdaysInStatus(string $status): float
     {
         return $this->getHistory()->getWorkdaysInStatus($status);
     }
 
-    public function getLinksList() : \Badoo\Jira\Issue\LinksList
+    public function getLinksList(): \Badoo\Jira\Issue\LinksList
     {
         $cache_key = 'Links';
 
