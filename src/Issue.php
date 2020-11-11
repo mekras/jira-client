@@ -6,6 +6,8 @@
 
 namespace Badoo\Jira;
 
+use Badoo\Jira\REST\Client;
+
 /**
  * Class Issue
  *
@@ -17,7 +19,7 @@ class Issue
     /** @var \stdClass - cached issue information from Jira: REST API response 'as is' */
     protected $BaseIssue;
 
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var array - cached issue data. Various objects of various types: 'History' issue info, 'Assignee' field, etc.
@@ -48,10 +50,10 @@ class Issue
     /**
      * Load info for issue identified by key from Jira using REST API
      *
-     * @param string                  $issue_key
-     * @param string[]                $fields - request only fields listed
-     * @param string[]                $expand - provide additional info for issue
-     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     * @param string   $issue_key
+     * @param string[] $fields                - request only fields listed
+     * @param string[] $expand                - provide additional info for issue
+     * @param Client   $Jira                  - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one
      *                                        piece of code, or use different users for different
      *                                        actions.
@@ -67,10 +69,10 @@ class Issue
         string $issue_key,
         array $fields = [],
         array $expand = [],
-        \Badoo\Jira\REST\Client $Jira = null
+        Client $Jira = null
     ): Issue {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = Client::instance();
         }
 
         $IssueInfo = $Jira->issue()->get($issue_key, $fields, $expand);
@@ -83,10 +85,10 @@ class Issue
     /**
      * Load list of issues by their keys from Jira REST API
      *
-     * @param string[]                $issue_keys - list of issue keys for issues load
-     * @param string[]                $fields     - load only listed field values
-     * @param string[]                $expand     - provide additional info for each issue
-     * @param \Badoo\Jira\REST\Client $Jira       - JIRA API client to use instead of global one.
+     * @param string[] $issue_keys                - list of issue keys for issues load
+     * @param string[] $fields                    - load only listed field values
+     * @param string[] $expand                    - provide additional info for each issue
+     * @param Client   $Jira                      - JIRA API client to use instead of global one.
      *                                            Enables you to access several JIRA instances from
      *                                            one piece of code, or use different users for
      *                                            different actions.
@@ -102,7 +104,7 @@ class Issue
         array $issue_keys,
         array $fields = [],
         array $expand = [],
-        \Badoo\Jira\REST\Client $Jira = null
+        Client $Jira = null
     ): array {
         if (empty($issue_keys)) {
             return [];
@@ -117,11 +119,11 @@ class Issue
      * Perform brief check of given \stdClass object for correctness and initialize
      * \Badoo\Jira\Issue object on it.
      *
-     * @param \stdClass               $BaseIssue
-     * @param string[]                $fields - <BaseIssue> object was loaded only with this fields
-     * @param string[]                $expand - <BaseIssue> object was loaded with this info
+     * @param \stdClass $BaseIssue
+     * @param string[]  $fields               - <BaseIssue> object was loaded only with this fields
+     * @param string[]  $expand               - <BaseIssue> object was loaded with this info
      *                                        expanded
-     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     * @param Client    $Jira                 - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one
      *                                        piece of code, or use different users for different
      *                                        actions.
@@ -134,7 +136,7 @@ class Issue
         \stdClass $BaseIssue,
         array $fields = [],
         array $expand = [],
-        \Badoo\Jira\REST\Client $Jira = null
+        Client $Jira = null
     ): Issue {
         if (empty($BaseIssue->key)) {
             throw new \Badoo\Jira\Exception\Issue('Provided data does not contain attribute "key"');
@@ -192,22 +194,20 @@ class Issue
     /**
      * Load list of issues using search query in Jira Query Language.
      *
-     * @param string                  $jql    - search query string
-     * @param string[]                $fields - load only listed field values
-     * @param string[]                $expand - load additional issues info
-     * @param int                     $limit  - return at most <limit> issues
-     * @param int                     $offset - skip first <offset> issues found
-     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param string      $jql    Search query string.
+     * @param string[]    $fields Load only listed field values.
+     * @param string[]    $expand Load additional issues info.
+     * @param int         $limit  Return at most <limit> issues.
+     * @param int         $offset Skip first <offset> issues found.
+     * @param Client|null $jira   JIRA API client to use instead of global one. Enables you to
+     *                            access several JIRA instances from one piece of code, or use
+     *                            different users for different actions.
      *
      * @return static[] - list of issues are fit the search request.
      *
      * @throws \Badoo\Jira\Exception\Issue
      * @throws \Badoo\Jira\REST\Exception
      * @see \Badoo\Jira\REST\Section\Issue::search()
-     *
      */
     public static function search(
         string $jql,
@@ -215,23 +215,23 @@ class Issue
         array $expand = [],
         int $limit = 1000,
         int $offset = 0,
-        \Badoo\Jira\REST\Client $Jira = null
+        Client $jira = null
     ): array {
-        if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+        if (!isset($jira)) {
+            $jira = Client::instance();
         }
 
-        $issues_list = $Jira->issue()->search($jql, $fields, $expand, $limit, $offset);
+        $issuesList = $jira->issue()->search($jql, $fields, $expand, $limit, $offset);
 
-        $issue_objects = [];
+        $issueObjects = [];
 
-        foreach ($issues_list as $issue_info) {
-            $Issue = static::fromStdClass($issue_info, $fields, $expand, $Jira);
+        foreach ($issuesList as $issueInfo) {
+            $Issue = static::fromStdClass($issueInfo, $fields, $expand, $jira);
             $Issue->expands = $expand;
-            $issue_objects[$Issue->getKey()] = $Issue;
+            $issueObjects[$Issue->getKey()] = $Issue;
         }
 
-        return $issue_objects;
+        return $issueObjects;
     }
 
     /**
@@ -242,15 +242,15 @@ class Issue
      *          perform full initialization with REST API requests within to not cause performance
      *          degradation.
      *
-     * @param string                  $issue_key
-     * @param \Badoo\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
+     * @param string $issue_key
+     * @param Client $Jira                    - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one
      *                                        piece of code, or use different users for different
      *                                        actions.
      *
      * @throws \Badoo\Jira\Exception\Issue
      */
-    public function __construct(string $issue_key, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(string $issue_key, Client $Jira = null)
     {
         $issue_key = trim($issue_key);
         if ($issue_key === '') {
@@ -258,7 +258,7 @@ class Issue
         }
 
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = Client::instance();
         }
 
         $this->Jira = $Jira;
@@ -677,7 +677,7 @@ class Issue
         return $id;
     }
 
-    public function getJira(): \Badoo\Jira\REST\Client
+    public function getJira(): Client
     {
         return $this->Jira;
     }
