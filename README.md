@@ -1,6 +1,4 @@
-# Changes from original jira-client
-
-All changes gathered in branch `main`.
+# Changes from original Badoo Jira client
 
 - [PSR-18 HTTP client support](#psr-18-http-client-support)
 - [PSR-16 cache support](#psr-16-cache-support)
