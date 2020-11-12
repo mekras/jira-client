@@ -45,7 +45,7 @@ class IssueAttachment extends Section
         $attachments = $this->getCached($issue_key);
 
         if (!isset($attachments) || $reload_cache) {
-            $IssueInfo = $this->jira->get(
+            $IssueInfo = $this->rawClient->get(
                 "issue/{$issue_key}",
                 [ 'fields' => "id,key,attachment"]
             );
@@ -82,7 +82,7 @@ class IssueAttachment extends Section
     public function create(string $issue_key, string $file_path, ?string $file_name = null, ?string $file_type = null) : \stdClass
     {
         $File = new \CURLFile($file_path, $file_type, $file_name);
-        $response = $this->jira->multipart("issue/{$issue_key}/attachments", ['file' => $File]);
+        $response = $this->rawClient->multipart("issue/{$issue_key}/attachments", ['file' => $File]);
 
         return reset($response);
     }

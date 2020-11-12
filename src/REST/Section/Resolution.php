@@ -32,7 +32,7 @@ class Resolution extends Section
     public function list(bool $reload_cache = false) : array
     {
         if (!$this->all_cached || $reload_cache) {
-            foreach ($this->jira->get('/resolution') as $ResolutionInfo) {
+            foreach ($this->rawClient->get('/resolution') as $ResolutionInfo) {
                 $this->cacheResolutionInfo($ResolutionInfo);
             }
             $this->all_cached = true;
@@ -58,7 +58,7 @@ class Resolution extends Section
         $ResolutionInfo = $this->resolutions_list[$id] || null;
 
         if (!isset($ResolutionInfo) || $reload_cache) {
-            $ResolutionInfo = $this->jira->get("/resolution/{$id}");
+            $ResolutionInfo = $this->rawClient->get("/resolution/{$id}");
             $this->cacheResolutionInfo($ResolutionInfo);
         }
 

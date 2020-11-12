@@ -5,6 +5,8 @@
 
 namespace Mekras\Jira\CustomFields;
 
+use Mekras\Jira\User;
+
 /**
  * Class SingleUserField
  *
@@ -12,7 +14,7 @@ namespace Mekras\Jira\CustomFields;
  */
 abstract class SingleUserField extends CustomField
 {
-    /** @var \Mekras\Jira\User */
+    /** @var User */
     protected $User;
 
     public function dropCache()
@@ -23,11 +25,11 @@ abstract class SingleUserField extends CustomField
     }
 
     /**
-     * @return \Mekras\Jira\User|null
+     * @return User|null
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getValue(): ?\Mekras\Jira\User
+    public function getValue(): ?User
     {
         if ($this->isEmpty()) {
             return null;
@@ -35,10 +37,10 @@ abstract class SingleUserField extends CustomField
 
         if (!isset($this->User)) {
             $UserInfo = $this->getOriginalObject();
-            $this->User = \Mekras\Jira\User::fromStdClass(
+            $this->User = User::fromStdClass(
+                $this->Issue->getJiraClient(),
                 $UserInfo,
-                $this->Issue,
-                $this->Issue->getJira()
+                $this->Issue
             );
         }
 
@@ -62,19 +64,19 @@ abstract class SingleUserField extends CustomField
     /**
      * @param $user
      *
-     * @return \Mekras\Jira\User
+     * @return User
      *
      * @throws \Mekras\Jira\REST\Exception
      * @throws \Mekras\Jira\Exception\CustomField
      */
-    protected function loadUser($user): \Mekras\Jira\User
+    protected function loadUser($user): User
     {
-        if ($user instanceof \Mekras\Jira\User) {
+        if ($user instanceof User) {
             return $user;
         }
 
         if (is_string($user)) {
-            $users = \Mekras\Jira\User::search($user, $this->Issue->getJira());
+            $users = User::search($this->Issue->getJiraClient(), $user);
 
             if (!empty($users)) {
                 return reset($users);
@@ -87,7 +89,7 @@ abstract class SingleUserField extends CustomField
     }
 
     /**
-     * @param \Mekras\Jira\User|string $user
+     * @param User|string $user
      *
      * @return $this
      *

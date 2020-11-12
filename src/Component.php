@@ -6,6 +6,8 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class Component
 {
     /** List of possible default assignee types. */
@@ -17,10 +19,10 @@ class Component
 
     const ASSIGNEE_TYPE_PROJECT_DEFAULT = 'PROJECT_DEFAULT'; // Use project default assignee.
 
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /** @var \stdClass with original data from REST API Response. */
@@ -34,11 +36,11 @@ class Component
     protected $update = [];
 
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $ComponentInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
+        Issue $Issue = null
     ): Component {
-        $Instance = new static($ComponentInfo->id, $Jira);
+        $Instance = new static($ComponentInfo->id, $jiraClient);
 
         $Instance->OriginalObject = $ComponentInfo;
         $Instance->Issue = $Issue;
@@ -61,49 +63,39 @@ class Component
      * requests JIRA only when you really need the data (e.g. the first time you call
      * $Component->getName()).
      *
-     * @param int                     $id     - ID of component you want to load
-     * @param \Mekras\Jira\REST\Client $Jira   - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of component you want to load.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null): Component
+    public static function get(Client $jiraClient, int $id): Component
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($id, $jiraClient);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
     /**
-     * Get all components associated with project
+     * Get all components associated with project.
      *
-     * @param int|string              $project - project key or ID
-     * @param \Mekras\Jira\REST\Client $Jira    - JIRA API client to use instead of global one.
-     *                                         Enables you to access several JIRA instances from
-     *                                         one piece of code, or use different users for
-     *                                         different actions.
+     * @param Client     $jiraClient JIRA API client to use.
+     * @param int|string $project    Project key or ID.
      *
      * @return static[]
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forProject($project, \Mekras\Jira\REST\Client $Jira = null): array
+    public static function forProject(Client $jiraClient, $project): array
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $components = $Jira->project()->listComponents($project);
+        $components = $jiraClient->project()->listComponents($project);
 
         $result = [];
         foreach ($components as $ComponentInfo) {
-            $Component = static::fromStdClass($ComponentInfo, null, $Jira);
-            $result[$Component->getID()] = $Component;
+            $component = static::fromStdClass($jiraClient, $ComponentInfo, null);
+            $result[$component->getID()] = $component;
         }
 
         return $result;
@@ -112,12 +104,9 @@ class Component
     /**
      * Search for component in a project by name instead of getting it directly by ID.
      *
-     * @param string|int              $project        - project key or ID
-     * @param string                  $component_name - name of component you want to get
-     * @param \Mekras\Jira\REST\Client $Jira           - JIRA API client to use instead of global
-     *                                                one. Enables you to access several JIRA
-     *                                                instances from one piece of code, or use
-     *                                                different users for different actions.
+     * @param Client     $jiraClient    JIRA API client to use.
+     * @param string|int $project       Project key or ID.
+     * @param string     $componentName Name of component you want to get.
      *
      * @return static
      *
@@ -126,52 +115,41 @@ class Component
      *                                         project.
      */
     public static function byName(
+        Client $jiraClient,
         $project,
-        string $component_name,
-        \Mekras\Jira\REST\Client $Jira = null
+        string $componentName
     ): Component {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $components = $Jira->project()->listComponents($project);
+        $components = $jiraClient->project()->listComponents($project);
 
         foreach ($components as $Component) {
-            if ($Component->name === $component_name) {
-                return static::fromStdClass($Component, null, $Jira);
+            if ($Component->name === $componentName) {
+                return static::fromStdClass($jiraClient, $Component, null);
             }
         }
 
         throw new \Mekras\Jira\Exception\Component(
-            "Component with name '$component_name' not found in project '$project'"
+            "Component with name '$componentName' not found in project '$project'"
         );
     }
 
     /**
-     * @param string|int              $project        - project key or ID
-     * @param string                  $component_name - name of component to check
-     * @param \Mekras\Jira\REST\Client $Jira           - JIRA API client to use instead of global
-     *                                                one. Enables you to access several JIRA
-     *                                                instances from one piece of code, or use
-     *                                                different users for different actions.
+     * @param Client     $jiraClient    JIRA API client to use.
+     * @param string|int $project       Project key or ID.
+     * @param string     $componentName Name of component to check.
      *
      * @return bool
      *
      * @throws \Mekras\Jira\REST\Exception
      */
     public static function exists(
+        Client $jiraClient,
         $project,
-        string $component_name,
-        \Mekras\Jira\REST\Client $Jira = null
+        string $componentName
     ): bool {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $components = $Jira->project()->listComponents($project);
+        $components = $jiraClient->project()->listComponents($project);
 
         foreach ($components as $Component) {
-            if ($Component->name === $component_name) {
+            if ($Component->name === $componentName) {
                 return true;
             }
         }
@@ -179,14 +157,10 @@ class Component
         return false;
     }
 
-    public function __construct(int $id = 0, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, Client $jiraClient)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
-        $this->Jira = $Jira;
+        $this->Jira = $jiraClient;
     }
 
     /**
@@ -291,7 +265,7 @@ class Component
         return $this;
     }
 
-    public function getLead(): ?\Mekras\Jira\User
+    public function getLead(): ?User
     {
         $key = 'lead';
 
@@ -300,7 +274,7 @@ class Component
 
             $UserInfo = $this->getOriginalObject()->lead ?? null;
             if (isset($UserInfo)) {
-                $this->cache[$key] = User::fromStdClass($UserInfo, null, $this->Jira);
+                $this->cache[$key] = User::fromStdClass($this->Jira, $UserInfo, null);
             }
         }
 
@@ -308,7 +282,7 @@ class Component
     }
 
     /**
-     * @param \Mekras\Jira\User|string $User - user name (e.g. testuser) or object.
+     * @param User|string $User - user name (e.g. testuser) or object.
      *
      * @return $this
      *
@@ -318,7 +292,7 @@ class Component
     {
         if (is_string($User)) {
             try {
-                $User = \Mekras\Jira\User::get($User, $this->Jira);
+                $User = User::get($this->Jira, $User);
             } catch (\Mekras\Jira\Exception $e) {
                 throw new \Mekras\Jira\Exception\Component(
                     "Can't change component's lead: user not found in Jira.", 0, $e
@@ -352,9 +326,9 @@ class Component
     }
 
     /**
-     * @return \Mekras\Jira\User|null
+     * @return User|null
      */
-    public function getDefaultAssignee(): ?\Mekras\Jira\User
+    public function getDefaultAssignee(): ?User
     {
         $key = 'assignee';
 
@@ -363,7 +337,7 @@ class Component
 
             $UserInfo = $this->getOriginalObject()->assignee ?? null;
             if (isset($UserInfo)) {
-                $this->cache[$key] = User::fromStdClass($UserInfo, null, $this->Jira);
+                $this->cache[$key] = User::fromStdClass($this->Jira, $UserInfo, null);
             }
         }
 

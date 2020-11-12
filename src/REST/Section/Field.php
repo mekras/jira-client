@@ -38,7 +38,7 @@ class Field extends Section
 
         $args = array_merge($args, $add_properties);
 
-        $this->jira->post('/field', $args);
+        $this->rawClient->post('/field', $args);
 
         // Drop fields list cache, we just have added a new field into the list
         $this->fields_list   = null;
@@ -64,7 +64,7 @@ class Field extends Section
         if (!isset($this->fields_list) || $reload_cache) {
             $this->fields_list = [];
 
-            $fields_list = $this->jira->get('/field');
+            $fields_list = $this->rawClient->get('/field');
             foreach ($fields_list as $field_info) {
                 $is_custom = $field_info->custom;
                 $field_id = $field_info->id;

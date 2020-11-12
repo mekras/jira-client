@@ -6,6 +6,9 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Component;
+use Mekras\Jira\REST\Client;
+
 /**
  * Class CreateRequest
  *
@@ -25,7 +28,7 @@ namespace Mekras\Jira\Issue;
  */
 class CreateRequest
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var array - list of fields to set in create request */
@@ -60,29 +63,24 @@ class CreateRequest
     /**
      * CreateRequest constructor.
      *
-     * @param string                        $project_key - key of project for new issue (e.g. EX,
-     *                                                   TEST, IOS)
-     * @param string|int                    $issue_type  - textual name or ID of type for issue you
-     *                                                   are going to create (e.g. 'Bug' or 34)
-     *
-     * @param \Mekras\Jira\REST\Client|null $Jira
+     * @param Client|null $Jira       Jira client to use.
+     * @param string      $projectKey Key of project for new issue (e.g. EX, TEST, IOS).
+     * @param string|int  $issueType  Textual name or ID of type for issue you are going to create
+     *                                (e.g. 'Bug' or 34).
      *
      * @throws \Mekras\Jira\Exception\Issue
      * @throws \Mekras\Jira\REST\Exception
      */
     public function __construct(
-        string $project_key,
-        $issue_type,
-        \Mekras\Jira\REST\Client $Jira = null
+        Client $Jira,
+        string $projectKey,
+        $issueType
     ) {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
         $this->Jira = $Jira;
 
-        $this->fields['project'] = ['key' => trim($project_key)];
+        $this->fields['project'] = ['key' => trim($projectKey)];
 
-        $TypeInfo = $this->loadIssueTypeInfo($issue_type);
+        $TypeInfo = $this->loadIssueTypeInfo($issueType);
 
         $this->fields['issuetype'] = ['id' => (string) $TypeInfo->id];
         $this->issue_type_name = $TypeInfo->name;
@@ -287,7 +285,7 @@ class CreateRequest
             $component_id = (int) $component;
 
             try {
-                $Component = new \Mekras\Jira\Component($component_id, $this->Jira);
+                $Component = new Component($component_id, $this->Jira);
                 $Component->getName(); // force API request
             } catch (\Mekras\Jira\REST\Exception $e) {
                 throw new \Mekras\Jira\Exception\Issue(
@@ -299,10 +297,10 @@ class CreateRequest
             $component = trim((string) $component);
 
             try {
-                $Component = \Mekras\Jira\Component::byName(
+                $Component = Component::byName(
+                    $this->Jira,
                     $this->getProject(),
-                    $component,
-                    $this->Jira
+                    $component
                 );
             } catch (\Mekras\Jira\Exception $e) {
                 throw new \Mekras\Jira\Exception\Issue(

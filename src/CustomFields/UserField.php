@@ -5,6 +5,8 @@
 
 namespace Mekras\Jira\CustomFields;
 
+use Mekras\Jira\User;
+
 /**
  * Class UserField
  *
@@ -12,10 +14,10 @@ namespace Mekras\Jira\CustomFields;
  */
 abstract class UserField extends CustomField
 {
-    /** @var \Mekras\Jira\User[] - users listed in field */
+    /** @var User[] - users listed in field */
     protected $value;
 
-    /** @var \Mekras\Jira\User[] - new field state to be set on ->save() call: [ <user 1 name> => true, <user 2 name> => true ] */
+    /** @var User[] - new field state to be set on ->save() call: [ <user 1 name> => true, <user 2 name> => true ] */
     protected $update;
 
     public function dropCache()
@@ -27,7 +29,7 @@ abstract class UserField extends CustomField
     }
 
     /**
-     * @return \Mekras\Jira\User[] - list of users listed in field
+     * @return User[] - list of users listed in field
      *
      * @throws \Mekras\Jira\REST\Exception
      */
@@ -39,10 +41,10 @@ abstract class UserField extends CustomField
             $Field = $this->getOriginalObject();
 
             foreach ((array) $Field as $UserData) {
-                $User = \Mekras\Jira\User::fromStdClass(
+                $User = User::fromStdClass(
+                    $this->Issue->getJiraClient(),
                     $UserData,
-                    $this->Issue,
-                    $this->Issue->getJira()
+                    $this->Issue
                 );
                 $this->value[$User->getName()] = $User;
             }
@@ -54,21 +56,21 @@ abstract class UserField extends CustomField
     /**
      * Search user in JIRA.
      *
-     * @param \Mekras\Jira\User|string $user
+     * @param User|string $user
      *
-     * @return \Mekras\Jira\User|null
+     * @return User|null
      *
      * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
      * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
-    protected function loadUser($user): \Mekras\Jira\User
+    protected function loadUser($user): User
     {
-        if ($user instanceof \Mekras\Jira\User) {
+        if ($user instanceof User) {
             return $user;
         }
 
         if (is_string($user)) {
-            $users = \Mekras\Jira\User::search($user, $this->Issue->getJira());
+            $users = User::search($this->Issue->getJiraClient(), $user);
 
             if (!empty($users)) {
                 return reset($users);
@@ -83,7 +85,7 @@ abstract class UserField extends CustomField
     /**
      * Get current list of users selected in a field value
      *
-     * @return \Mekras\Jira\User[]
+     * @return User[]
      *
      * @throws \Mekras\Jira\REST\Exception
      */
@@ -110,7 +112,7 @@ abstract class UserField extends CustomField
     /**
      * Set field value to exact list of users
      *
-     * @param \Mekras\Jira\User[]|string[] $value - list of names of selected users, or User
+     * @param User[]|string[] $value - list of names of selected users, or User
      *                                            objects, or emails JIRA can use to find users.
      *                                            You can mix the values.
      *
@@ -149,7 +151,7 @@ abstract class UserField extends CustomField
     /**
      * Add user to field value
      *
-     * @param \Mekras\Jira\User|string $user - username, name or e-mail address as string or User
+     * @param User|string $user - username, name or e-mail address as string or User
      *                                       object
      *
      * @return $this
@@ -175,7 +177,7 @@ abstract class UserField extends CustomField
     /**
      * Remove user from field value
      *
-     * @param \Mekras\Jira\User|string $user
+     * @param User|string $user
      *
      * @return $this
      *
@@ -204,7 +206,7 @@ abstract class UserField extends CustomField
     /**
      * Check if user is already selected in field
      *
-     * @param \Mekras\Jira\User|string $user
+     * @param User|string $user
      *
      * @return bool - true when user is listed in current field value
      *

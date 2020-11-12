@@ -21,7 +21,7 @@ class Attachment extends \Mekras\Jira\REST\Section\Section
      */
     public function get(int $id) : \stdClass
     {
-        return $this->jira->get("attachment/{$id}");
+        return $this->rawClient->get("attachment/{$id}");
     }
 
     /**
@@ -35,6 +35,6 @@ class Attachment extends \Mekras\Jira\REST\Section\Section
      */
     public function delete(int $id) : void
     {
-        $this->jira->delete("attachment/{$id}");
+        $this->rawClient->delete("attachment/{$id}");
     }
 }

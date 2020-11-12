@@ -48,7 +48,7 @@ class IssueLink extends Section
             $args['comment'] = $comment_arg;
         }
 
-        $this->jira->post('issueLink', $args);
+        $this->rawClient->post('issueLink', $args);
     }
 
     /**
@@ -64,7 +64,7 @@ class IssueLink extends Section
      */
     public function get(int $link_id) : \stdClass
     {
-        return $this->jira->get("issueLink/{$link_id}");
+        return $this->rawClient->get("issueLink/{$link_id}");
     }
 
     /**
@@ -78,7 +78,7 @@ class IssueLink extends Section
      */
     public function delete(int $link_id) : void
     {
-        $this->jira->delete("issueLink/{$link_id}");
+        $this->rawClient->delete("issueLink/{$link_id}");
     }
 
     /**
@@ -100,7 +100,7 @@ class IssueLink extends Section
      */
     public function listForIssue(string $issue_key, string $type = '', bool $case_sensitive = false) : array
     {
-        $IssueInfo = $this->jira->get("/issue/{$issue_key}", ['fields' => 'issuelinks']);
+        $IssueInfo = $this->rawClient->get("/issue/{$issue_key}", ['fields' => 'issuelinks']);
 
         $links = $IssueInfo->fields->issuelinks;
 

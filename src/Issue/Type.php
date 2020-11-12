@@ -1,14 +1,17 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+
 class Type
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -17,26 +20,24 @@ class Type
     /** @var int */
     protected $id;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     private $Issue;
 
     /**
      * Initialize Type object on data obtained from API
      *
-     * @param \stdClass $TypeInfo           - issue type information received from JIRA API.
-     * @param \Mekras\Jira\Issue $Issue      - when current Type object represents current type of some issue.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client    $jiraClient JIRA API client to use.
+     * @param \stdClass $TypeInfo   Issue type information received from JIRA API.
+     * @param Issue     $Issue      When current Type object represents current type of some issue.
      *
      * @return static
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $TypeInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
-    ) : Type {
-        $Instance = new static((int)$TypeInfo->id, $Jira);
+        Issue $Issue = null
+    ): Type {
+        $Instance = new static($jiraClient, (int) $TypeInfo->id);
 
         $Instance->OriginalObject = $TypeInfo;
         $Instance->Issue = $Issue;
@@ -49,33 +50,28 @@ class Type
      *
      * This method makes an API request immediately, while
      *     $Type = new Type(<id>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $Type->getName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $Type->getName()).
      *
-     * @param int $id                       - ID of type you want to get
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of type you want to get.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($jiraClient, $id);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
+        $this->Jira = $jiraClient;
         $this->id = $id;
-        $this->Jira = $Jira;
     }
 
     /**
@@ -92,42 +88,42 @@ class Type
         return $this->OriginalObject;
     }
 
-    public function getIssue() : ?\Mekras\Jira\Issue
+    public function getIssue(): ?Issue
     {
         return $this->Issue;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function getDescription() : string
+    public function getDescription(): string
     {
         return $this->getOriginalObject()->description ?? '';
     }
 
-    public function isSubtask() : bool
+    public function isSubtask(): bool
     {
         return $this->getOriginalObject()->subtask ?? false;
     }
 
-    public function getSelf() : string
+    public function getSelf(): string
     {
         return $this->getOriginalObject()->self;
     }
 
-    public function getIconUrl() : string
+    public function getIconUrl(): string
     {
         return $this->getOriginalObject()->iconUrl ?? '';
     }
 
-    public function getAvatarId() : string
+    public function getAvatarId(): string
     {
         return $this->getOriginalObject()->avatarId ?? '';
     }

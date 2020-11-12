@@ -5,9 +5,11 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class Group
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -19,27 +21,23 @@ class Group
     /** @var string */
     protected $self;    // https://<jira host>/rest/api/2/group?groupname=Developers"
 
-    /** @var \Mekras\Jira\User[] */
+    /** @var User[] */
     protected $users;
 
     public static function fromStdClass(
-        \stdClass $GroupInfo,
-        \Mekras\Jira\REST\Client $Jira = null
+        Client $jiraClient,
+        \stdClass $GroupInfo
     ): Group {
-        $Instance = new static($GroupInfo->name, $Jira);
+        $Instance = new static($GroupInfo->name, $jiraClient);
         $Instance->init($GroupInfo);
 
         return $Instance;
     }
 
-    public function __construct(string $name, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(string $name, Client $jiraClient)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->name = $name;
-        $this->Jira = $Jira;
+        $this->Jira = $jiraClient;
     }
 
     public function __toString()
@@ -73,7 +71,7 @@ class Group
 
             $this->users = [];
             foreach ($users as $UserInfo) {
-                $User = \Mekras\Jira\User::fromStdClass($UserInfo);
+                $User = User::fromStdClass($this->Jira, $UserInfo);
                 $this->users[$User->getName()] = $User;
             }
         }

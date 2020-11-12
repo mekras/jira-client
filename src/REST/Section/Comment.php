@@ -42,7 +42,7 @@ class Comment extends Section
             $args['expand'] = 'renderedBody';
         }
 
-        $result = $this->jira->get("issue/{$issue_key}/comment", $args);
+        $result = $this->rawClient->get("issue/{$issue_key}/comment", $args);
         return $result->comments;
     }
 
@@ -76,7 +76,7 @@ class Comment extends Section
             $args['expand'] = 'renderedBody';
         }
 
-        return $this->jira->get("issue/{$issue_key}/comment/{$id}", $args);
+        return $this->rawClient->get("issue/{$issue_key}/comment/{$id}", $args);
     }
 
     /**
@@ -110,7 +110,7 @@ class Comment extends Section
             $args['expand'] = 'renderedBody';
         }
 
-        return $this->jira->post("issue/{$issue_key}/comment", $args);
+        return $this->rawClient->post("issue/{$issue_key}/comment", $args);
     }
 
     /**
@@ -151,7 +151,7 @@ class Comment extends Section
             $args['expand'] = 'renderedBody';
         }
 
-        return $this->jira->put("issue/{$issue_key}/comment/{$id}", $args);
+        return $this->rawClient->put("issue/{$issue_key}/comment/{$id}", $args);
     }
 
     /**
@@ -166,6 +166,6 @@ class Comment extends Section
      */
     public function delete(string $issue_key, int $id) : void
     {
-        $this->jira->delete("issue/{$issue_key}/comment/{$id}");
+        $this->rawClient->delete("issue/{$issue_key}/comment/{$id}");
     }
 }

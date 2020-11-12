@@ -1,152 +1,174 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST;
 
+use Mekras\Jira\Cache\NullCache;
+use Mekras\Jira\REST\HTTP\CurlClient;
+use Mekras\Jira\REST\Section\Attachment;
+use Mekras\Jira\REST\Section\Component;
+use Mekras\Jira\REST\Section\Field;
+use Mekras\Jira\REST\Section\Group;
+use Mekras\Jira\REST\Section\Issue;
+use Mekras\Jira\REST\Section\IssueLink;
+use Mekras\Jira\REST\Section\IssueLinkType;
+use Mekras\Jira\REST\Section\IssueType;
+use Mekras\Jira\REST\Section\Jql;
+use Mekras\Jira\REST\Section\Priority;
+use Mekras\Jira\REST\Section\Project;
+use Mekras\Jira\REST\Section\Resolution;
 use Mekras\Jira\REST\Section\Section;
+use Mekras\Jira\REST\Section\SecurityLevel;
+use Mekras\Jira\REST\Section\Status;
+use Mekras\Jira\REST\Section\StatusCategory;
+use Mekras\Jira\REST\Section\User;
+use Mekras\Jira\REST\Section\Version;
 
+/**
+ * TODO ???
+ *
+ * @since x.x
+ */
 class Client extends Section
 {
     /**
-     * @var static|null
+     * Client constructor.
+     *
+     * @param string         $jiraUrl
+     * @param string         $apiPrefix
+     * @param ClientRaw|null $rawClient Instance of ClientRaw to use instead of default one.
      */
-    protected static $instance;
-
-    /**
-     * @return static
-     */
-    public static function instance() : Client
-    {
-        if (!isset(static::$instance)) {
-            static::$instance = new static;
+    public function __construct(
+        string $jiraUrl = 'https://jira.localhost/',
+        string $apiPrefix = '/rest/api/latest/',
+        ClientRaw $rawClient = null
+    ) {
+        if ($rawClient === null) {
+            $rawClient = new ClientRaw($jiraUrl, $apiPrefix, new CurlClient(), new NullCache());
         }
 
-        return static::$instance;
+        parent::__construct($rawClient);
     }
 
     /**
-     * Client constructor.
-     *
-     * @param string         $jira_url
-     * @param string         $api_prefix
-     * @param ClientRaw|null $Jira Instance of ClientRaw to use instead of default one.
+     * @return Attachment
      */
-    public function __construct(
-        $jira_url   = ClientRaw::DEFAULT_JIRA_URL,
-        $api_prefix = ClientRaw::DEFAULT_JIRA_API_PREFIX,
-        ClientRaw $Jira = null
-    ) {
-        if ($Jira === null) {
-            $Jira = ClientRaw::instance()
-                ->setJiraUrl($jira_url)
-                ->setApiPrefix($api_prefix);
-        }
+    public function attachment(): Attachment
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('attachment', Attachment::class);
+    }
 
-        parent::__construct($Jira);
+    /**
+     * @return Component
+     */
+    public function component(): Component
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('component', Component::class);
+    }
+
+    /**
+     * Get interface for operations with Jira issue fields
+     */
+    public function field(): Field
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('field', Field::class);
     }
 
     /**
      * @return ClientRaw
      */
-    public function getRawClient() : ClientRaw
+    public function getRawClient(): ClientRaw
     {
-        return $this->jira;
+        return $this->rawClient;
     }
 
     /**
-     * @param string $url
-     * @return static
+     * Get interface for operations with JIRA user groups
      */
-    public function setJiraUrl(string $url) : Client
-    {
-        $this->getRawClient()->setJiraUrl($url);
-        return $this;
-    }
-
-    /**
-     * @param string $login
-     * @param string $secret
-     * @return static
-     */
-    public function setAuth(string $login, string $secret) : Client
-    {
-        $this->getRawClient()->setAuth($login, $secret);
-        return $this;
-    }
-
-    /**
-     * @return \Mekras\Jira\REST\Section\Jql
-     */
-    public function jql() : \Mekras\Jira\REST\Section\Jql
+    public function group(): Group
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('jql', \Mekras\Jira\REST\Section\Jql::class);
+        return $this->getSection('group', Group::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\Attachment
+     * @return Issue
      */
-    public function attachment() : \Mekras\Jira\REST\Section\Attachment
+    public function issue(): Issue
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('attachment', \Mekras\Jira\REST\Section\Attachment::class);
+        return $this->getSection('issue', Issue::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\Project
+     * @return IssueLink
      */
-    public function project() : \Mekras\Jira\REST\Section\Project
+    public function issueLink(): IssueLink
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('project', \Mekras\Jira\REST\Section\Project::class);
+        return $this->getSection('issuelink', IssueLink::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\Component
+     * @return IssueLinkType
      */
-    public function component() : \Mekras\Jira\REST\Section\Component
+    public function issueLinkType(): IssueLinkType
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('component', \Mekras\Jira\REST\Section\Component::class);
+        return $this->getSection('issuelinktype', IssueLinkType::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\Issue
+     * @return IssueType
      */
-    public function issue() : \Mekras\Jira\REST\Section\Issue
+    public function issueType(): IssueType
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issue', \Mekras\Jira\REST\Section\Issue::class);
+        return $this->getSection('issuetype', IssueType::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\IssueType
+     * @return Jql
      */
-    public function issueType() : \Mekras\Jira\REST\Section\IssueType
+    public function jql(): Jql
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuetype', \Mekras\Jira\REST\Section\IssueType::class);
+        return $this->getSection('jql', Jql::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\IssueLink
+     * Get interface for operations with JIRA issue priorities
      */
-    public function issueLink() : \Mekras\Jira\REST\Section\IssueLink
+    public function priority(): Priority
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuelink', \Mekras\Jira\REST\Section\IssueLink::class);
+        return $this->getSection('priority', Priority::class);
     }
 
     /**
-     * @return \Mekras\Jira\REST\Section\IssueLinkType
+     * @return Project
      */
-    public function issueLinkType() : \Mekras\Jira\REST\Section\IssueLinkType
+    public function project(): Project
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuelinktype', \Mekras\Jira\REST\Section\IssueLinkType::class);
+        return $this->getSection('project', Project::class);
+    }
+
+    /**
+     * Get interface for operations with Jira resolutions
+     */
+    public function resolution(): Resolution
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('resolution', Resolution::class);
     }
 
     /**
@@ -154,23 +176,30 @@ class Client extends Section
      *
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/search-search
      *
-     * @param string    $jql
-     * @param string[]  $fields
-     * @param string[]  $expand
-     * @param int       $max_results
-     * @param int       $start_at
-     * @param bool      $validate_query
+     * @param string   $jql
+     * @param string[] $fields
+     * @param string[] $expand
+     * @param int      $max_results
+     * @param int      $start_at
+     * @param bool     $validate_query
      *
-     * @return \stdClass[] - API response, parsed as JSON. You need to use 'issues' key to get actual list of issues from response
+     * @return \stdClass[] - API response, parsed as JSON. You need to use 'issues' key to get
+     *                     actual list of issues from response
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function search(string $jql, $fields = [], $expand = [], int $max_results = 50, int $start_at = 0, $validate_query = true)
-    {
+    public function search(
+        string $jql,
+        $fields = [],
+        $expand = [],
+        int $max_results = 50,
+        int $start_at = 0,
+        $validate_query = true
+    ): array {
         $args = [
-            'jql'           => $jql,
-            'startAt'       => $start_at,
-            'maxResults'    => $max_results,
+            'jql' => $jql,
+            'startAt' => $start_at,
+            'maxResults' => $max_results,
             'validateQuery' => $validate_query,
         ];
 
@@ -181,84 +210,61 @@ class Client extends Section
             $args['expand'] = $expand;
         }
 
-        return $this->jira->post('/search', $args);
-    }
-
-    /**
-     * Get interface for operations with Jira issue fields
-     */
-    public function field() : \Mekras\Jira\REST\Section\Field
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('field', \Mekras\Jira\REST\Section\Field::class);
-    }
-
-    /**
-     * Get interface for operations with Jira resolutions
-     */
-    public function resolution() : \Mekras\Jira\REST\Section\Resolution
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('resolution', \Mekras\Jira\REST\Section\Resolution::class);
-    }
-
-    /**
-     * Get interface for operations with JIRA users
-     */
-    public function user() : \Mekras\Jira\REST\Section\User
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('user', \Mekras\Jira\REST\Section\User::class);
-    }
-
-    /**
-     * Get interface for operations with JIRA user groups
-     */
-    public function group() : \Mekras\Jira\REST\Section\Group
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('group', \Mekras\Jira\REST\Section\Group::class);
+        return $this->rawClient->post('/search', $args);
     }
 
     /**
      * Get interface for operations with JIRA issue security levels
      */
-    public function securityLevel() : \Mekras\Jira\REST\Section\SecurityLevel
+    public function securityLevel(): SecurityLevel
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('securitylevel', \Mekras\Jira\REST\Section\SecurityLevel::class);
+        return $this->getSection('securitylevel', SecurityLevel::class);
     }
 
     /**
-     * Get interface for operations with JIRA issue priorities
+     * @param string $login
+     * @param string $secret
+     *
+     * @return static
      */
-    public function priority() : \Mekras\Jira\REST\Section\Priority
+    public function setAuth(string $login, string $secret): Client
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('priority', \Mekras\Jira\REST\Section\Priority::class);
-    }
+        $this->getRawClient()->setAuth($login, $secret);
 
-    /**
-     * Get interface for operations with JIRA status categories
-     */
-    public function statusCategory() : \Mekras\Jira\REST\Section\StatusCategory
-    {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('statuscategory', \Mekras\Jira\REST\Section\StatusCategory::class);
+        return $this;
     }
 
     /**
      * Get interface for operations with JIRA statuses
      */
-    public function status() : \Mekras\Jira\REST\Section\Status
+    public function status(): Status
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('status', \Mekras\Jira\REST\Section\Status::class);
+        return $this->getSection('status', Status::class);
     }
 
-    public function version() : \Mekras\Jira\REST\Section\Version
+    /**
+     * Get interface for operations with JIRA status categories
+     */
+    public function statusCategory(): StatusCategory
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('version', \Mekras\Jira\REST\Section\Version::class);
+        return $this->getSection('statuscategory', StatusCategory::class);
+    }
+
+    /**
+     * Get interface for operations with JIRA users
+     */
+    public function user(): User
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('user', User::class);
+    }
+
+    public function version(): Version
+    {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->getSection('version', Version::class);
     }
 }

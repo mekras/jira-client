@@ -6,15 +6,19 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+use Mekras\Jira\User;
+
 class File
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
     protected $OriginalObject;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /** @var int $id */
@@ -24,25 +28,21 @@ class File
     protected $cache = [];
 
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $AttachmentInfo,
-        \Mekras\Jira\Issue $Issue,
-        \Mekras\Jira\REST\Client $Jira = null
+        Issue $Issue
     ) : File {
-        $Instance = new static((int)$AttachmentInfo->id, $Issue, $Jira);
+        $Instance = new static($jiraClient, (int) $AttachmentInfo->id, $Issue);
         $Instance->OriginalObject = $AttachmentInfo;
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, int $id, Issue $Issue = null)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
         $this->Issue = $Issue;
-        $this->Jira = $Jira;
+        $this->Jira = $jiraClient;
     }
 
     protected function getOriginalObject() : \stdClass
@@ -102,13 +102,13 @@ class File
         return $this->cache[$key];
     }
 
-    public function getAuthor() : \Mekras\Jira\User
+    public function getAuthor() : User
     {
         $key = 'Author';
 
         if (!isset($this->cache[$key])) {
             $UserInfo = $this->getOriginalObject()->author;
-            $this->cache[$key] = \Mekras\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
+            $this->cache[$key] = User::fromStdClass($this->Jira, $UserInfo, $this->Issue);
         }
 
         return $this->cache[$key];

@@ -1,14 +1,17 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+
 class Status
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -20,25 +23,25 @@ class Status
     /** @var StatusCategory */
     protected $StatusCategory;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /**
      * Initialize Status object on data loaded from API
      *
-     * @param \stdClass $StatusInfo         - status information received from JIRA API.
-     * @param \Mekras\Jira\Issue $Issue      - when current Status object represents current status of some issue.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient    JIRA API client to use.
+     * @param \stdClass $StatusInfo Status information received from JIRA API.
+     * @param Issue $Issue          When current Status object represents current status of some
+     *                              issue.
+     *
      * @return static
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $StatusInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
-    ) : Status {
-        $Instance = new static((int)$StatusInfo->id, $Jira);
+        Issue $Issue = null
+    ): Status {
+        $Instance = new static($jiraClient, (int) $StatusInfo->id);
 
         $Instance->OriginalObject = $StatusInfo;
         $Instance->Issue = $Issue;
@@ -51,36 +54,27 @@ class Status
      *
      * This method makes an API request immediately, while
      *     $Status = new Status(<id>, <Client);
-     * requests JIRA only when you really need the data (e.g. the first time you call $Status->getName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $Status->getName()).
      *
-     * @param int $id - ID of status to get from API
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of status to get from API.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
+        $StatusInfo = $jiraClient->status()->get($id);
 
-        $StatusInfo = $Jira->status()->get($id);
-
-        return static::fromStdClass($StatusInfo, null, $Jira);
+        return static::fromStdClass($jiraClient, $StatusInfo, null);
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
+        $this->Jira = $jiraClient;
         $this->id = $id;
-        $this->Jira = $Jira;
     }
 
     protected function getOriginalObject()
@@ -92,41 +86,44 @@ class Status
         return $this->OriginalObject;
     }
 
-    public function getIssue() : ?\Mekras\Jira\Issue
+    public function getIssue(): ?Issue
     {
         return $this->Issue;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function getDescription() : string
+    public function getDescription(): string
     {
         return $this->getOriginalObject()->description ?? '';
     }
 
-    public function getStatusCategory() : StatusCategory
+    public function getStatusCategory(): StatusCategory
     {
         if (!isset($this->StatusCategory)) {
-            $this->StatusCategory = StatusCategory::fromStdClass($this->getOriginalObject()->statusCategory, $this->Jira);
+            $this->StatusCategory = StatusCategory::fromStdClass(
+                $this->Jira,
+                $this->getOriginalObject()->statusCategory
+            );
         }
 
         return $this->StatusCategory;
     }
 
-    public function getIconUrl() : string
+    public function getIconUrl(): string
     {
         return $this->getOriginalObject()->iconUrl;
     }
 
-    public function getSelf() : string
+    public function getSelf(): string
     {
         return $this->getOriginalObject()->self;
     }

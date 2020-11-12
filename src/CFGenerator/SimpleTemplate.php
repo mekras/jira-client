@@ -5,9 +5,11 @@
 
 namespace Mekras\Jira\CFGenerator;
 
+use Mekras\Jira\REST\Client;
+
 class SimpleTemplate implements ITemplate
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var string */
@@ -17,14 +19,10 @@ class SimpleTemplate implements ITemplate
     /** @var string */
     protected $template_path;
 
-    public function __construct(string $name, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(string $name, Client $jiraClient)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->name = $name;
-        $this->Jira = $Jira;
+        $this->Jira = $jiraClient;
     }
 
     protected function quoteOptionValue(string $value) : string

@@ -5,9 +5,11 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class Security
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -16,15 +18,15 @@ class Security
     /** @var int */
     protected $id;            // 10000
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $SecurityLevel,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
+        Issue $Issue = null
     ): Security {
-        $Instance = new static((int) $SecurityLevel->id, $Jira);
+        $Instance = new static((int) $SecurityLevel->id, $jiraClient);
 
         $Instance->OriginalObject = $SecurityLevel;
         $Instance->Issue = $Issue;
@@ -32,20 +34,16 @@ class Security
         return $Instance;
     }
 
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($id, $jiraClient);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, Client $Jira)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
         $this->Jira = $Jira;
     }
@@ -59,7 +57,7 @@ class Security
         return $this->OriginalObject;
     }
 
-    public function getIssue(): ?\Mekras\Jira\Issue
+    public function getIssue(): ?Issue
     {
         return $this->Issue;
     }

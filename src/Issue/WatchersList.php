@@ -1,39 +1,48 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
-class WatchersList extends \Mekras\Jira\UsersList
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+use Mekras\Jira\User;
+use Mekras\Jira\UsersList;
+
+class WatchersList extends UsersList
 {
     protected $initialized = false;
+
     protected $loaded = false;
 
     /**
-     * @param array $users_info
-     * @param \Mekras\Jira\Issue $Issue
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client     $jiraClient JIRA API client to use.
+     * @param array      $usersInfo
+     * @param Issue|null $Issue
      *
      * @return static
      *
      * @throws \Mekras\Jira\Exception
      */
-    public static function fromStdClass(array $users_info, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null) : \Mekras\Jira\UsersList
-    {
+    public static function fromStdClass(
+        Client $jiraClient,
+        array $usersInfo,
+        Issue $Issue = null
+    ): UsersList {
         if (!isset($Issue)) {
-            throw new \Mekras\Jira\Exception("Watchers list requires parent Issue object to work properly");
+            throw new \Mekras\Jira\Exception(
+                "Watchers list requires parent Issue object to work properly"
+            );
         }
 
         $users = [];
-        foreach ($users_info as $UserInfo) {
-            $users[] = \Mekras\Jira\User::fromStdClass($UserInfo, $Issue, $Jira);
+        foreach ($usersInfo as $UserInfo) {
+            $users[] = User::fromStdClass($jiraClient, $UserInfo, $Issue);
         }
 
-        $Instance = new static($users, $Jira);
+        $Instance = new static($users, $jiraClient);
         $Instance->Issue = $Issue;
         $Instance->initialized = true;
 
@@ -41,10 +50,8 @@ class WatchersList extends \Mekras\Jira\UsersList
     }
 
     /**
-     * @param string $issue_key
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string $issueKey
+     * @param Client $jiraClient JIRA API client to use.
      *
      * @return WatchersList
      *
@@ -52,9 +59,10 @@ class WatchersList extends \Mekras\Jira\UsersList
      * @throws \Mekras\Jira\Exception\Issue
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira = null) : WatchersList
+    public static function forIssue(Client $jiraClient, string $issueKey): WatchersList
     {
-        $Issue = new \Mekras\Jira\Issue($issue_key, $Jira);
+        $Issue = new Issue($jiraClient, $issueKey);
+
         return $Issue->getWatchers();
     }
 
@@ -63,7 +71,7 @@ class WatchersList extends \Mekras\Jira\UsersList
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function clearList() : \Mekras\Jira\UsersList
+    public function clearList(): UsersList
     {
         if ($this->initialized) {
             foreach ($this->getUsers() as $User) {
@@ -72,20 +80,21 @@ class WatchersList extends \Mekras\Jira\UsersList
         }
 
         $this->loaded = false;
-        return \Mekras\Jira\UsersList::clearList();
+
+        return UsersList::clearList();
     }
 
     /**
-     * @return \Mekras\Jira\User[]
+     * @return User[]
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getUsers() : array
+    public function getUsers(): array
     {
         if (!$this->loaded) {
             $watchers = $this->Jira->issue()->watchers()->list($this->Issue->getKey());
 
             foreach ($watchers as $UserInfo) {
-                $Watcher = \Mekras\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
+                $Watcher = User::fromStdClass($this->Jira, $UserInfo, $this->Issue);
                 parent::addUsers($Watcher);
             }
 
@@ -104,25 +113,26 @@ class WatchersList extends \Mekras\Jira\UsersList
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function addUsersByName(string ...$names) : WatchersList
+    public function addUsersByName(string ...$names): WatchersList
     {
         $users = [];
         foreach ($names as $name) {
-            $users[] = new \Mekras\Jira\User($name, $this->Jira);
+            $users[] = new User($this->Jira, $name);
         }
+
         return $this->addUsers(...$users);
     }
 
     /**
      * Add user to list of issue's watchers
      *
-     * @param \Mekras\Jira\User ...$users
+     * @param User ...$users
      *
      * @return $this
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function addUsers(\Mekras\Jira\User ...$users) : \Mekras\Jira\UsersList
+    public function addUsers(User ...$users): UsersList
     {
         if ($this->initialized) {
             foreach ($users as $User) {
@@ -130,7 +140,7 @@ class WatchersList extends \Mekras\Jira\UsersList
             }
         }
 
-        return \Mekras\Jira\UsersList::addUsers(...$users);
+        return UsersList::addUsers(...$users);
     }
 
     /**
@@ -142,26 +152,26 @@ class WatchersList extends \Mekras\Jira\UsersList
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function removeUsersByName(string ...$names) : WatchersList
+    public function removeUsersByName(string ...$names): WatchersList
     {
         $users = [];
         foreach ($names as $name) {
-            $users[] = new \Mekras\Jira\User($name, $this->Jira);
-        }
-        ;
+            $users[] = new User($this->Jira, $name);
+        };
+
         return $this->removeUsers($users);
     }
 
     /**
      * Remove user from list of issue's watchers
      *
-     * @param \Mekras\Jira\User ...$users
+     * @param User ...$users
      *
      * @return $this
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function removeUsers(\Mekras\Jira\User ...$users) : \Mekras\Jira\UsersList
+    public function removeUsers(User ...$users): UsersList
     {
         if ($this->initialized) {
             foreach ($users as $User) {
@@ -169,6 +179,6 @@ class WatchersList extends \Mekras\Jira\UsersList
             }
         }
 
-        return \Mekras\Jira\UsersList::removeUsers(...$users);
+        return UsersList::removeUsers(...$users);
     }
 }

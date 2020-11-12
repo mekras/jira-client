@@ -5,6 +5,8 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class User
 {
     public const AVATAR_L = '48x48';
@@ -15,7 +17,7 @@ class User
 
     public const AVATAR_XS = '16x16';
 
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -30,30 +32,26 @@ class User
     /** @var \Mekras\Jira\Group[] */
     protected $groups;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /**
      * Initialize User object on data from API
      *
-     * @param \stdClass                $UserInfo - user information received from JIRA API.
-     * @param \Mekras\Jira\Issue       $Issue    - when current user somehow related to an issue:
-     *                                           e.g. is Assignee or is listed in some custom
-     *                                           field.
-     * @param \Mekras\Jira\REST\Client $Jira     - JIRA API client to use instead of global one.
-     *                                           Enables you to access several JIRA instances from
-     *                                           one piece of code, or use different users for
-     *                                           different actions.
+     * @param Client    $jiraClient JIRA API client to use.
+     * @param \stdClass $UserInfo   User information received from JIRA API.
+     * @param Issue     $Issue      When current user somehow related to an issue: e. g. is
+     *                              Assignee or is listed in some custom field.
      *
      * @return static
      *
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $UserInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
+        Issue $Issue = null
     ): User {
-        $Instance = new static($UserInfo->name ?? $UserInfo->accountId, $Jira);
+        $Instance = new static($jiraClient, $UserInfo->name ?? $UserInfo->accountId);
         $Instance->Issue = $Issue;
         $Instance->OriginalObject = $UserInfo;
 
@@ -68,17 +66,16 @@ class User
      * requests JIRA only when you really need the data (e.g. the first time you call
      * $User->getDisplayName()).
      *
-     * @param string                   $user_name - name of user in JIRA. Don't mess with display
-     *                                            name you see in UI!
-     * @param \Mekras\Jira\REST\Client $Jira
+     * @param Client $jiraClient
+     * @param string $userName Name of user in JIRA. Don't mess with display name you see in UI!
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(string $user_name, \Mekras\Jira\REST\Client $Jira = null): User
+    public static function get(Client $jiraClient, string $userName): User
     {
-        $Instance = new static($user_name, $Jira);
+        $Instance = new static($jiraClient, $userName);
         $Instance->getOriginalObject();
 
         return $Instance;
@@ -89,27 +86,20 @@ class User
      * This gives you a result similar to the one you get in 'Uses' administration page of JIRA Web
      * UI.
      *
-     * @param string                   $pattern - user login, display name or email
-     * @param \Mekras\Jira\REST\Client $Jira    - JIRA API client to use instead of global one.
-     *                                          Enables you to access several JIRA instances from
-     *                                          one piece of code, or use different users for
-     *                                          different actions.
+     * @param string $pattern    User login, display name or email.
+     * @param Client $jiraClient JIRA API client to use.
      *
      * @return static[]
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function search(string $pattern, \Mekras\Jira\REST\Client $Jira = null): array
+    public static function search(Client $jiraClient, string $pattern): array
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $users = $Jira->user()->search($pattern);
+        $users = $jiraClient->user()->search($pattern);
 
         $result = [];
         foreach ($users as $UserInfo) {
-            $User = static::fromStdClass($UserInfo, null, $Jira);
+            $User = static::fromStdClass($jiraClient, $UserInfo, null);
             $result[$User->getName()] = $User;
         }
 
@@ -119,28 +109,21 @@ class User
     /**
      * Search for user by exact match in email address
      *
-     * @param string                   $email - user email
-     * @param \Mekras\Jira\REST\Client $Jira  - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param string $email      User email.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
      * @throws \Mekras\Jira\Exception\User - when no user with given email found in JIRA
      */
-    public static function byEmail(string $email, \Mekras\Jira\REST\Client $Jira = null): User
+    public static function byEmail(Client $jiraClient, string $email): User
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $users = $Jira->user()->search($email);
+        $users = $jiraClient->user()->search($email);
 
         foreach ($users as $UserInfo) {
             if ($UserInfo->emailAddress === $email) {
-                return static::fromStdClass($UserInfo, null, $Jira);
+                return static::fromStdClass($jiraClient, $UserInfo, null);
             }
         }
 
@@ -152,21 +135,13 @@ class User
     /**
      * User constructor.
      *
-     * @param string                   $name  - name of user in JIRA. Don't mess with display name
-     *                                        you see in UI!
-     * @param \Mekras\Jira\REST\Client $Jira  - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param string $name       Name of user in JIRA. Don't mess with display name you see in UI!
      */
-    public function __construct(string $name, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, string $name)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
+        $this->Jira = $jiraClient;
         $this->name = $name;
-        $this->Jira = $Jira;
     }
 
     /**
@@ -288,7 +263,7 @@ class User
             $this->groups = [];
             if (isset($UserInfo->groups)) {
                 foreach ($UserInfo->groups->items as $GroupInfo) {
-                    $Group = Group::fromStdClass($GroupInfo, $this->Jira);
+                    $Group = Group::fromStdClass($this->Jira, $GroupInfo);
                     $this->groups[$Group->getName()] = $Group;
                 }
             }

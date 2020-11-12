@@ -32,7 +32,7 @@ class IssueLinkType extends Section
     public function list(bool $reload_cache = false) : array
     {
         if (!$this->all_cached || $reload_cache) {
-            $response = $this->jira->get('issueLinkType');
+            $response = $this->rawClient->get('issueLinkType');
 
             foreach ($response->issueLinkTypes as $LinkTypeInfo) {
                 $this->cacheLinkType($LinkTypeInfo);
@@ -68,7 +68,7 @@ class IssueLinkType extends Section
             'outward'   => $outward,
         ];
 
-        $LinkTypeInfo = $this->jira->post('issueLinkType', $args);
+        $LinkTypeInfo = $this->rawClient->post('issueLinkType', $args);
         $this->cacheLinkType($LinkTypeInfo);
 
         return $LinkTypeInfo;
@@ -90,7 +90,7 @@ class IssueLinkType extends Section
     {
         $LinkTypeInfo = $this->link_types_list[$link_type_id] ?? null;
         if (!isset($LinkTypeInfo) || $reload_cache) {
-            $LinkTypeInfo = $this->jira->get("issueLinkType/{$link_type_id}");
+            $LinkTypeInfo = $this->rawClient->get("issueLinkType/{$link_type_id}");
             $this->cacheLinkType($LinkTypeInfo);
         }
 
@@ -133,10 +133,10 @@ class IssueLinkType extends Section
             $args['outward'] = $outward;
         }
 
-        $LinkTypeInfo = $this->jira->put("issueLinkType/{$link_type_id}", $args);
+        $LinkTypeInfo = $this->rawClient->put("issueLinkType/{$link_type_id}", $args);
         $this->cacheLinkType($LinkTypeInfo);
 
-        return $this->jira->put("issueLinkType/{$link_type_id}", $args);
+        return $this->rawClient->put("issueLinkType/{$link_type_id}", $args);
     }
 
     /**
@@ -150,6 +150,6 @@ class IssueLinkType extends Section
      */
     public function delete(int $link_id) : void
     {
-        $this->jira->delete("issueLinkType/{$link_id}");
+        $this->rawClient->delete("issueLinkType/{$link_id}");
     }
 }

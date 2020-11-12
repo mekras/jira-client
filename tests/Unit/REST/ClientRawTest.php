@@ -2,21 +2,42 @@
 
 declare(strict_types=1);
 
-namespace Mekras\Jira\Tests\REST;
+namespace Mekras\Jira\Tests\Unit\REST;
 
 use Mekras\Jira\REST\ClientRaw;
 use Mekras\Jira\REST\HTTP\HttpClient;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\Test\TestLogger;
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * Tests for ClientRaw
+ * Tests for ClientRaw.
  *
  * @covers \Mekras\Jira\REST\ClientRaw
  */
 class ClientRawTest extends TestCase
 {
+    /**
+     * @var CacheInterface&MockObject
+     */
+    private $cache;
+
+    /**
+     * @var HttpClient&MockObject
+     */
+    private $httpClient;
+
+    /**
+     * @var TestLogger
+     */
+    private $logger;
+
+    /**
+     * @var ClientRaw
+     */
+    private $rawClient;
+
     /**
      * Tests that specified HTTP requests are not cached.
      *
@@ -24,28 +45,14 @@ class ClientRawTest extends TestCase
      */
     public function testNonCacheableRequest(): void
     {
-        $httpClient = $this->createMock(HttpClient::class);
-        $cache = $this->createMock(CacheInterface::class);
-        $logger = new TestLogger();
-
         // To store used cache key.
         $cacheKey = null;
 
-        $client = new ClientRaw(
-            ClientRaw::DEFAULT_JIRA_URL,
-            ClientRaw::DEFAULT_JIRA_API_PREFIX,
-            $logger
-        );
+        $this->cache->expects(self::never())->method('get');
+        $this->cache->expects(self::never())->method('has');
+        $this->cache->expects(self::never())->method('set');
 
-        $client
-            ->setCache($cache)
-            ->setHttpClient($httpClient);
-
-        $cache->expects(self::never())->method('get');
-        $cache->expects(self::never())->method('has');
-        $cache->expects(self::never())->method('set');
-
-        $httpClient
+        $this->httpClient
             ->expects(self::once())
             ->method('request')
             ->with(
@@ -67,7 +74,7 @@ class ClientRawTest extends TestCase
         $expected = new \stdClass();
         $expected->foo = 'bar';
 
-        self::assertEquals($expected, $client->post('/foo'));
+        self::assertEquals($expected, $this->rawClient->post('/foo'));
 
         self::assertEquals(
             [
@@ -82,7 +89,7 @@ class ClientRawTest extends TestCase
                     'context' => [],
                 ],
             ],
-            $logger->records
+            $this->logger->records
         );
     }
 
@@ -93,29 +100,16 @@ class ClientRawTest extends TestCase
      */
     public function testRequestCaching(): void
     {
-        $httpClient = $this->createMock(HttpClient::class);
-        $cache = $this->createMock(CacheInterface::class);
-        $logger = new TestLogger();
-
         // To store used cache key.
         $cacheKey = null;
 
-        $client = new ClientRaw(
-            ClientRaw::DEFAULT_JIRA_URL,
-            ClientRaw::DEFAULT_JIRA_API_PREFIX,
-            $logger
-        );
-        $client
-            ->setCache($cache)
-            ->setHttpClient($httpClient);
-
-        $cache
+        $this->cache
             ->expects(self::at(0))
             ->method('has')
             ->with(self::anything())
             ->willReturn(false);
 
-        $httpClient
+        $this->httpClient
             ->expects(self::once())
             ->method('request')
             ->with(
@@ -134,7 +128,7 @@ class ClientRawTest extends TestCase
                 }
             );
 
-        $cache
+        $this->cache
             ->expects(self::once())
             ->method('set')
             ->with(
@@ -154,7 +148,7 @@ class ClientRawTest extends TestCase
                 )
             );
 
-        $cache
+        $this->cache
             ->expects(self::at(2))
             ->method('has')
             ->with(
@@ -168,7 +162,7 @@ class ClientRawTest extends TestCase
             )
             ->willReturn(true);
 
-        $cache
+        $this->cache
             ->expects(self::once())
             ->method('get')
             ->with(
@@ -191,8 +185,8 @@ class ClientRawTest extends TestCase
         $expected = new \stdClass();
         $expected->foo = 'bar';
 
-        self::assertEquals($expected, $client->get('/foo'));
-        self::assertEquals($expected, $client->get('/foo'));
+        self::assertEquals($expected, $this->rawClient->get('/foo'));
+        self::assertEquals($expected, $this->rawClient->get('/foo'));
 
         self::assertEquals(
             [
@@ -217,7 +211,29 @@ class ClientRawTest extends TestCase
                     'context' => [],
                 ],
             ],
-            $logger->records
+            $this->logger->records
+        );
+    }
+
+    /**
+     * Prepare test environment.
+     *
+     * @throws \Throwable
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->httpClient = $this->createMock(HttpClient::class);
+        $this->cache = $this->createMock(CacheInterface::class);
+        $this->logger = new TestLogger();
+
+        $this->rawClient = new ClientRaw(
+            'https://jira.localhost/',
+            '/rest/api/latest/',
+            $this->httpClient,
+            $this->cache,
+            $this->logger
         );
     }
 }

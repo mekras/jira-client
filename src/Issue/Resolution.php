@@ -1,14 +1,17 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+
 class Resolution
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -17,26 +20,25 @@ class Resolution
     /** @var int */
     protected $id;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /**
      * Initialize Resolution object on data obtained from API
      *
-     * @param \stdClass $ResolutionInfo     - issue resolution information received from JIRA API.
-     * @param \Mekras\Jira\Issue $Issue      - when current Resolution object represents current resolution of some issue.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param \stdClass $ResolutionInfo Issue resolution information received from JIRA API.
+     * @param Issue     $Issue          When current Resolution object represents current
+     *                                  resolution of some issue.
+     * @param Client    $jiraClient     JIRA API client to use.
      *
      * @return static
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $ResolutionInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
-    ) : Resolution {
-        $Instance = new static((int)$ResolutionInfo->id, $Jira);
+        Issue $Issue = null
+    ): Resolution {
+        $Instance = new static($jiraClient, (int) $ResolutionInfo->id);
 
         $Instance->OriginalObject = $ResolutionInfo;
         $Instance->Issue = $Issue;
@@ -49,33 +51,28 @@ class Resolution
      *
      * This method makes an API request immediately, while
      *     $Resolution = new Resolution(<id>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $Resolution->getName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $Resolution->getName()).
      *
-     * @param int $id                       - ID of resolution you want to get
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of resolution you want to get.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($jiraClient, $id);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
+        $this->Jira = $jiraClient;
         $this->id = $id;
-        $this->Jira = $Jira;
     }
 
     protected function getOriginalObject()
@@ -87,27 +84,27 @@ class Resolution
         return $this->OriginalObject;
     }
 
-    public function getIssue() : ?\Mekras\Jira\Issue
+    public function getIssue(): ?Issue
     {
         return $this->Issue;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function getDescription() : string
+    public function getDescription(): string
     {
         return $this->getOriginalObject()->description ?? '';
     }
 
-    public function getSelf() : string
+    public function getSelf(): string
     {
         return $this->getOriginalObject()->self;
     }

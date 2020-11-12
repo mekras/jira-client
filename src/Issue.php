@@ -5,57 +5,85 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\CustomFields\CustomField;
+use Mekras\Jira\Issue\Priority;
+use Mekras\Jira\Issue\Resolution;
+use Mekras\Jira\Issue\Status;
 use Mekras\Jira\REST\Client;
 
 /**
- * Class Issue
+ * Issue.
  *
- * Represents particular Jira issue
- * with plenty of wrappers to interact with common and custom Jira fields.
+ * Represents particular Jira issue with plenty of wrappers to interact with common and custom Jira
+ * fields.
  */
 class Issue
 {
-    /** @var \stdClass - cached issue information from Jira: REST API response 'as is' */
-    protected $BaseIssue;
-
-    /** @var Client */
-    protected $Jira;
-
-    /** @var array - cached issue data. Various objects of various types: 'History' issue info, 'Assignee' field, etc.
-     *               Everything, which is not classified as custom fields. */
-    protected $cached_data = [];
-
-    /** @var \Mekras\Jira\CustomFields\CustomField[] - cached objects for issue's custom fields */
-    protected $custom_fields = [];
-
-    /** @var string[] - list of expands for issue. REST API request with 'expand' parameter makes API to add additional
-     *                  information about issue to response, like issue history, rendered fields
-     *                  and so on. */
-    protected $expands = [];
-
-    /** @var string */
-    protected $key;
-
-    /** @var string */
-    protected $project;
+    /**
+     * Cached issue information from Jira: REST API response 'as is'.
+     *
+     * @var \stdClass
+     */
+    private $baseIssue;
 
     /**
-     * @var array - list of field updates to be sent to JIRA API on ->save() call
+     * Cached issue data.
+     *
+     * Various objects of various types: 'History' issue info, 'Assignee' field, etc.
+     * Everything, which is not classified as custom fields.
+     *
+     * @var array<mixed>
+     */
+    private $cachedData = [];
+
+    /**
+     * Cached objects for issue's custom fields.
+     *
+     * @var CustomField[]
+     */
+    private $customFields = [];
+
+    /**
+     * List of expands for issue.
+     *
+     * REST API request with 'expand' parameter makes API to add additional information about issue
+     * to response, like issue history, rendered fields and so on.
+     *
+     * @var string[]
+     */
+    private $expands = [];
+
+    /**
+     * @var Client
+     */
+    private $jiraClient;
+
+    /**
+     * @var string
+     */
+    private $key;
+
+    /**
+     * @var string
+     */
+    private $project;
+
+    /**
+     * List of field updates to be sent to JIRA API on ->save() call.
+     *
+     * @var array
      * @see \Mekras\Jira\REST\Section\Issue::edit for more info on structure of data stored here
      *      ($update parameter)
      */
-    protected $update_fields = [];
+    private $updateFields = [];
 
     /**
      * Load info for issue identified by key from Jira using REST API
      *
-     * @param string   $issue_key
-     * @param string[] $fields                - request only fields listed
-     * @param string[] $expand                - provide additional info for issue
-     * @param Client   $Jira                  - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param Client   $jiraClient JIRA API client to use.
+     * @param string   $issueKey
+     * @param string[] $fields     Request only fields listed.
+     * @param string[] $expand     Provide additional info for issue.
      *
      * @return static
      *
@@ -65,32 +93,23 @@ class Issue
      *
      */
     public static function byKey(
-        string $issue_key,
+        Client $jiraClient,
+        string $issueKey,
         array $fields = [],
-        array $expand = [],
-        Client $Jira = null
+        array $expand = []
     ): Issue {
-        if (!isset($Jira)) {
-            $Jira = Client::instance();
-        }
+        $IssueInfo = $jiraClient->issue()->get($issueKey, $fields, $expand);
 
-        $IssueInfo = $Jira->issue()->get($issue_key, $fields, $expand);
-
-        $Issue = static::fromStdClass($IssueInfo, $fields, $expand, $Jira);
-
-        return $Issue;
+        return static::fromStdClass($jiraClient, $IssueInfo, $fields, $expand);
     }
 
     /**
      * Load list of issues by their keys from Jira REST API
      *
-     * @param string[] $issue_keys                - list of issue keys for issues load
-     * @param string[] $fields                    - load only listed field values
-     * @param string[] $expand                    - provide additional info for each issue
-     * @param Client   $Jira                      - JIRA API client to use instead of global one.
-     *                                            Enables you to access several JIRA instances from
-     *                                            one piece of code, or use different users for
-     *                                            different actions.
+     * @param Client   $jiraClient JIRA API client to use.
+     * @param string[] $issueKeys  List of issue keys for issues load.
+     * @param string[] $fields     Load only listed field values.
+     * @param string[] $expand     Provide additional info for each issue.
      *
      * @return static[]
      *
@@ -100,45 +119,43 @@ class Issue
      *
      */
     public static function byKeys(
-        array $issue_keys,
+        Client $jiraClient,
+        array $issueKeys,
         array $fields = [],
-        array $expand = [],
-        Client $Jira = null
+        array $expand = []
     ): array {
-        if (empty($issue_keys)) {
+        if (empty($issueKeys)) {
             return [];
         }
 
-        $query = "key IN (" . implode(',', $issue_keys) . ")";
+        $query = "key IN (" . implode(',', $issueKeys) . ")";
 
-        return static::search($query, $fields, $expand, 1000, 0, $Jira);
+        return static::search($jiraClient, $query, $fields, $expand, 1000, 0);
     }
 
     /**
      * Perform brief check of given \stdClass object for correctness and initialize
      * \Mekras\Jira\Issue object on it.
      *
+     * @param Client    $jiraClient JIRA API client to use.
      * @param \stdClass $BaseIssue
-     * @param string[]  $fields               - <BaseIssue> object was loaded only with this fields
-     * @param string[]  $expand               - <BaseIssue> object was loaded with this info
-     *                                        expanded
-     * @param Client    $Jira                 - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param string[]  $fields     <BaseIssue> object was loaded only with this fields.
+     * @param string[]  $expand     <BaseIssue> object was loaded with this info expanded.
      *
      * @return static
      *
      * @throws \Mekras\Jira\Exception\Issue
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $BaseIssue,
         array $fields = [],
-        array $expand = [],
-        Client $Jira = null
+        array $expand = []
     ): Issue {
         if (empty($BaseIssue->key)) {
-            throw new \Mekras\Jira\Exception\Issue('Provided data does not contain attribute "key"');
+            throw new \Mekras\Jira\Exception\Issue(
+                'Provided data does not contain attribute "key"'
+            );
         }
 
         if (!empty($fields) && !empty($expand)) {
@@ -155,7 +172,7 @@ class Issue
             'self' => true,
         ];
 
-        $Issue = new static($BaseIssue->key, $Jira);
+        $Issue = new static($jiraClient, $BaseIssue->key);
 
         foreach ($hack_fields as $field_id => $cache) {
             if (!$cache) {
@@ -173,7 +190,7 @@ class Issue
             // We save BaseIssue object only when it contains full information on issue fields.
             // This is done to prevent code from requesting API each time we want to get empty issue field.
             // This also preventes from returning 'null' about field that is not empty but we just don't have info on it.
-            $Issue->BaseIssue = $BaseIssue;
+            $Issue->baseIssue = $BaseIssue;
             $Issue->expands = $expand;
         } else {
             // We can't store BaseIssue object because we know it does not contain the full fields information.
@@ -193,14 +210,12 @@ class Issue
     /**
      * Load list of issues using search query in Jira Query Language.
      *
-     * @param string      $jql    Search query string.
-     * @param string[]    $fields Load only listed field values.
-     * @param string[]    $expand Load additional issues info.
-     * @param int         $limit  Return at most <limit> issues.
-     * @param int         $offset Skip first <offset> issues found.
-     * @param Client|null $jira   JIRA API client to use instead of global one. Enables you to
-     *                            access several JIRA instances from one piece of code, or use
-     *                            different users for different actions.
+     * @param Client   $jiraClient JIRA API client to use.
+     * @param string   $jql        Search query string.
+     * @param string[] $fields     Load only listed field values.
+     * @param string[] $expand     Load additional issues info.
+     * @param int      $limit      Return at most <limit> issues.
+     * @param int      $offset     Skip first <offset> issues found.
      *
      * @return static[] - list of issues are fit the search request.
      *
@@ -209,23 +224,19 @@ class Issue
      * @see \Mekras\Jira\REST\Section\Issue::search()
      */
     public static function search(
+        Client $jiraClient,
         string $jql,
         array $fields = [],
         array $expand = [],
         int $limit = 1000,
-        int $offset = 0,
-        Client $jira = null
+        int $offset = 0
     ): array {
-        if (!isset($jira)) {
-            $jira = Client::instance();
-        }
-
-        $issuesList = $jira->issue()->search($jql, $fields, $expand, $limit, $offset);
+        $issuesList = $jiraClient->issue()->search($jql, $fields, $expand, $limit, $offset);
 
         $issueObjects = [];
 
         foreach ($issuesList as $issueInfo) {
-            $Issue = static::fromStdClass($issueInfo, $fields, $expand, $jira);
+            $Issue = static::fromStdClass($jiraClient, $issueInfo, $fields, $expand);
             $Issue->expands = $expand;
             $issueObjects[$Issue->getKey()] = $Issue;
         }
@@ -241,27 +252,22 @@ class Issue
      *          perform full initialization with REST API requests within to not cause performance
      *          degradation.
      *
-     * @param string $issue_key
-     * @param Client $Jira                    - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one
-     *                                        piece of code, or use different users for different
-     *                                        actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param string $issueKey
      *
      * @throws \Mekras\Jira\Exception\Issue
      */
-    public function __construct(string $issue_key, Client $Jira = null)
+    public function __construct(Client $jiraClient, string $issueKey)
     {
-        $issue_key = trim($issue_key);
-        if ($issue_key === '') {
-            throw new \Mekras\Jira\Exception\Issue("Can't create Issue object with empty issue key");
+        $issueKey = trim($issueKey);
+        if ($issueKey === '') {
+            throw new \Mekras\Jira\Exception\Issue(
+                "Can't create Issue object with empty issue key"
+            );
         }
 
-        if (!isset($Jira)) {
-            $Jira = Client::instance();
-        }
-
-        $this->Jira = $Jira;
-        $this->key = $issue_key;
+        $this->jiraClient = $jiraClient;
+        $this->key = $issueKey;
     }
 
     public function __toString(): string
@@ -274,7 +280,7 @@ class Issue
         ?array $visibility = [],
         bool $expand_rendered = false
     ): \Mekras\Jira\Issue\Comment {
-        $CommentInfo = $this->Jira->issue()->comment()->create(
+        $CommentInfo = $this->jiraClient->issue()->comment()->create(
             $this->getKey(),
             $text,
             $visibility,
@@ -296,7 +302,7 @@ class Issue
      */
     public function addComponents(...$components): Issue
     {
-        $components_update = $this->update_fields['components'] ?? [];
+        $components_update = $this->updateFields['components'] ?? [];
 
         foreach ($components as $component) {
             if (is_numeric($component)) {
@@ -321,7 +327,7 @@ class Issue
     {
         $to_add = array_values(array_unique($labels));
 
-        $update_labels = $this->update_fields['labels'] ?? [];
+        $update_labels = $this->updateFields['labels'] ?? [];
         foreach ($to_add as $label) {
             $update_labels[] = ['add' => $label];
         }
@@ -339,7 +345,7 @@ class Issue
      * @param string $version_name
      * @param bool   $create - create new version in Jira, if it does not already exist.
      *
-     * @return \Mekras\Jira\Version
+     * @return Version
      *
      * @throws \Mekras\Jira\REST\Exception
      * @throws \Mekras\Jira\Exception\Version
@@ -356,18 +362,18 @@ class Issue
         }
 
         // Create a new version in Jira project if it is needed.
-        if ($create && !\Mekras\Jira\Version::exists(
+        if ($create && !Version::exists(
+                $this->getJiraClient(),
                 $this->getProject(),
-                $version_name,
-                $this->getJira()
+                $version_name
             )) {
-            $VersionToAdd = new \Mekras\Jira\Version(0, $this->getJira());
+            $VersionToAdd = new Version(0, $this->getJiraClient());
             $VersionToAdd->setProject($this->getProject())->setName($version_name)->save();
         } else {
-            $VersionToAdd = \Mekras\Jira\Version::byName(
+            $VersionToAdd = Version::byName(
+                $this->getJiraClient(),
                 $this->getProject(),
-                $version_name,
-                $this->getJira()
+                $version_name
             );
         }
 
@@ -398,7 +404,7 @@ class Issue
      */
     public function delete(): void
     {
-        $this->Jira->issue()->delete($this->getKey());
+        $this->jiraClient->issue()->delete($this->getKey());
     }
 
     /**
@@ -415,7 +421,7 @@ class Issue
      */
     public function edit(string $field_id, array $update): \Mekras\Jira\Issue
     {
-        $this->update_fields[$field_id] = $update;
+        $this->updateFields[$field_id] = $update;
 
         return $this;
     }
@@ -423,7 +429,7 @@ class Issue
     /**
      * Get issue's assignee user information. 'null' is returned for unassigned issues.
      *
-     * @return \Mekras\Jira\User|null
+     * @return User|null
      *
      * @throws \Mekras\Jira\REST\Exception
      */
@@ -432,10 +438,10 @@ class Issue
         $Assignee = $this->getCachedData('Assignee');
 
         if (!isset($Assignee) && isset($this->getBaseIssue()->fields->assignee)) {
-            $Assignee = \Mekras\Jira\User::fromStdClass(
+            $Assignee = User::fromStdClass(
+                $this->jiraClient,
                 $this->getFieldValue('assignee'),
-                $this,
-                $this->Jira
+                $this
             );
             $this->cacheData('Assignee', $Assignee);
         }
@@ -516,7 +522,7 @@ class Issue
             $components = [];
 
             foreach ((array) $this->getFieldValue('components') as $ComponentInfo) {
-                $Component = Component::fromStdClass($ComponentInfo, $this, $this->Jira);
+                $Component = Component::fromStdClass($this->jiraClient, $ComponentInfo, $this);
                 $components[$Component->getID()] = $Component;
             }
 
@@ -540,16 +546,16 @@ class Issue
     /**
      * @param string $field_class - class name of CustomField to get
      *
-     * @return \Mekras\Jira\CustomFields\CustomField
+     * @return CustomField
      */
     public function getCustomField($field_class)
     {
-        /** @var \Mekras\Jira\CustomFields\CustomField $CustomField */
-        $CustomField = $this->custom_fields[$field_class] ?? null;
+        /** @var CustomField $CustomField */
+        $CustomField = $this->customFields[$field_class] ?? null;
 
         if (!isset($CustomField)) {
             $CustomField = new $field_class($this);
-            $this->custom_fields[$field_class] = $CustomField;
+            $this->customFields[$field_class] = $CustomField;
         }
 
         return $CustomField;
@@ -618,7 +624,7 @@ class Issue
      */
     public function getEditMeta(): array
     {
-        return $this->Jira->issue()->getEditMeta($this->getKey());
+        return $this->jiraClient->issue()->getEditMeta($this->getKey());
     }
 
     /**
@@ -676,9 +682,9 @@ class Issue
         return $id;
     }
 
-    public function getJira(): Client
+    public function getJiraClient(): Client
     {
-        return $this->Jira;
+        return $this->jiraClient;
     }
 
     /**
@@ -751,7 +757,7 @@ class Issue
             return null;
         }
 
-        return static::byKey($this->getFieldValue('parent')->key, [], [], $this->Jira);
+        return static::byKey($this->jiraClient, $this->getFieldValue('parent')->key, [], []);
     }
 
     /**
@@ -778,11 +784,11 @@ class Issue
     }
 
     /**
-     * @return \Mekras\Jira\Issue\Priority|null
+     * @return Priority|null
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getPriority(): ?\Mekras\Jira\Issue\Priority
+    public function getPriority(): ?Priority
     {
         $cache_key = 'Priority';
 
@@ -791,10 +797,10 @@ class Issue
             $PriorityInfo = $this->getFieldValue('priority');
 
             if (isset($PriorityInfo)) {
-                $Priority = \Mekras\Jira\Issue\Priority::fromStdClass(
+                $Priority = Priority::fromStdClass(
+                    $this->jiraClient,
                     $PriorityInfo,
-                    $this,
-                    $this->Jira
+                    $this
                 );
             } else {
                 // Issue has no priority. Yes, this is possible.
@@ -839,7 +845,7 @@ class Issue
      * Get issue's reporter user information. 'null' is returned for issues, where reporter is not
      * displayed.
      *
-     * @return \Mekras\Jira\User|null
+     * @return User|null
      *
      * @throws \Mekras\Jira\REST\Exception
      */
@@ -848,10 +854,10 @@ class Issue
         $Reporter = $this->getCachedData('Reporter');
 
         if (!isset($Reporter) && $this->getFieldValue('reporter') !== null) {
-            $Reporter = \Mekras\Jira\User::fromStdClass(
+            $Reporter = User::fromStdClass(
+                $this->jiraClient,
                 $this->getFieldValue('reporter'),
-                $this,
-                $this->Jira
+                $this
             );
             $this->cacheData('Reporter', $Reporter);
         }
@@ -862,11 +868,11 @@ class Issue
     /**
      * Get current issue resolution. Returns null for unresolved issues.
      *
-     * @return \Mekras\Jira\Issue\Resolution|null
+     * @return Resolution|null
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getResolution(): ?\Mekras\Jira\Issue\Resolution
+    public function getResolution(): ?Resolution
     {
         $cache_key = 'Resolution';
 
@@ -875,10 +881,10 @@ class Issue
             $ResolutionInfo = $this->getFieldValue('resolution');
 
             if (isset($ResolutionInfo)) {
-                $Resolution = \Mekras\Jira\Issue\Resolution::fromStdClass(
+                $Resolution = Resolution::fromStdClass(
+                    $this->jiraClient,
                     $ResolutionInfo,
-                    $this,
-                    $this->Jira
+                    $this
                 );
             } else {
                 // Issue has no resolution yet (unresolved)
@@ -916,7 +922,7 @@ class Issue
             $PriorityInfo = $this->getFieldValue('security');
 
             if (isset($PriorityInfo)) {
-                $Security = \Mekras\Jira\Security::fromStdClass($PriorityInfo, $this, $this->Jira);
+                $Security = \Mekras\Jira\Security::fromStdClass($PriorityInfo, $this, $this->jiraClient);
             } else {
                 // Issue has no priority. Yes, this is possible.
                 $Security = null;
@@ -946,20 +952,20 @@ class Issue
     }
 
     /**
-     * @return \Mekras\Jira\Issue\Status
+     * @return Status
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getStatus(): \Mekras\Jira\Issue\Status
+    public function getStatus(): Status
     {
         $cache_key = 'Status';
 
         $Status = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
-            $Status = \Mekras\Jira\Issue\Status::fromStdClass(
+            $Status = Status::fromStdClass(
+                $this->jiraClient,
                 $this->getFieldValue('status'),
-                $this,
-                $this->Jira
+                $this
             );
             $this->cacheData($cache_key, $Status);
         }
@@ -977,7 +983,7 @@ class Issue
      */
     public function getSubIssues(): array
     {
-        return static::search("parent = '{$this->getKey()}'", [], [], 1000, 0, $this->Jira);
+        return static::search($this->jiraClient, "parent = '{$this->getKey()}'", [], [], 1000, 0);
     }
 
     /**
@@ -1007,9 +1013,9 @@ class Issue
         $Type = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
             $Type = \Mekras\Jira\Issue\Type::fromStdClass(
+                $this->jiraClient,
                 $this->getFieldValue('issuetype'),
-                $this,
-                $this->Jira
+                $this
             );
             $this->cacheData($cache_key, $Type);
         }
@@ -1030,11 +1036,11 @@ class Issue
 
     public function getUrl(): string
     {
-        return $this->Jira->getRawClient()->getJiraUrl() . 'browse/' . $this->getKey();
+        return $this->jiraClient->getRawClient()->getJiraUrl() . 'browse/' . $this->getKey();
     }
 
     /**
-     * @return \Mekras\Jira\Version[]
+     * @return Version[]
      *
      * @throws \Mekras\Jira\REST\Exception
      */
@@ -1048,10 +1054,10 @@ class Issue
             foreach ((array) $this->getFieldValue('fixVersions') as $VersionInfo) {
                 // Don't know why, but list of versions associated with issue has no 'projectId' field.
                 $VersionInfo->projectId = $project_id;
-                $Versions[] = \Mekras\Jira\Version::fromStdClass(
+                $Versions[] = Version::fromStdClass(
+                    $this->getJiraClient(),
                     $VersionInfo,
-                    $this,
-                    $this->getJira()
+                    $this
                 );
             }
             $this->cacheData('Versions', $Versions);
@@ -1074,12 +1080,12 @@ class Issue
 
         $WatchersList = $this->getCachedData($cache_key);
         if (!isset($WatchersList)) {
-            $watchers = $this->Jira->issue()->watchers()->list($this->getKey());
+            $watchers = $this->jiraClient->issue()->watchers()->list($this->getKey());
 
             $WatchersList = \Mekras\Jira\Issue\WatchersList::fromStdClass(
                 $watchers,
                 $this,
-                $this->getJira()
+                $this->getJiraClient()
             );
 
             $this->cacheData($cache_key, $WatchersList);
@@ -1145,7 +1151,7 @@ class Issue
      */
     public function removeComponents(...$components)
     {
-        $components_update = $this->update_fields['components'] ?? [];
+        $components_update = $this->updateFields['components'] ?? [];
 
         foreach ($components as $component) {
             if (is_numeric($component)) {
@@ -1177,20 +1183,20 @@ class Issue
      */
     public function save(array $properties = [], $notify_users = true): \Mekras\Jira\Issue
     {
-        if (empty($this->update_fields)) {
+        if (empty($this->updateFields)) {
             return $this;
         }
 
-        $this->Jira->issue()->edit(
+        $this->jiraClient->issue()->edit(
             $this->getKey(),
             [],
-            $this->update_fields,
+            $this->updateFields,
             $properties,
             $notify_users
         );
-        $this->update_fields = [];
+        $this->updateFields = [];
 
-        foreach ($this->custom_fields as $CustomField) {
+        foreach ($this->customFields as $CustomField) {
             $CustomField->dropCache();
         }
         $this->dropCache();
@@ -1385,16 +1391,16 @@ class Issue
         bool $step_same_status = false,
         bool $safe_transition = false
     ): \Mekras\Jira\Issue {
-        $this->Jira->issue()->transitions()->step(
+        $this->jiraClient->issue()->transitions()->step(
             $this->getKey(),
             $step_name,
             [],
-            $this->update_fields,
+            $this->updateFields,
             $safe_transition,
             $step_same_status
         );
 
-        $this->update_fields = [];
+        $this->updateFields = [];
         $this->dropCache();
 
         return $this;
@@ -1415,22 +1421,22 @@ class Issue
     public function transition(int $transition_id, $safe_transition = false): \Mekras\Jira\Issue
     {
         if ($safe_transition) {
-            $this->Jira->issue()->transitions()->do_safe(
+            $this->jiraClient->issue()->transitions()->do_safe(
                 $this->getKey(),
                 $transition_id,
                 [],
-                $this->update_fields
+                $this->updateFields
             );
         } else {
-            $this->Jira->issue()->transitions()->do(
+            $this->jiraClient->issue()->transitions()->do(
                 $this->getKey(),
                 $transition_id,
                 [],
-                $this->update_fields
+                $this->updateFields
             );
         }
 
-        $this->update_fields = [];
+        $this->updateFields = [];
         $this->dropCache();
 
         return $this;
@@ -1468,7 +1474,7 @@ class Issue
      */
     protected function cacheData($key, $value): Issue
     {
-        $this->cached_data[$key] = $value;
+        $this->cachedData[$key] = $value;
 
         return $this;
     }
@@ -1478,9 +1484,9 @@ class Issue
      */
     protected function dropCache()
     {
-        $this->BaseIssue = null;
-        $this->custom_fields = [];
-        $this->cached_data = [];
+        $this->baseIssue = null;
+        $this->customFields = [];
+        $this->cachedData = [];
     }
 
     /**
@@ -1502,12 +1508,12 @@ class Issue
             }
         }
 
-        if (!isset($this->BaseIssue)) {
+        if (!isset($this->baseIssue)) {
             $this->dropCache();
-            $this->BaseIssue = $this->Jira->issue()->get($this->getKey(), [], $this->expands);
+            $this->baseIssue = $this->jiraClient->issue()->get($this->getKey(), [], $this->expands);
         }
 
-        return $this->BaseIssue;
+        return $this->baseIssue;
     }
 
     /**
@@ -1518,7 +1524,7 @@ class Issue
      */
     protected function getCachedData($key)
     {
-        return $this->cached_data[$key] ?? null;
+        return $this->cachedData[$key] ?? null;
     }
 
     /**
@@ -1532,6 +1538,6 @@ class Issue
      */
     protected function isCached($key): bool
     {
-        return array_key_exists($key, $this->cached_data);
+        return array_key_exists($key, $this->cachedData);
     }
 }

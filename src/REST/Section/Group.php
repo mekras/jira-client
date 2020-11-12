@@ -41,7 +41,7 @@ class Group extends Section
     public function create(
         string $name
     ) : \stdClass {
-        $GroupInfo = $this->jira->post(
+        $GroupInfo = $this->rawClient->post(
             'group',
             [
                 "name" => $name,
@@ -73,7 +73,7 @@ class Group extends Section
             $parameters['swapGroup'] = $swap_group;
         }
 
-        $this->jira->delete('group', $parameters);
+        $this->rawClient->delete('group', $parameters);
         $this->dropCache($name);
     }
 
@@ -93,7 +93,7 @@ class Group extends Section
     {
         $GroupInfo = $this->groups[$name] ?? null;
         if (!isset($GroupInfo) || $reload_cache) {
-            $GroupInfo = $this->jira->get('group', ['groupname' => $name]);
+            $GroupInfo = $this->rawClient->get('group', ['groupname' => $name]);
             $this->cacheGroup($GroupInfo);
         }
 
@@ -120,7 +120,7 @@ class Group extends Section
         int $max_results = 50,
         bool $include_inactive = false
     ) : \stdClass {
-        $users = $this->jira->get(
+        $users = $this->rawClient->get(
             'group/member',
             [
                 'groupname'       => $name,
@@ -199,7 +199,7 @@ class Group extends Section
      */
     public function addUser(string $groupname, string $username) : \stdClass
     {
-        $GroupInfo = $this->jira->post(
+        $GroupInfo = $this->rawClient->post(
             'group/user?' . http_build_query(['groupname' => $groupname]),
             ['name' => $username]
         );
@@ -222,7 +222,7 @@ class Group extends Section
      */
     public function removeUser(string $groupname, string $username) : void
     {
-        $this->jira->delete(
+        $this->rawClient->delete(
             'group/user',
             [
                 'groupname' => $groupname,

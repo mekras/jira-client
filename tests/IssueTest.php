@@ -5,37 +5,59 @@
 
 namespace Mekras\Jira\Tests;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class IssueTest extends TestCase
 {
-    public static function getBaseIssue(string $key) : \stdClass
+    public static function getBaseIssue(string $key): \stdClass
     {
         $BaseIssue = new \stdClass();
         $BaseIssue->key = $key;
 
         $BaseIssue->fields = new \stdClass();
+
         return $BaseIssue;
     }
 
-    protected function getIssueMock(\stdClass $BaseIssue, string $key = 'ISSUE-1') : \Mekras\Jira\Issue
+    /**
+     * TODO ???
+     *
+     * @param \stdClass $BaseIssue
+     * @param string    $key
+     *
+     * @return Issue&MockObject
+     *
+     * @throws \Throwable
+     */
+    protected function getIssueMock(\stdClass $BaseIssue, string $key = 'ISSUE-1'): Issue
     {
-        $IssueMockBuilder = $this->getMockBuilder(\Mekras\Jira\Issue::class);
+        $IssueMockBuilder = $this->getMockBuilder(Issue::class);
         $IssueMockBuilder
-            ->setConstructorArgs([$key])
+            ->setConstructorArgs(
+                [
+                    $this->createMock(Client::class),
+                    $key,
+                ]
+            )
             ->disableArgumentCloning()
             ->disallowMockingUnknownTypes()
             ->setMethods(['getBaseIssue']);
 
-
         $IssueMock = $IssueMockBuilder->getMock();
         $IssueMock->method('getBaseIssue')->willReturn($BaseIssue);
 
-        /** @var \Mekras\Jira\Issue $IssueMock */
         return $IssueMock;
     }
 
-    public function testGetFieldValue_originalValue()
+    /**
+     * TODO ???
+     *
+     * @throws \Throwable
+     */
+    public function testGetFieldValue_originalValue(): void
     {
         $expected_value = 'value from jira';
 
@@ -50,9 +72,9 @@ class IssueTest extends TestCase
     public function summariesForCache()
     {
         return [
-            'non empty string'  => ['non empty string in summary cache'],
-            'empty string'      => [''],
-            'null'              => [null],
+            'non empty string' => ['non empty string in summary cache'],
+            'empty string' => [''],
+            'null' => [null],
         ];
     }
 
@@ -80,9 +102,9 @@ class IssueTest extends TestCase
     public function datesToParse()
     {
         return [
-            'empty date'        => ['', 0],
-            'meaningful date'   => ['2018-06-19T12:53:31.000+0000', 1529412811],
-            'null date'         => [null, 0],
+            'empty date' => ['', 0],
+            'meaningful date' => ['2018-06-19T12:53:31.000+0000', 1529412811],
+            'null date' => [null, 0],
         ];
     }
 
@@ -96,15 +118,27 @@ class IssueTest extends TestCase
 
         $Issue = $this->getIssueMock($Base);
 
-        self::assertEquals($expected_value, $Issue->getCreatedDate(), 'Incorrect created date after parsing');
+        self::assertEquals(
+            $expected_value,
+            $Issue->getCreatedDate(),
+            'Incorrect created date after parsing'
+        );
 
         $getCachedData = new \ReflectionMethod($Issue, 'getCachedData');
         $getCachedData->setAccessible(true);
 
         $cached = $getCachedData->invokeArgs($Issue, ['created', $expected_value]);
 
-        self::assertEquals($expected_value, $cached, 'The created date timestamp seems not cached after parsing');
-        self::assertEquals($expected_value, $Issue->getCreatedDate(), 'Strange created date timestamp after second call');
+        self::assertEquals(
+            $expected_value,
+            $cached,
+            'The created date timestamp seems not cached after parsing'
+        );
+        self::assertEquals(
+            $expected_value,
+            $Issue->getCreatedDate(),
+            'Strange created date timestamp after second call'
+        );
     }
 
     public function testGetPriority_empty()
@@ -138,7 +172,11 @@ class IssueTest extends TestCase
 
         $IssueMock = $this->getIssueMock($JiraIssue);
 
-        $Issue = $IssueMock::fromStdClass($IssueToCache, ['id', 'key', 'self', 'customfield_54321']);
+        $Issue = $IssueMock::fromStdClass(
+            $this->createMock(Client::class),
+            $IssueToCache,
+            ['id', 'key', 'self', 'customfield_54321']
+        );
         $Issue->method('getBaseIssue')->willReturn($JiraIssue);
 
         self::assertEquals($cached_id, $Issue->getId());
@@ -148,7 +186,10 @@ class IssueTest extends TestCase
 
         $dropCache = new \ReflectionMethod($Issue, 'dropCache');
         $dropCache->setAccessible(true);
-        $dropCache->invokeArgs($Issue, []); // drop cache. We hacked getBaseIssue() and this breaks thing we try to check
+        $dropCache->invokeArgs(
+            $Issue,
+            []
+        ); // drop cache. We hacked getBaseIssue() and this breaks thing we try to check
 
         self::assertEquals($jira_cf_value, $Issue->getFieldValue('customfield_12345'));
         self::assertEquals($jira_id, $Issue->getId());

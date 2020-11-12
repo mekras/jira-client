@@ -1,14 +1,16 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\REST\Client;
+
 class LinkType
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -23,16 +25,14 @@ class LinkType
     /**
      * Initialize LinkType object on data obtained from API
      *
-     * @param \stdClass $LinkTypeInfo       - issue link type information received from JIRA API.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client    $jiraClient   JIRA API client to use.
+     * @param \stdClass $LinkTypeInfo Issue link type information received from JIRA API.
      *
      * @return static
      */
-    public static function fromStdClass(\stdClass $LinkTypeInfo, \Mekras\Jira\REST\Client $Jira = null) : LinkType
+    public static function fromStdClass(Client $jiraClient, \stdClass $LinkTypeInfo): LinkType
     {
-        $Instance = new static($LinkTypeInfo->id, $Jira);
+        $Instance = new static($jiraClient, $LinkTypeInfo->id);
         $Instance->OriginalObject = $LinkTypeInfo;
 
         return $Instance;
@@ -43,31 +43,26 @@ class LinkType
      *
      * This method makes an API request immediately, while
      *     $LinkType = new LinkType(<id>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $LinkType->getName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $LinkType->getName()).
      *
-     * @param int $id                       - ID of link type you want to get
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of link type you want to get.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null) : LinkType
+    public static function get(Client $jiraClient, int $id): LinkType
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($jiraClient, $id);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id = 0, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $Jira, int $id = 0)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
         $this->Jira = $Jira;
     }
@@ -76,7 +71,7 @@ class LinkType
      * @return \stdClass
      * @throws \Mekras\Jira\REST\Exception
      */
-    protected function getOriginalObject() : \stdClass
+    protected function getOriginalObject(): \stdClass
     {
         if (!isset($this->OriginalObject)) {
             $this->OriginalObject = $this->Jira->issueLinkType()->get($this->getId());
@@ -87,27 +82,30 @@ class LinkType
 
     /**
      * Drop internal object cache.
+     *
      * @return $this
      */
     public function dropCache()
     {
         $this->OriginalObject = null;
+
         return $this;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function setName(string $new_name) : LinkType
+    public function setName(string $new_name): LinkType
     {
         $this->update['name'] = $new_name;
+
         return $this;
     }
 
@@ -116,9 +114,10 @@ class LinkType
         return $this->getOriginalObject()->inward;
     }
 
-    public function setInward(string $new_inward_description) : LinkType
+    public function setInward(string $new_inward_description): LinkType
     {
         $this->update['inward'] = $new_inward_description;
+
         return $this;
     }
 
@@ -127,16 +126,17 @@ class LinkType
         return $this->getOriginalObject()->outward;
     }
 
-    public function setOutward(string $new_outward_description) : LinkType
+    public function setOutward(string $new_outward_description): LinkType
     {
         $this->update['outward'] = $new_outward_description;
+
         return $this;
     }
 
     /**
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function save() : LinkType
+    public function save(): LinkType
     {
         if (empty($this->update) && $this->getId() !== 0) {
             return $this;
@@ -167,7 +167,7 @@ class LinkType
         return $this;
     }
 
-    public function delete() : LinkType
+    public function delete(): LinkType
     {
         if ($this->getId() === 0) {
             return $this;

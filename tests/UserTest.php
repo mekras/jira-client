@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Mekras\Jira\Tests;
 
+use Mekras\Jira\REST\Client;
+use Mekras\Jira\REST\ClientRaw;
 use Mekras\Jira\User;
 
 /**
@@ -52,7 +54,7 @@ class UserTest extends BaseTestCase
      */
     public function testCreateUserFromObject(\stdClass $jiraUserData, string $expectedName): void
     {
-        $user = User::fromStdClass($jiraUserData);
+        $user = User::fromStdClass($this->createMock(Client::class), $jiraUserData);
 
         self::assertEquals($expectedName, $user->getName());
     }

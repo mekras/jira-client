@@ -6,9 +6,11 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\REST\Client;
+
 class StatusCategory
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -20,18 +22,16 @@ class StatusCategory
     /**
      * Initialize StatusCategory object on data obtained from API
      *
-     * @param \stdClass $CategoryInfo       - issue type information received from JIRA API.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client    $jiraClient   JIRA API client to use.
+     * @param \stdClass $CategoryInfo Issue type information received from JIRA API.
      *
      * @return static
      */
     public static function fromStdClass(
-        \stdClass $CategoryInfo,
-        \Mekras\Jira\REST\Client $Jira = null
+        Client $jiraClient,
+        \stdClass $CategoryInfo
     ) : StatusCategory {
-        $Instance = new static((int)$CategoryInfo->id, $Jira);
+        $Instance = new static($jiraClient, (int)$CategoryInfo->id);
 
         $Instance->OriginalObject = $CategoryInfo;
 
@@ -45,31 +45,25 @@ class StatusCategory
      *     $StatusCategory = new StatusCategory(<id>, <Client>);
      * requests JIRA only when you really need the data (e.g. the first time you call $StatusCategory->getName()).
      *
-     * @param int $id                       - ID of status category you want to get
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of status category you want to get.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($jiraClient, $id);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $jiraClient, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
+        $this->Jira = $jiraClient;
         $this->id = $id;
-        $this->Jira = $Jira;
     }
 
     /**

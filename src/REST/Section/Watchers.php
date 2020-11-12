@@ -21,7 +21,7 @@ class Watchers extends Section
      */
     public function list(string $issue_key)
     {
-        $response = $this->jira->get("issue/{$issue_key}/watchers");
+        $response = $this->rawClient->get("issue/{$issue_key}/watchers");
 
         if (!isset($response->watchers)) {
             return [];
@@ -42,7 +42,7 @@ class Watchers extends Section
      */
     public function add(string $issue_key, string $user_login) : void
     {
-        $this->jira->post("issue/{$issue_key}/watchers", $user_login);
+        $this->rawClient->post("issue/{$issue_key}/watchers", $user_login);
     }
 
     /**
@@ -57,6 +57,6 @@ class Watchers extends Section
      */
     public function remove(string $issue_key, string $user_login) : void
     {
-        $this->jira->delete("issue/{$issue_key}/watchers", ['username' => $user_login]);
+        $this->rawClient->delete("issue/{$issue_key}/watchers", ['username' => $user_login]);
     }
 }

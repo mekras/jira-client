@@ -1,10 +1,13 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
+
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
 
 /**
  * Class History
@@ -13,14 +16,21 @@ namespace Mekras\Jira\Issue;
  */
 class History
 {
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
+
     /** @var HistoryRecord[] */
     protected $records = [];
 
-    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira) : \Mekras\Jira\Issue\History
+    public static function forIssue(Client $jiraClient, string $issueKey): History
     {
-        $Issue = \Mekras\Jira\Issue::byKey($issue_key, [], [\Mekras\Jira\REST\Section\Issue::EXP_CHANGELOG], $Jira);
+        $Issue = Issue::byKey(
+            $jiraClient,
+            $issueKey,
+            [],
+            [\Mekras\Jira\REST\Section\Issue::EXP_CHANGELOG]
+        );
+
         return $Issue->getHistory();
     }
 
@@ -28,11 +38,11 @@ class History
      * Initialize History object on data loaded from API
      *
      * @param \stdClass[] $records - list of history log records (issue->changelog->histories)
-     * @param \Mekras\Jira\Issue $Issue
+     * @param Issue       $Issue
      *
      * @return History
      */
-    public static function fromStdClass(array $records, \Mekras\Jira\Issue $Issue)
+    public static function fromStdClass(array $records, Issue $Issue)
     {
         $Instance = new self();
         $Instance->Issue = $Issue;
@@ -49,7 +59,7 @@ class History
     /**
      * @return HistoryRecord[]
      */
-    public function getRecords() : array
+    public function getRecords(): array
     {
         return $this->records;
     }
@@ -57,12 +67,12 @@ class History
     /**
      * @return HistoryRecord[]
      */
-    public function getRecordsReverse() : array
+    public function getRecordsReverse(): array
     {
         return array_reverse($this->records);
     }
 
-    public function getIssue() : \Mekras\Jira\Issue
+    public function getIssue(): Issue
     {
         return $this->Issue;
     }
@@ -71,9 +81,10 @@ class History
      * Track field changes by it's name.
      *
      * @param string $field_name
+     *
      * @return LogRecordItem[] - all changes from history for selected field.
      */
-    public function trackField($field_name) : array
+    public function trackField($field_name): array
     {
         $field_changes = [];
         foreach ($this->records as $HistoryRecord) {
@@ -100,9 +111,11 @@ class History
      * Get last change record for specific field.
      *
      * @param string $field_id
-     * @return LogRecordItem|null - field change record or null when no changes for field found in history.
+     *
+     * @return LogRecordItem|null - field change record or null when no changes for field found in
+     *                            history.
      */
-    public function getLastFieldChange(string $field_id) : ?LogRecordItem
+    public function getLastFieldChange(string $field_id): ?LogRecordItem
     {
         for ($i = count($this->records) - 1; $i >= 0; $i--) {
             $HistoryRecord = $this->records[$i];
@@ -118,7 +131,7 @@ class History
     /**
      * Get total amount of time issue spent in specific status.
      */
-    public function getTimeInStatus(string $status_name) : int
+    public function getTimeInStatus(string $status_name): int
     {
         $last_change_time = $this->Issue->getCreatedDate();
         $time_in_status = 0;
@@ -142,19 +155,20 @@ class History
     /**
      * Get time in status in work days (excluding weekends).
      */
-    public function getWorkdaysInStatus(string $status_name) : float
+    public function getWorkdaysInStatus(string $status_name): float
     {
         $daysBetween = function ($begin, $end) {
             $time = $begin;
             $weekends_count = 0;
             while ($time < $end) {
-                $week_day = (int)date('N', $time);
+                $week_day = (int) date('N', $time);
                 if ($week_day > 5) {
                     ++$weekends_count;
                 }
                 $time += 86400;
             }
             $days_between = ($end - $begin) / 86400;
+
             return $days_between - $weekends_count;
         };
 
@@ -162,7 +176,8 @@ class History
         $status_changes = $this->trackField('status');
         $last_change_time = $this->getIssue()->getCreatedDate();
         foreach ($status_changes as $StatusChange) {
-            if ($StatusChange->getFromString() === $status_name && $StatusChange->isStringChanged()) {
+            if ($StatusChange->getFromString() === $status_name && $StatusChange->isStringChanged(
+                )) {
                 $total_days += $daysBetween($last_change_time, $StatusChange->getChangeTime());
             }
 
@@ -183,12 +198,12 @@ class History
         return round($total_days, 2);
     }
 
-    public function getLastStatusChange() : ?LogRecordItem
+    public function getLastStatusChange(): ?LogRecordItem
     {
         return $this->getLastFieldChange('status');
     }
 
-    public function getTimeInLastStatus() : int
+    public function getTimeInLastStatus(): int
     {
         $LastStatusChange = $this->getLastStatusChange();
         if (isset($LastStatusChange)) {
@@ -208,7 +223,7 @@ class History
      *
      * @return HistoryRecord[]
      */
-    public function getTransitions(bool $only_status_changes = false) : array
+    public function getTransitions(bool $only_status_changes = false): array
     {
         $transitions = [];
         foreach ($this->records as $HistoryRecord) {

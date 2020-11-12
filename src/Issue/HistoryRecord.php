@@ -6,6 +6,8 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\User;
+
 /**
  * Class HistoryRecord
  *
@@ -53,7 +55,7 @@ class HistoryRecord implements ILogRecord
         return (int)$this->getOriginalObject()->id;
     }
 
-    public function getAuthor() : \Mekras\Jira\User
+    public function getAuthor() : User
     {
         $key = 'Author';
 
@@ -61,7 +63,7 @@ class HistoryRecord implements ILogRecord
             $AuthorInfo = $this->getOriginalObject()->author;
             $Issue = $this->getIssue();
 
-            $this->cache[$key] = \Mekras\Jira\User::fromStdClass($AuthorInfo, $Issue, $Issue->getJira());
+            $this->cache[$key] = User::fromStdClass($Issue->getJiraClient(), $AuthorInfo, $Issue);
         }
 
         return $this->cache[$key];

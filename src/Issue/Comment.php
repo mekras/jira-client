@@ -6,6 +6,8 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\User;
+
 class Comment
 {
     /** @var \Mekras\Jira\REST\Client */
@@ -70,7 +72,7 @@ class Comment
     protected function getOriginalObject($expand_rendered = false) : \stdClass
     {
         if (!isset($this->OriginalObject)) {
-            $this->OriginalObject = $this->Issue->getJira()->issue()->comment()->get(
+            $this->OriginalObject = $this->Issue->getJiraClient()->issue()->comment()->get(
                 $this->Issue->getKey(),
                 $this->id,
                 $expand_rendered
@@ -134,13 +136,13 @@ class Comment
         return $timestamp;
     }
 
-    public function getAuthor() : \Mekras\Jira\User
+    public function getAuthor() : User
     {
         $User = $this->cache['Author'] ?? null;
 
         if (!isset($User)) {
             $UserInfo = $this->getOriginalObject()->author;
-            $User = \Mekras\Jira\User::fromStdClass($UserInfo);
+            $User = User::fromStdClass($this->Jira, $UserInfo);
 
             $this->cache['Author'] = $User;
         }
@@ -148,13 +150,13 @@ class Comment
         return $User;
     }
 
-    public function getUpdateAuthor() : \Mekras\Jira\User
+    public function getUpdateAuthor() : User
     {
         $User = $this->cache['UpdateAuthor'] ?? null;
 
         if (!isset($User)) {
             $UserInfo = $this->getOriginalObject()->updateAuthor;
-            $User = \Mekras\Jira\User::fromStdClass($UserInfo);
+            $User = User::fromStdClass($this->Jira, $UserInfo);
 
             $this->cache['UpdateAuthor'] = $User;
         }
@@ -172,7 +174,7 @@ class Comment
 
     public function update(string $new_text, array $visibility = []) : Comment
     {
-        $CommentInfo = $this->Issue->getJira()->issue()->comment()->update(
+        $CommentInfo = $this->Issue->getJiraClient()->issue()->comment()->update(
             $this->Issue->getKey(),
             $this->id,
             $new_text,
@@ -187,6 +189,6 @@ class Comment
 
     public function delete() : void
     {
-        $this->Issue->getJira()->issue()->comment()->delete($this->Issue->getKey(), $this->id);
+        $this->Issue->getJiraClient()->issue()->comment()->delete($this->Issue->getKey(), $this->id);
     }
 }

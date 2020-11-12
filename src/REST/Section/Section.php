@@ -26,7 +26,7 @@ class Section
      *
      * @var ClientRaw
      */
-    protected $jira;
+    protected $rawClient;
 
     /**
      * TODO ???
@@ -45,14 +45,14 @@ class Section
     /**
      * Construct section.
      *
-     * @param ClientRaw           $jira  Raw jira client.
-     * @param CacheInterface|null $cache Cache for received data.
+     * @param ClientRaw           $rawClient Raw Jira client.
+     * @param CacheInterface|null $cache     Cache for received data.
      *
      * @since x.x Added argument $cache.
      */
-    public function __construct(ClientRaw $jira, CacheInterface $cache = null)
+    public function __construct(ClientRaw $rawClient, CacheInterface $cache = null)
     {
-        $this->jira = $jira;
+        $this->rawClient = $rawClient;
         $this->cache = $cache ?? new NullCache();
     }
 
@@ -81,7 +81,7 @@ class Section
     protected function getSection(string $sectionKey, string $sectionClass): self
     {
         if (!isset($this->sections[$sectionKey])) {
-            $Section = new $sectionClass($this->jira, $sectionKey);
+            $Section = new $sectionClass($this->rawClient, $sectionKey);
             $this->sections[$sectionKey] = $Section;
         }
 

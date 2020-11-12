@@ -1,14 +1,16 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\REST\Client;
+
 class Link
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -23,38 +25,36 @@ class Link
     /**
      * Initialize Link object on data obtained from API
      *
-     * @param \stdClass $LinkInfo           - issue link information received from JIRA API.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client    $jiraClient JIRA API client to use.
+     * @param \stdClass $LinkInfo   Issue link information received from JIRA API.
      *
      * @return static
      */
-    public static function fromStdClass(\stdClass $LinkInfo, \Mekras\Jira\REST\Client $Jira = null) : Link
+    public static function fromStdClass(Client $jiraClient, \stdClass $LinkInfo): Link
     {
-        $Instance = new static($LinkInfo->id, $Jira);
+        $Instance = new static($jiraClient, $LinkInfo->id);
         $Instance->OriginalObject = $LinkInfo;
 
         return $Instance;
     }
 
     /**
-     * Issue link info, returned by JIRA API in issue fields has only one issue (inward or outward) information.
-     * That is because the second end is always current issue itself.
+     * Issue link info, returned by JIRA API in issue fields has only one issue (inward or outward)
+     * information. That is because the second end is always current issue itself.
      *
-     * Because of this optimization we have to hack initializer to return second issue info without requesting
-     * API once again.
+     * Because of this optimization we have to hack initializer to return second issue info without
+     * requesting API once again.
      *
-     * @param \stdClass $LinkInfo
+     * @param \stdClass          $LinkInfo
      * @param \Mekras\Jira\Issue $Issue
      *
      * @return static
      *
      * @throws \Mekras\Jira\Exception\Link
      */
-    public static function fromIssueField(\stdClass $LinkInfo, \Mekras\Jira\Issue $Issue) : Link
+    public static function fromIssueField(\stdClass $LinkInfo, \Mekras\Jira\Issue $Issue): Link
     {
-        $Instance = static::fromStdClass($LinkInfo, $Issue->getJira());
+        $Instance = static::fromStdClass($LinkInfo, $Issue->getJiraClient());
 
         if (isset($LinkInfo->inwardIssue) && isset($LinkInfo->outwardIssue)) {
             throw new \Mekras\Jira\Exception\Link(
@@ -74,49 +74,46 @@ class Link
     }
 
     /**
-     * Issue link info, returned by JIRA API in issue fields has only one issue (inward or outward) information.
-     * That is because the second end is always current issue itself.
+     * Issue link info, returned by JIRA API in issue fields has only one issue (inward or outward)
+     * information. That is because the second end is always current issue itself.
      *
-     * Because of this optimization we have to hack initializer to return second issue info without requesting
-     * API once again.
+     * Because of this optimization we have to hack initializer to return second issue info without
+     * requesting API once again.
      *
-     * @see \Mekras\Jira\REST\Section\IssueLink::create() for parameters description
-     *
+     * @param Client $jiraClient JIRA API client to use.
      * @param string $type
-     * @param string $outward_issue
-     * @param string $inward_issue
+     * @param string $outwardIssue
+     * @param string $inwardIssue
      * @param string $comment
-     * @param array $visibility
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param array  $visibility
      *
      * @return static
      *
      * @throws \Mekras\Jira\Exception\Link
      * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\IssueLink::create() for parameters description
+     *
      */
     public static function create(
+        Client $jiraClient,
         string $type,
-        string $outward_issue,
-        string $inward_issue,
+        string $outwardIssue,
+        string $inwardIssue,
         string $comment = '',
-        array $visibility = [],
-        \Mekras\Jira\REST\Client $Jira = null
-    ) : Link {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $Jira->issueLink()->create($type, $outward_issue, $inward_issue, $comment, $visibility);
+        array $visibility = []
+    ): Link {
+        $jiraClient->issueLink()->create($type, $outwardIssue, $inwardIssue, $comment, $visibility);
 
         // actualize key, we can't be sure issue was not renamed some time ago
-        $inward_issue = $Jira->issue()->get($inward_issue, ['key'])->key;
+        $inwardIssue = $jiraClient->issue()->get($inwardIssue, ['key'])->key;
 
-        $links = $Jira->issueLink()->listForIssue($outward_issue, $type);
+        $links = $jiraClient->issueLink()->listForIssue($outwardIssue, $type);
         foreach ($links as $LinkInfo) {
-            if ($LinkInfo->inwardIssue->key === $inward_issue) {
-                return static::get($LinkInfo->id, $Jira); // we have to get it because of half data in links info :(
+            if ($LinkInfo->inwardIssue->key === $inwardIssue) {
+                return static::get(
+                    $LinkInfo->id,
+                    $jiraClient
+                ); // we have to get it because of half data in links info :(
             }
         }
 
@@ -130,31 +127,26 @@ class Link
      *
      * This method makes an API request immediately, while
      *     $Link = new Link(<id>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $Link->getName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $Link->getName()).
      *
-     * @param int $id                       - ID of link you want to get
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID of link you want to get.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public static function get(Client $jiraClient, int $id)
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($jiraClient, $id);
         $Instance->getOriginalObject();
 
         return $Instance;
     }
 
-    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(Client $Jira, int $id)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
         $this->Jira = $Jira;
     }
@@ -163,7 +155,7 @@ class Link
      * @return \stdClass
      * @throws \Mekras\Jira\REST\Exception
      */
-    protected function getOriginalObject() : \stdClass
+    protected function getOriginalObject(): \stdClass
     {
         if (!isset($this->OriginalObject)) {
             $this->OriginalObject = $this->Jira->issueLink()->get($this->id);
@@ -174,9 +166,10 @@ class Link
 
     /**
      * @param \stdClass $IssueInfo
+     *
      * @return \Mekras\Jira\Issue
      */
-    protected function getIssueFromLinkInfo(\stdClass $IssueInfo) : \Mekras\Jira\Issue
+    protected function getIssueFromLinkInfo(\stdClass $IssueInfo): \Mekras\Jira\Issue
     {
         return \Mekras\Jira\Issue::fromStdClass(
             $IssueInfo,
@@ -187,7 +180,7 @@ class Link
                 'summary',
                 'status',
                 'priority',
-                'issuetype'
+                'issuetype',
             ],
             [],
             $this->Jira
@@ -196,9 +189,10 @@ class Link
 
     /**
      * Drop internal object cache
+     *
      * @return $this
      */
-    public function dropCache() : Link
+    public function dropCache(): Link
     {
         $this->OriginalObject = null;
         $this->cache = [];
@@ -206,7 +200,7 @@ class Link
         return $this;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -217,11 +211,11 @@ class Link
      * @return LinkType
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function getType() : LinkType
+    public function getType(): LinkType
     {
         $Type = $this->cache['Type'] ?? null;
         if (!isset($Type)) {
-            $Type = LinkType::fromStdClass($this->getOriginalObject()->type, $this->Jira);
+            $Type = LinkType::fromStdClass($this->Jira, $this->getOriginalObject()->type);
             $this->cache['Type'] = $Type;
         }
 
@@ -264,7 +258,7 @@ class Link
         return $Issue;
     }
 
-    public function delete() : Link
+    public function delete(): Link
     {
         $this->Jira->issueLink()->delete($this->getId());
 

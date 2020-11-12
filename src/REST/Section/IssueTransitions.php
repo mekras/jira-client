@@ -29,7 +29,7 @@ class IssueTransitions extends Section
             $args = ['expand' => 'transitions.fields'];
         }
 
-        return $this->jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
+        return $this->rawClient->get("/issue/{$issue_key}/transitions", $args)->transitions;
     }
 
     /**
@@ -56,10 +56,10 @@ class IssueTransitions extends Section
             $args = ['expand' => 'transitions.fields'];
         }
 
-        $transitions = $this->jira->get("/issue/{$issue_key}/transitions", $args)->transitions;
+        $transitions = $this->rawClient->get("/issue/{$issue_key}/transitions", $args)->transitions;
 
         if (empty($transitions)) {
-            $user = $this->jira->getLogin();
+            $user = $this->rawClient->getLogin();
             throw new \Mekras\Jira\REST\Exception(
                 "Transition '{$transition_id}' of '{$issue_key}' is not available for '{$user}' in current issue status"
             );
@@ -95,7 +95,7 @@ class IssueTransitions extends Section
             $args['update'] = $update;
         }
 
-        $this->jira->post("issue/{$issue_key}/transitions", $args);
+        $this->rawClient->post("issue/{$issue_key}/transitions", $args);
     }
 
     /**
@@ -152,7 +152,7 @@ class IssueTransitions extends Section
      */
     public function step(string $issue_key, string $step_name, array $fields = [], array $update = [], $use_do_safe = false, bool $step_same_status = false) : void
     {
-        $IssueInfo = $this->jira->get("/issue/{$issue_key}", ['fields' => 'status']);
+        $IssueInfo = $this->rawClient->get("/issue/{$issue_key}", ['fields' => 'status']);
 
         $issue_status_id = $IssueInfo->fields->status->id;
 

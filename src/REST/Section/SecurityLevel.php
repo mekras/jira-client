@@ -33,7 +33,7 @@ class SecurityLevel extends Section
         $SecurityLevelInfo = $this->security_levels_list[$id] ?? null;
 
         if (!isset($SecurityLevelInfo) || $reload_cache) {
-            $SecurityLevelInfo = $this->jira->get("/securitylevel/{$id}");
+            $SecurityLevelInfo = $this->rawClient->get("/securitylevel/{$id}");
             $this->cacheSecurityLevelInfo($SecurityLevelInfo);
         }
 

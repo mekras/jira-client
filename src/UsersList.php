@@ -5,12 +5,14 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class UsersList
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /** @var User[] */
@@ -18,33 +20,27 @@ class UsersList
     /** @var User[] */
     protected $by_email = [];
 
-    public static function fromStdClass(array $users_info, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null) : UsersList
+    public static function fromStdClass(Client $jiraClient, array $usersInfo, Issue $Issue = null) : UsersList
     {
         $users = [];
-        foreach ($users_info as $UserInfo) {
-            $users[] = User::fromStdClass($UserInfo, $Issue, $Jira);
+        foreach ($usersInfo as $UserInfo) {
+            $users[] = User::fromStdClass($jiraClient, $UserInfo, $Issue);
         }
 
-        $Instance = new static($users, $Jira);
+        $Instance = new static($users, $jiraClient);
         $Instance->Issue = $Issue;
 
         return $Instance;
     }
 
     /**
-     * @param User[] $users                 - users in list
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param User[] $users      Users in list.
+     * @param Client $jiraClient JIRA API client to use.
      */
-    public function __construct(array $users, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(array $users, Client $jiraClient)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->addUsers(...$users);
-        $this->Jira = $Jira;
+        $this->Jira = $jiraClient;
     }
 
     /**

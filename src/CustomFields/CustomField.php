@@ -5,6 +5,9 @@
 
 namespace Mekras\Jira\CustomFields;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+
 /**
  * Class CustomField
  *
@@ -22,12 +25,12 @@ abstract class CustomField
     /** @var \stdClass|string|null */
     private $OriginalObject;
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /**
-     * @param string                        $issue_key
-     * @param \Mekras\Jira\REST\Client|null $Jira
+     * @param Client $jiraClient
+     * @param string $issueKey
      *
      * @return static
      *
@@ -35,15 +38,15 @@ abstract class CustomField
      * @throws \Mekras\Jira\REST\Exception
      */
     public static function forIssue(
-        string $issue_key,
-        \Mekras\Jira\REST\Client $Jira = null
+        Client $jiraClient,
+        string $issueKey
     ): CustomField {
-        $Issue = \Mekras\Jira\Issue::byKey($issue_key, ['key', static::ID], [], $Jira);
+        $Issue = Issue::byKey($jiraClient, $issueKey, ['key', static::ID], []);
 
         return $Issue->getCustomField(static::class);
     }
 
-    public function __construct(\Mekras\Jira\Issue $Issue)
+    public function __construct(Issue $Issue)
     {
         $this->Issue = $Issue;
     }
@@ -86,7 +89,7 @@ abstract class CustomField
     /**
      * Get field issue. Current field's value is for this JIRA issue.
      */
-    public function getIssue(): \Mekras\Jira\Issue
+    public function getIssue(): Issue
     {
         return $this->Issue;
     }

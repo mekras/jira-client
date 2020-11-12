@@ -32,7 +32,7 @@ class Component extends Section
      */
     public function get(int $id) : \stdClass
     {
-        return $this->jira->get("component/{$id}");
+        return $this->rawClient->get("component/{$id}");
     }
 
     /**
@@ -61,7 +61,7 @@ class Component extends Section
 
         $args['name'] = $name;
 
-        return $this->jira->post("component", $args);
+        return $this->rawClient->post("component", $args);
     }
 
     /**
@@ -92,7 +92,7 @@ class Component extends Section
         int $id,
         array $update = []
     ) : \stdClass {
-        return $this->jira->put("component/{$id}", $update);
+        return $this->rawClient->put("component/{$id}", $update);
     }
 
 
@@ -114,6 +114,6 @@ class Component extends Section
             $args['moveIssuesTo'] = $move_issues_to;
         }
 
-        $this->jira->delete("component/{$id}", $args);
+        $this->rawClient->delete("component/{$id}", $args);
     }
 }

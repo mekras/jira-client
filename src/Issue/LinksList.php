@@ -6,9 +6,12 @@
 
 namespace Mekras\Jira\Issue;
 
+use Mekras\Jira\Issue;
+use Mekras\Jira\REST\Client;
+
 class LinksList
 {
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /** @var Link[] */
@@ -18,7 +21,7 @@ class LinksList
      * Initialize LinksList object on data of Issue->fields->issuelinks obtained from API
      *
      * @param \stdClass[] $links            - links list information as it is provided in Issue->fields->issueLinks
-     * @param \Mekras\Jira\Issue $Issue      - when current LinksList object represents current links list of some issue.
+     * @param Issue $Issue      - when current LinksList object represents current links list of some issue.
      *
      * @return static
      *
@@ -26,7 +29,7 @@ class LinksList
      */
     public static function fromStdClass(
         array $links,
-        \Mekras\Jira\Issue $Issue
+        Issue $Issue
     ) : LinksList {
         $Instance = new static($Issue);
 
@@ -41,23 +44,21 @@ class LinksList
     /**
      * Get list of links connected to issue identified by key.
      *
-     * @param string $issue_key             - key of issue to list links for.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param string $issueKey   Key of issue to list links for.
      *
      * @return static
      *
      * @throws \Mekras\Jira\Exception\Issue
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira = null) : LinksList
+    public static function forIssue(Client $jiraClient, string $issueKey) : LinksList
     {
-        $Issue = \Mekras\Jira\Issue::byKey($issue_key, ['issuelinks'], [], $Jira);
+        $Issue = Issue::byKey($jiraClient, $issueKey, ['issuelinks'], []);
         return $Issue->getLinksList();
     }
 
-    public function __construct(\Mekras\Jira\Issue $Issue)
+    public function __construct(Issue $Issue)
     {
         $this->Issue = $Issue;
     }
@@ -72,7 +73,7 @@ class LinksList
         return $this;
     }
 
-    public function getIssue() : \Mekras\Jira\Issue
+    public function getIssue() : Issue
     {
         return $this->Issue;
     }
@@ -89,7 +90,7 @@ class LinksList
      */
     public function addInward(string $issue_key, string $link_type, string $comment = '', array $visibility = []) : LinksList
     {
-        $this->Issue->getJira()->issueLink()->create(
+        $this->Issue->getJiraClient()->issueLink()->create(
             $link_type,
             $this->Issue->getKey(),
             $issue_key,
@@ -117,7 +118,7 @@ class LinksList
      */
     public function addOutward(string $issue_key, string $link_type, string $comment = '', array $visibility = []) : LinksList
     {
-        $this->Issue->getJira()->issueLink()->create(
+        $this->Issue->getJiraClient()->issueLink()->create(
             $link_type,
             $issue_key,
             $this->Issue->getKey(),

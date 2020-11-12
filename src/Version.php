@@ -5,13 +5,16 @@
 
 namespace Mekras\Jira;
 
+use Mekras\Jira\REST\Client;
+
 class Version
 {
-    /** @var \Mekras\Jira\REST\Client */
+    /** @var Client */
     protected $Jira;
 
     /** @var \stdClass */
     protected $OriginalObject;
+
     protected $cache = [];
 
     /** @var int */
@@ -19,26 +22,24 @@ class Version
 
     protected $update = [];
 
-    /** @var \Mekras\Jira\Issue */
+    /** @var Issue */
     protected $Issue;
 
     /**
      * Initialize Version object on data obtained from API
      *
-     * @param \stdClass $VersionInfo        - version information received from JIRA API.
-     * @param \Mekras\Jira\Issue $Issue      - issue, the version is attached to.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client    $jiraClient  JIRA API client to use.
+     * @param \stdClass $VersionInfo Version information received from JIRA API.
+     * @param Issue     $Issue       Issue, the version is attached to.
      *
      * @return static
      */
     public static function fromStdClass(
+        Client $jiraClient,
         \stdClass $VersionInfo,
-        \Mekras\Jira\Issue $Issue = null,
-        \Mekras\Jira\REST\Client $Jira = null
-    ) : Version {
-        $Instance = new static((int)$VersionInfo->id, $Jira);
+        Issue $Issue = null
+    ): Version {
+        $Instance = new static((int) $VersionInfo->id, $jiraClient);
 
         $Instance->OriginalObject = $VersionInfo;
         $Instance->Issue = $Issue;
@@ -51,19 +52,19 @@ class Version
      *
      * This method makes an API request immediately, while
      *     $Version = new Version(<id>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $User->getDisplayName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $User->getDisplayName()).
      *
-     * @param int $id - ID
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client $jiraClient JIRA API client to use.
+     * @param int    $id         ID.
+     *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null) : Version
+    public static function get(Client $jiraClient, int $id): Version
     {
-        $Instance = new static($id, $Jira);
+        $Instance = new static($id, $jiraClient);
         $Instance->getOriginalObject();
 
         return $Instance;
@@ -72,26 +73,20 @@ class Version
     /**
      * List all versions in given project
      *
-     * @param string|int $project           - project name or ID.
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client     $jiraClient JIRA API client to use.
+     * @param string|int $project    Project name or ID.
      *
      * @return static[] - list of versions indexed by IDs
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forProject($project, \Mekras\Jira\REST\Client $Jira = null) : array
+    public static function forProject(Client $jiraClient, $project): array
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $versions = $Jira->project()->listVersions($project);
+        $versions = $jiraClient->project()->listVersions($project);
 
         $result = [];
         foreach ($versions as $VersionInfo) {
-            $Version = static::fromStdClass($VersionInfo, null, $Jira);
+            $Version = static::fromStdClass($jiraClient, $VersionInfo, null);
             $result[$Version->getId()] = $Version;
         }
 
@@ -101,59 +96,47 @@ class Version
     /**
      * Look for version with specific name insire a project
      *
-     * @param string|int $project           - project name or ID.
-     * @param string $version_name          - name of version to look for
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client     $jiraClient  JIRA API client to use.
+     * @param string|int $project     Project name or ID.
+     * @param string     $versionName Name of version to look for.
      *
      * @return static
      *
      * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
      * @throws \Mekras\Jira\Exception\Version - when no version with given name found in project
      */
-    public static function byName($project, string $version_name, \Mekras\Jira\REST\Client $Jira = null) : Version
+    public static function byName(Client $jiraClient, $project, string $versionName): Version
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $versions = $Jira->project()->listVersions($project);
+        $versions = $jiraClient->project()->listVersions($project);
 
         foreach ($versions as $VersionInfo) {
-            if ($VersionInfo->name === $version_name) {
-                return static::fromStdClass($VersionInfo, null, $Jira);
+            if ($VersionInfo->name === $versionName) {
+                return static::fromStdClass($jiraClient, $VersionInfo, null);
             }
         }
 
         throw new \Mekras\Jira\Exception\Version(
-            "Version with name '{$version_name}' not found in project '{$project}'"
+            "Version with name '{$versionName}' not found in project '{$project}'"
         );
     }
 
     /**
      * Check if version with specific name exists in a project
      *
-     * @param string|int $project           - project name or ID.
-     * @param string $version_name          - name of version to look for
-     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param Client     $jiraClient  JIRA API client to use.
+     * @param string|int $project     Project name or ID.
+     * @param string     $versionName Name of version to look for.
      *
      * @return bool - true when version exists
      *
      * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
      */
-    public static function exists($project, $version_name, \Mekras\Jira\REST\Client $Jira = null) : bool
+    public static function exists(Client $jiraClient, $project, $versionName): bool
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
-        $versions = $Jira->project()->listVersions($project);
+        $versions = $jiraClient->project()->listVersions($project);
 
         foreach ($versions as $VersionInfo) {
-            if ($VersionInfo->name === $version_name) {
+            if ($VersionInfo->name === $versionName) {
                 return true;
             }
         }
@@ -161,12 +144,8 @@ class Version
         return false;
     }
 
-    public function __construct(int $id = 0, \Mekras\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, Client $Jira)
     {
-        if (!isset($Jira)) {
-            $Jira = \Mekras\Jira\REST\Client::instance();
-        }
-
         $this->id = $id;
         $this->Jira = $Jira;
     }
@@ -191,17 +170,17 @@ class Version
         $this->cache = [];
     }
 
-    public function getID() : int
+    public function getID(): int
     {
         return $this->id;
     }
 
-    public function getProjectID() : int
+    public function getProjectID(): int
     {
-        return (int)$this->getOriginalObject()->projectId;
+        return (int) $this->getOriginalObject()->projectId;
     }
 
-    public function getProjectKey() : string
+    public function getProjectKey(): string
     {
         $key = 'project_key';
 
@@ -215,10 +194,10 @@ class Version
         return $this->cache[$key];
     }
 
-    public function setProject($project) : Version
+    public function setProject($project): Version
     {
         if (is_numeric($project)) {
-            $this->update["projectId"] = (int)$project;
+            $this->update["projectId"] = (int) $project;
         } else {
             $this->update["project"] = $project;
         }
@@ -226,29 +205,31 @@ class Version
         return $this;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function setName(string $name) : Version
+    public function setName(string $name): Version
     {
         $this->update['name'] = $name;
+
         return $this;
     }
 
-    public function getDescription() : string
+    public function getDescription(): string
     {
         return $this->getOriginalObject()->description ?? '';
     }
 
-    public function setDescription(string $description) : Version
+    public function setDescription(string $description): Version
     {
         $this->update['description'] = $description;
+
         return $this;
     }
 
-    public function getStartDate() : int
+    public function getStartDate(): int
     {
         $key = 'start_date';
 
@@ -264,17 +245,18 @@ class Version
         return $this->cache[$key];
     }
 
-    public function setStartDate(int $timestamp) : Version
+    public function setStartDate(int $timestamp): Version
     {
         if ($timestamp === 0) {
             $this->update['startDate'] = '';
         }
 
         $this->update['startDate'] = date('Y-m-d', $timestamp);
+
         return $this;
     }
 
-    public function getReleaseDate() : int
+    public function getReleaseDate(): int
     {
         $key = 'release_date';
 
@@ -290,39 +272,42 @@ class Version
         return $this->cache[$key];
     }
 
-    public function setReleaseDate(int $timestamp) : Version
+    public function setReleaseDate(int $timestamp): Version
     {
         if ($timestamp === 0) {
             $this->update['releaseDate'] = '';
         }
 
         $this->update['releaseDate'] = date('Y-m-d', $timestamp);
+
         return $this;
     }
 
-    public function isArchived() : bool
+    public function isArchived(): bool
     {
         return $this->getOriginalObject()->archived ?? false;
     }
 
-    public function setArchived(bool $archived = true) : Version
+    public function setArchived(bool $archived = true): Version
     {
         $this->update['archived'] = $archived;
+
         return $this;
     }
 
-    public function isReleased() : bool
+    public function isReleased(): bool
     {
         return $this->getOriginalObject()->released ?? false;
     }
 
-    public function setReleased(bool $released = true) : Version
+    public function setReleased(bool $released = true): Version
     {
         $this->update['released'] = $released;
+
         return $this;
     }
 
-    public function isOverdue() : bool
+    public function isOverdue(): bool
     {
         return $this->getOriginalObject()->overdue ?? false;
     }
@@ -368,12 +353,13 @@ class Version
 
     /**
      * Delete version
-     * @see \Mekras\Jira\REST\Section\Version::delete for parameters meaning description
      *
      * @param string|null $move_fixed_to
      * @param string|null $move_affected_to
      *
      * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Version::delete for parameters meaning description
+     *
      */
     public function delete(string $move_fixed_to = null, string $move_affected_to = null)
     {
@@ -385,10 +371,10 @@ class Version
     }
 
     /**
-     * Check that current version was not released yet and release it (mark as 'released' and set release date to now).
-     * Have no effect on already released versions.
+     * Check that current version was not released yet and release it (mark as 'released' and set
+     * release date to now). Have no effect on already released versions.
      */
-    public function release() : Version
+    public function release(): Version
     {
         if ($this->isReleased()) {
             return $this;
