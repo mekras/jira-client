@@ -81,7 +81,7 @@ abstract class Section
     protected function getSection(string $sectionKey, string $sectionClass): self
     {
         if (!isset($this->sections[$sectionKey])) {
-            $Section = new $sectionClass($this->rawClient);
+            $Section = new $sectionClass($this->rawClient, $this->getCache());
             $this->sections[$sectionKey] = $Section;
         }
 
