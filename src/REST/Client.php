@@ -8,8 +8,6 @@ declare(strict_types=1);
 
 namespace Mekras\Jira\REST;
 
-use Mekras\Jira\Cache\NullCache;
-use Mekras\Jira\REST\HTTP\CurlClient;
 use Mekras\Jira\REST\Section\Attachment;
 use Mekras\Jira\REST\Section\Component;
 use Mekras\Jira\REST\Section\Field;
@@ -36,25 +34,6 @@ use Mekras\Jira\REST\Section\Version;
  */
 class Client extends Section
 {
-    /**
-     * Client constructor.
-     *
-     * @param string         $jiraUrl
-     * @param string         $apiPrefix
-     * @param ClientRaw|null $rawClient Instance of ClientRaw to use instead of default one.
-     */
-    public function __construct(
-        string $jiraUrl = 'https://jira.localhost/',
-        string $apiPrefix = '/rest/api/latest/',
-        ClientRaw $rawClient = null
-    ) {
-        if ($rawClient === null) {
-            $rawClient = new ClientRaw($jiraUrl, $apiPrefix, new CurlClient(), new NullCache());
-        }
-
-        parent::__construct($rawClient);
-    }
-
     /**
      * @return Attachment
      */
