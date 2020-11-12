@@ -47,6 +47,8 @@ class Section
      *
      * @param ClientRaw           $jira  Raw jira client.
      * @param CacheInterface|null $cache Cache for received data.
+     *
+     * @since x.x Added argument $cache.
      */
     public function __construct(ClientRaw $jira, CacheInterface $cache = null)
     {

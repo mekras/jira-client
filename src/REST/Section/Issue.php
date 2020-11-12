@@ -6,6 +6,8 @@
 
 namespace Mekras\Jira\REST\Section;
 
+use Mekras\Jira\Cache\CacheUtils;
+
 class Issue extends Section
 {
     /**
@@ -395,9 +397,16 @@ class Issue extends Section
             $args['expand'] = $expand;
         }
 
-        $result = $this->jira->post('/search', $args);
+        $cacheKey = CacheUtils::composeKey($args);
+        if ($this->getCache()->has($cacheKey)) {
+            return $this->getCache()->get($cacheKey);
+        }
 
-        return $result->issues;
+        $issues = $this->jira->post('/search', $args)->issues;
+
+        $this->getCache()->set($cacheKey, $issues);
+
+        return $issues;
     }
 
     public function transitions(): IssueTransitions

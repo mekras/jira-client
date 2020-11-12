@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- **BREAKING CHANGE**: Root namespace changed from `Badoo` to `Mekras`.
+- Method `REST\Section\Issue::search()` now use cache to store search results.
+- `REST\Section\Section`:
+  - added argument `$cache` to constructor;
+  - added protected method `getCache()`.
+
 
 ## 1.4.0 - 22.09.2020
 
