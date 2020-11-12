@@ -4,17 +4,17 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class File
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
     protected $OriginalObject;
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /** @var int $id */
@@ -25,8 +25,8 @@ class File
 
     public static function fromStdClass(
         \stdClass $AttachmentInfo,
-        \Badoo\Jira\Issue $Issue,
-        \Badoo\Jira\REST\Client $Jira = null
+        \Mekras\Jira\Issue $Issue,
+        \Mekras\Jira\REST\Client $Jira = null
     ) : File {
         $Instance = new static((int)$AttachmentInfo->id, $Issue, $Jira);
         $Instance->OriginalObject = $AttachmentInfo;
@@ -34,10 +34,10 @@ class File
         return $Instance;
     }
 
-    public function __construct(int $id, \Badoo\Jira\Issue $Issue = null, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -102,13 +102,13 @@ class File
         return $this->cache[$key];
     }
 
-    public function getAuthor() : \Badoo\Jira\User
+    public function getAuthor() : \Mekras\Jira\User
     {
         $key = 'Author';
 
         if (!isset($this->cache[$key])) {
             $UserInfo = $this->getOriginalObject()->author;
-            $this->cache[$key] = \Badoo\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
+            $this->cache[$key] = \Mekras\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
         }
 
         return $this->cache[$key];

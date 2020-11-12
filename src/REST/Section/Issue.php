@@ -4,7 +4,7 @@
  * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Issue extends Section
 {
@@ -32,7 +32,7 @@ class Issue extends Section
      * @param string|null $user_name   -   '-1' = default assignee for project.
      *                                 'null' = unassigned
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function assign($issue_key, ?string $user_name = null): void
     {
@@ -66,7 +66,7 @@ class Issue extends Section
      * @param array $history_meta
      *
      * @return \stdClass
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(
         array $fields,
@@ -146,7 +146,7 @@ class Issue extends Section
      * @param bool   $notify_users          - notify watchers about the update. Requires
      *                                      administrator privileges in issue's project.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function edit(
         string $issue_key,
@@ -187,7 +187,7 @@ class Issue extends Section
      * @param array  $properties
      *
      * @return \stdClass
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(
         string $issue_key,
@@ -197,7 +197,7 @@ class Issue extends Section
     ): \stdClass {
         $issue_key = trim($issue_key);
         if (empty($issue_key)) {
-            throw new \Badoo\Jira\REST\Exception("Can't get info for issue with empty key");
+            throw new \Mekras\Jira\REST\Exception("Can't get info for issue with empty key");
         }
 
         $args = [];
@@ -229,7 +229,7 @@ class Issue extends Section
      *
      * @return \stdClass[] - list of projects with issues creation metadata for them
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getCreateMeta($projects, $issue_types = [], bool $expand_fields = false): array
     {
@@ -292,7 +292,7 @@ class Issue extends Section
      *
      * @return \stdClass[] - list of fields current user can edit in issue
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getEditMeta(string $issue_key): array
     {
@@ -341,7 +341,7 @@ class Issue extends Section
      *                           ],
      *                         ]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getTransitions(string $issue_key, bool $expand_fields = false)
     {
@@ -356,6 +356,7 @@ class Issue extends Section
 
     /**
      * Search for issues using JQL.
+     *
      * This method is the same to Client->search() one with some differences:
      *  - it returns the list of issues from 'issues' response field.
      *  - it has much higher max_results default value
@@ -366,24 +367,24 @@ class Issue extends Section
      * @param string   $jql
      * @param string[] $fields
      * @param string[] $expand
-     * @param int      $max_results
-     * @param int      $start_at
+     * @param int      $limit
+     * @param int      $offset
      *
-     * @return \stdClass[] - list of issues
+     * @return \stdClass[] List of issues.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function search(
         string $jql,
         $fields = [],
         $expand = [],
-        int $max_results = 1000,
-        int $start_at = 0
+        int $limit = 1000,
+        int $offset = 0
     ): array {
         $args = [
             'jql' => $jql,
-            'startAt' => $start_at,
-            'maxResults' => $max_results,
+            'startAt' => $offset,
+            'maxResults' => $limit,
             'validateQuery' => true,
         ];
 

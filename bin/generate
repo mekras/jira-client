@@ -1,22 +1,25 @@
 #!/usr/bin/env php
 <?php
+
 /**
- * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 require realpath(dirname(__DIR__)) .
     DIRECTORY_SEPARATOR . 'src' .
     DIRECTORY_SEPARATOR . 'autoload.php';
 
-const EXIT_OK                       = 0;
-const EXIT_GENERATION_FAILED        = 1;
-const EXIT_FIELD_NOT_FOUND          = 2;
-const EXIT_CONFIG_ERROR             = 3;
-const EXIT_INVALID_CLI_OPTIONS      = 4;
-const EXIT_INTERRUPTED              = 5;
+const EXIT_OK = 0;
+const EXIT_GENERATION_FAILED = 1;
+const EXIT_FIELD_NOT_FOUND = 2;
+const EXIT_CONFIG_ERROR = 3;
+const EXIT_INVALID_CLI_OPTIONS = 4;
+const EXIT_INTERRUPTED = 5;
 
-function configureGenerator(\Badoo\Jira\CFGenerator\Generator $Generator, \Badoo\Jira\CLI\Configuration $Config, \Psr\Log\LoggerInterface $Logger) : bool
-{
+function configureGenerator(
+    \Badoo\Jira\CFGenerator\Generator $Generator,
+    \Badoo\Jira\CLI\Configuration $Config,
+    \Psr\Log\LoggerInterface $Logger
+): bool {
     $all_ok = true;
 
     $Generator
@@ -35,15 +38,19 @@ function configureGenerator(\Badoo\Jira\CFGenerator\Generator $Generator, \Badoo
         $path = $Config->resolvePath($path);
 
         $load_options = $template_options['load-options'] ?? false;
-        $fields       = $template_options['fields'] ?? [];
-        $types        = $template_options['types'] ?? [];
+        $fields = $template_options['fields'] ?? [];
+        $types = $template_options['types'] ?? [];
 
         if (empty($fields) && empty($types)) {
-            $Logger->warning("Template '{$template_name}' is not bound to any of field or field type and is thus unreachable");
+            $Logger->warning(
+                "Template '{$template_name}' is not bound to any of field or field type and is thus unreachable"
+            );
             continue;
         }
 
-        $Template = new \Badoo\Jira\CFGenerator\SimpleTemplate($template_name, $Generator->getJira());
+        $Template = new \Badoo\Jira\CFGenerator\SimpleTemplate(
+            $template_name, $Generator->getJira()
+        );
         $Template
             ->setTemplatePath($path)
             ->setLoadOptions($load_options);
@@ -72,8 +79,11 @@ function configureGenerator(\Badoo\Jira\CFGenerator\Generator $Generator, \Badoo
     return $all_ok;
 }
 
-function runSingleFieldGeneration(string $field, \Badoo\Jira\CFGenerator\Generator $Generator, \Psr\Log\LoggerInterface $Logger) : bool
-{
+function runSingleFieldGeneration(
+    string $field,
+    \Badoo\Jira\CFGenerator\Generator $Generator,
+    \Psr\Log\LoggerInterface $Logger
+): bool {
     $Logger->info("Single field generation mode.");
 
     if (strpos($field, 'customfield_') === 0) {
@@ -86,12 +96,16 @@ function runSingleFieldGeneration(string $field, \Badoo\Jira\CFGenerator\Generat
     } else {
         $fields = $Generator->getJira()->field()->search($field);
         if (count($fields) === 0) {
-            $Logger->critical("Field with name '{$field}' not found in JIRA. Can't generate class for it");
+            $Logger->critical(
+                "Field with name '{$field}' not found in JIRA. Can't generate class for it"
+            );
             exit(EXIT_FIELD_NOT_FOUND);
         }
 
         if (count($fields) > 1) {
-            $Logger->critical("Found more than one field with name {$field}. Please use field ID to choose as single field between them");
+            $Logger->critical(
+                "Found more than one field with name {$field}. Please use field ID to choose as single field between them"
+            );
             foreach ($fields as $FieldInfo) {
                 $Logger->critical(print_r($FieldInfo, true));
             }
@@ -168,7 +182,7 @@ $Climate->arguments->add(
             'description' => 'Target namespace for generated classes.',
         ],
         'field-to-generate' => [
-            'description' => "Generate class for single field, identified by name of ID (e.g. 'Developer' or 'customfield_12345')"
+            'description' => "Generate class for single field, identified by name of ID (e.g. 'Developer' or 'customfield_12345')",
         ],
     ]
 );
@@ -198,7 +212,9 @@ if ($Climate->arguments->defined('help')) {
 
 $config_path = $Climate->arguments->get('config');
 if (empty($config_path)) {
-    $Logger->debug("Configuration file path is not specified in CLI options. Using default config name.");
+    $Logger->debug(
+        "Configuration file path is not specified in CLI options. Using default config name."
+    );
     $config_path = \Badoo\Jira\CLI\Configuration::DEFAULT_CONFIG_FILE;
 }
 
@@ -284,7 +300,9 @@ if (!empty($field)) {
 }
 
 // All fields generation mode
-$Input = $Climate->confirm("You are going to run generation for all JIRA custom fields in '{$Config->getJiraURL()}'. Are you sure?");
+$Input = $Climate->confirm(
+    "You are going to run generation for all JIRA custom fields in '{$Config->getJiraURL()}'. Are you sure?"
+);
 
 if (!$Input->confirmed()) {
     exit(EXIT_INTERRUPTED);

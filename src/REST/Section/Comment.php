@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Comment extends Section
 {
@@ -22,7 +22,7 @@ class Comment extends Section
      * @return \stdClass[] - list of issue comments.
      *                       @see Comment::get() DocBlock method documentation for brief info about response data format
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(string $issue_key, int $start_at = 0, int $max_results = -1, string $order_by = '', bool $expand_rendered = false) : array
     {
@@ -67,7 +67,7 @@ class Comment extends Section
      *                         'visibility'   => <visibility info>
      *                       ]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $issue_key, int $id, $expand_rendered = false) : \stdClass
     {
@@ -95,7 +95,7 @@ class Comment extends Section
      * @return \stdClass
      * @see Comment::get() DocBlock for more info about format
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(string $issue_key, string $text, ?array $visibility = [], bool $expand_rendered = false) : \stdClass
     {
@@ -130,7 +130,7 @@ class Comment extends Section
      * @return \stdClass - updated comment data
      * @see Comment::get() DocBlock for more info about format
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function update(
         string $issue_key,
@@ -162,7 +162,7 @@ class Comment extends Section
      * @param string $issue_key - key of issue that contains the comment
      * @param int $id           - unique comment ID
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(string $issue_key, int $id) : void
     {

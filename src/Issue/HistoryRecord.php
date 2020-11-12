@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 /**
  * Class HistoryRecord
@@ -38,7 +38,7 @@ class HistoryRecord implements ILogRecord
         return $this->OriginalObject;
     }
 
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue() : \Mekras\Jira\Issue
     {
         return $this->History->getIssue();
     }
@@ -53,7 +53,7 @@ class HistoryRecord implements ILogRecord
         return (int)$this->getOriginalObject()->id;
     }
 
-    public function getAuthor() : \Badoo\Jira\User
+    public function getAuthor() : \Mekras\Jira\User
     {
         $key = 'Author';
 
@@ -61,7 +61,7 @@ class HistoryRecord implements ILogRecord
             $AuthorInfo = $this->getOriginalObject()->author;
             $Issue = $this->getIssue();
 
-            $this->cache[$key] = \Badoo\Jira\User::fromStdClass($AuthorInfo, $Issue, $Issue->getJira());
+            $this->cache[$key] = \Mekras\Jira\User::fromStdClass($AuthorInfo, $Issue, $Issue->getJira());
         }
 
         return $this->cache[$key];

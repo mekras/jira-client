@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
+
 /**
- * @package \Badoo\Jira\CLI
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
@@ -14,71 +14,71 @@ $Climate = new \League\CLImate\CLImate();
 $Climate->arguments->add(
     [
         'help' => [
-            'prefix'        => 'h',
-            'longPrefix'    => 'help',
-            'description'   => 'show help message and exit.',
-            'noValue'       => true,
+            'prefix' => 'h',
+            'longPrefix' => 'help',
+            'description' => 'show help message and exit.',
+            'noValue' => true,
         ],
 
         'config' => [
-            'prefix'        => 'c',
-            'longPrefix'    => 'config',
-            'description'   => 'use alternative configuration file path.',
+            'prefix' => 'c',
+            'longPrefix' => 'config',
+            'description' => 'use alternative configuration file path.',
         ],
 
         'log-level' => [
-            'prefix'        => 'l',
-            'longPrefix'    => 'log-level',
-            'description'   => 'change max log level. Use PSR-3 log level names here',
+            'prefix' => 'l',
+            'longPrefix' => 'log-level',
+            'description' => 'change max log level. Use PSR-3 log level names here',
         ],
 
         // JIRA client configuration
         'jira-url' => [
-            'longPrefix'    => 'jira-url',
-            'description'   => 'use API of this JIRA instance (e.g. https://jira.localhost/).',
+            'longPrefix' => 'jira-url',
+            'description' => 'use API of this JIRA instance (e.g. https://jira.localhost/).',
         ],
         'timeout' => [
-            'longPrefix'    => 'timeout',
-            'description'   => 'API request timeout in seconds. Defaults to 60',
-            'castTo'        => 'int',
+            'longPrefix' => 'timeout',
+            'description' => 'API request timeout in seconds. Defaults to 60',
+            'castTo' => 'int',
         ],
         'user' => [
-            'prefix'        => 'U',
-            'longPrefix'    => 'user',
-            'description'   => 'auth in JIRA API with this user',
+            'prefix' => 'U',
+            'longPrefix' => 'user',
+            'description' => 'auth in JIRA API with this user',
         ],
         'password' => [
-            'prefix'        => 'P',
-            'longPrefix'    => 'password',
-            'description'   => 'auth in JIRA API with this password or API token.',
+            'prefix' => 'P',
+            'longPrefix' => 'password',
+            'description' => 'auth in JIRA API with this password or API token.',
         ],
         'credentials-file' => [
-            'longPrefix'    => 'credentials-file',
-            'description'   => 'read <user>:<password> pair from this file',
+            'longPrefix' => 'credentials-file',
+            'description' => 'read <user>:<password> pair from this file',
         ],
 
         // Find-field configuration
         'ignore-case' => [
-            'prefix'        => 'i',
-            'longPrefix'    => 'ignore-case',
-            'description'   => 'run case insensitive search.',
-            'noValue'       => true,
+            'prefix' => 'i',
+            'longPrefix' => 'ignore-case',
+            'description' => 'run case insensitive search.',
+            'noValue' => true,
         ],
         'pretty' => [
-            'prefix'        => 'p',
-            'longPrefix'    => 'pretty',
-            'description'   => 'output pretty JSON (human-readable)',
-            'noValue'       => true,
+            'prefix' => 'p',
+            'longPrefix' => 'pretty',
+            'description' => 'output pretty JSON (human-readable)',
+            'noValue' => true,
         ],
         'field-name' => [
-            'description'   => 'name of field to search for.',
-        ]
+            'description' => 'name of field to search for.',
+        ],
     ]
 );
 
 $Climate->description('Find JIRA custom field imformation using API');
 
-// Initialize lgger as soon as possible
+// Initialize logger as soon as possible
 $Logger = new \Badoo\Jira\CLI\ClimateLogger($Climate);
 
 try {
@@ -175,7 +175,7 @@ $load_options_types = [
 
 $load_option_items = [
     '',
-    'option'
+    'option',
 ];
 
 foreach ($fields as $FieldInfo) {
@@ -183,7 +183,10 @@ foreach ($fields as $FieldInfo) {
     $item_type = $FieldInfo->schema->items ?? '';
     $is_custom = isset($FieldInfo->schema->custom);
 
-    if ($is_custom && in_array($type, $load_options_types) && in_array($item_type, $load_option_items)) {
+    if ($is_custom && in_array($type, $load_options_types) && in_array(
+            $item_type,
+            $load_option_items
+        )) {
         $FieldInfo->options = $Jira->jql()->getFieldSuggestions($FieldInfo->name);
     }
 }

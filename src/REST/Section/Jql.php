@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Jql extends Section
 {
@@ -18,7 +18,7 @@ class Jql extends Section
      *
      * @return array
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getFieldSuggestions(
         string $field_name,

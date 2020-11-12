@@ -4,11 +4,11 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class Type
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -17,15 +17,15 @@ class Type
     /** @var int */
     protected $id;
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     private $Issue;
 
     /**
      * Initialize Type object on data obtained from API
      *
      * @param \stdClass $TypeInfo           - issue type information received from JIRA API.
-     * @param \Badoo\Jira\Issue $Issue      - when current Type object represents current type of some issue.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\Issue $Issue      - when current Type object represents current type of some issue.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
@@ -33,8 +33,8 @@ class Type
      */
     public static function fromStdClass(
         \stdClass $TypeInfo,
-        \Badoo\Jira\Issue $Issue = null,
-        \Badoo\Jira\REST\Client $Jira = null
+        \Mekras\Jira\Issue $Issue = null,
+        \Mekras\Jira\REST\Client $Jira = null
     ) : Type {
         $Instance = new static((int)$TypeInfo->id, $Jira);
 
@@ -52,15 +52,15 @@ class Type
      * requests JIRA only when you really need the data (e.g. the first time you call $Type->getName()).
      *
      * @param int $id                       - ID of type you want to get
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         $Instance = new static($id, $Jira);
         $Instance->getOriginalObject();
@@ -68,10 +68,10 @@ class Type
         return $Instance;
     }
 
-    public function __construct(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -81,7 +81,7 @@ class Type
     /**
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getOriginalObject()
     {
@@ -92,7 +92,7 @@ class Type
         return $this->OriginalObject;
     }
 
-    public function getIssue() : ?\Badoo\Jira\Issue
+    public function getIssue() : ?\Mekras\Jira\Issue
     {
         return $this->Issue;
     }

@@ -1,16 +1,13 @@
 <?php
-/**
- * @package REST
- */
 
-namespace Badoo\Jira\CustomFields;
+namespace Mekras\Jira\CustomFields;
 
 class LabelField extends CustomField
 {
     /**
      * @inheritDoc
      * @return array
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getValue()
     {

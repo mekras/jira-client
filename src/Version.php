@@ -1,14 +1,13 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira;
+namespace Mekras\Jira;
 
 class Version
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -20,15 +19,15 @@ class Version
 
     protected $update = [];
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /**
      * Initialize Version object on data obtained from API
      *
      * @param \stdClass $VersionInfo        - version information received from JIRA API.
-     * @param \Badoo\Jira\Issue $Issue      - issue, the version is attached to.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\Issue $Issue      - issue, the version is attached to.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
@@ -36,8 +35,8 @@ class Version
      */
     public static function fromStdClass(
         \stdClass $VersionInfo,
-        \Badoo\Jira\Issue $Issue = null,
-        \Badoo\Jira\REST\Client $Jira = null
+        \Mekras\Jira\Issue $Issue = null,
+        \Mekras\Jira\REST\Client $Jira = null
     ) : Version {
         $Instance = new static((int)$VersionInfo->id, $Jira);
 
@@ -55,14 +54,14 @@ class Version
      * requests JIRA only when you really need the data (e.g. the first time you call $User->getDisplayName()).
      *
      * @param int $id - ID
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Badoo\Jira\REST\Client $Jira = null) : Version
+    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null) : Version
     {
         $Instance = new static($id, $Jira);
         $Instance->getOriginalObject();
@@ -74,18 +73,18 @@ class Version
      * List all versions in given project
      *
      * @param string|int $project           - project name or ID.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static[] - list of versions indexed by IDs
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forProject($project, \Badoo\Jira\REST\Client $Jira = null) : array
+    public static function forProject($project, \Mekras\Jira\REST\Client $Jira = null) : array
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $versions = $Jira->project()->listVersions($project);
@@ -104,19 +103,19 @@ class Version
      *
      * @param string|int $project           - project name or ID.
      * @param string $version_name          - name of version to look for
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception - on JIRA API interaction errors
-     * @throws \Badoo\Jira\Exception\Version - when no version with given name found in project
+     * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
+     * @throws \Mekras\Jira\Exception\Version - when no version with given name found in project
      */
-    public static function byName($project, string $version_name, \Badoo\Jira\REST\Client $Jira = null) : Version
+    public static function byName($project, string $version_name, \Mekras\Jira\REST\Client $Jira = null) : Version
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $versions = $Jira->project()->listVersions($project);
@@ -127,7 +126,7 @@ class Version
             }
         }
 
-        throw new \Badoo\Jira\Exception\Version(
+        throw new \Mekras\Jira\Exception\Version(
             "Version with name '{$version_name}' not found in project '{$project}'"
         );
     }
@@ -137,18 +136,18 @@ class Version
      *
      * @param string|int $project           - project name or ID.
      * @param string $version_name          - name of version to look for
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return bool - true when version exists
      *
-     * @throws \Badoo\Jira\REST\Exception - on JIRA API interaction errors
+     * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
      */
-    public static function exists($project, $version_name, \Badoo\Jira\REST\Client $Jira = null) : bool
+    public static function exists($project, $version_name, \Mekras\Jira\REST\Client $Jira = null) : bool
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $versions = $Jira->project()->listVersions($project);
@@ -162,10 +161,10 @@ class Version
         return false;
     }
 
-    public function __construct(int $id = 0, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id = 0, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -175,7 +174,7 @@ class Version
     /**
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getOriginalObject()
     {
@@ -346,7 +345,7 @@ class Version
             $name = $this->update['name'] ?? null;
 
             if (!isset($project) || !isset($name)) {
-                throw new \Badoo\Jira\Exception\Version(
+                throw new \Mekras\Jira\Exception\Version(
                     'JIRA project and version name are required for new version creation'
                 );
             }
@@ -369,12 +368,12 @@ class Version
 
     /**
      * Delete version
-     * @see \Badoo\Jira\REST\Section\Version::delete for parameters meaning description
+     * @see \Mekras\Jira\REST\Section\Version::delete for parameters meaning description
      *
      * @param string|null $move_fixed_to
      * @param string|null $move_affected_to
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(string $move_fixed_to = null, string $move_affected_to = null)
     {

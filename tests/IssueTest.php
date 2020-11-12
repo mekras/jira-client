@@ -3,7 +3,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Tests;
+namespace Mekras\Jira\Tests;
 
 use PHPUnit\Framework\TestCase;
 
@@ -18,9 +18,9 @@ class IssueTest extends TestCase
         return $BaseIssue;
     }
 
-    protected function getIssueMock(\stdClass $BaseIssue, string $key = 'ISSUE-1') : \Badoo\Jira\Issue
+    protected function getIssueMock(\stdClass $BaseIssue, string $key = 'ISSUE-1') : \Mekras\Jira\Issue
     {
-        $IssueMockBuilder = $this->getMockBuilder(\Badoo\Jira\Issue::class);
+        $IssueMockBuilder = $this->getMockBuilder(\Mekras\Jira\Issue::class);
         $IssueMockBuilder
             ->setConstructorArgs([$key])
             ->disableArgumentCloning()
@@ -31,7 +31,7 @@ class IssueTest extends TestCase
         $IssueMock = $IssueMockBuilder->getMock();
         $IssueMock->method('getBaseIssue')->willReturn($BaseIssue);
 
-        /** @var \Badoo\Jira\Issue $IssueMock */
+        /** @var \Mekras\Jira\Issue $IssueMock */
         return $IssueMock;
     }
 

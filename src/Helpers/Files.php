@@ -1,10 +1,9 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Helpers;
+namespace Mekras\Jira\Helpers;
 
 class Files
 {

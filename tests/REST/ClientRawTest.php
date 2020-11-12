@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\Tests\REST;
+namespace Mekras\Jira\Tests\REST;
 
-use Badoo\Jira\REST\ClientRaw;
-use Badoo\Jira\REST\HTTP\HttpClient;
+use Mekras\Jira\REST\ClientRaw;
+use Mekras\Jira\REST\HTTP\HttpClient;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\Test\TestLogger;
 use Psr\SimpleCache\CacheInterface;
@@ -13,7 +13,7 @@ use Psr\SimpleCache\CacheInterface;
 /**
  * Tests for ClientRaw
  *
- * @covers \Badoo\Jira\REST\ClientRaw
+ * @covers \Mekras\Jira\REST\ClientRaw
  */
 class ClientRawTest extends TestCase
 {

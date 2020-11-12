@@ -6,19 +6,23 @@ declare(strict_types=1);
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
-use Badoo\Jira\REST\ClientRaw;
+use Mekras\Jira\REST\ClientRaw;
+use Mekras\Jira\Cache\NullCache;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * TODO Describe.
+ *
+ * TODO Declare as abstract?
  *
  * @since x.x
  */
 class Section
 {
     /**
-     * Raw jira client.
+     * Raw Jira client.
      *
      * @var ClientRaw
      */
@@ -32,13 +36,34 @@ class Section
     protected $sections = [];
 
     /**
+     * Cache for received data.
+     *
+     * @var CacheInterface
+     */
+    private $cache;
+
+    /**
      * Construct section.
      *
-     * @param ClientRaw $jira Raw jira client.
+     * @param ClientRaw           $jira  Raw jira client.
+     * @param CacheInterface|null $cache Cache for received data.
      */
-    public function __construct(ClientRaw $jira)
+    public function __construct(ClientRaw $jira, CacheInterface $cache = null)
     {
         $this->jira = $jira;
+        $this->cache = $cache ?? new NullCache();
+    }
+
+    /**
+     * Return cache for received data.
+     *
+     * @return CacheInterface
+     *
+     * @since x.x
+     */
+    protected function getCache(): CacheInterface
+    {
+        return $this->cache;
     }
 
     /**
@@ -46,8 +71,8 @@ class Section
      *                             objects creation for the same section on each method call.
      * @param string $sectionClass Use special custom class for given section. E. g.
      *                             ->getSubSection('/issue',
-     *                             '\Badoo\Jira\REST\Section\Issue') will initialize and return
-     *                             \Badoo\Jira\REST\Section\Issue class for section /issue.
+     *                             '\Mekras\Jira\REST\Section\Issue') will initialize and return
+     *                             \Mekras\Jira\REST\Section\Issue class for section /issue.
      *
      * @return self
      */

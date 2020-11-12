@@ -8,7 +8,7 @@ if (!empty($namespace)) {
 }
 ?>
 
-class <?= $class_name ?> extends \Badoo\Jira\CustomFields\CheckboxField
+class <?= $class_name ?> extends \Mekras\Jira\CustomFields\CheckboxField
 {
     const ID    = '<?= $field_id ?>';
     const NAME  = '<?= $field_name ?>';

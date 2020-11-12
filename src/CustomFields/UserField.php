@@ -1,22 +1,21 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CustomFields;
+namespace Mekras\Jira\CustomFields;
 
 /**
  * Class UserField
- * @package Badoo\Jira\CustomFields
  *
  * Wrapper class for 'multi user picker' type custom field
  */
 abstract class UserField extends CustomField
 {
-    /** @var \Badoo\Jira\User[] - users listed in field */
+    /** @var \Mekras\Jira\User[] - users listed in field */
     protected $value;
-    /** @var \Badoo\Jira\User[] - new field state to be set on ->save() call: [ <user 1 name> => true, <user 2 name> => true ] */
+
+    /** @var \Mekras\Jira\User[] - new field state to be set on ->save() call: [ <user 1 name> => true, <user 2 name> => true ] */
     protected $update;
 
     public function dropCache()
@@ -28,9 +27,9 @@ abstract class UserField extends CustomField
     }
 
     /**
-     * @return \Badoo\Jira\User[] - list of users listed in field
+     * @return \Mekras\Jira\User[] - list of users listed in field
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getSelectedUsers()
     {
@@ -39,8 +38,12 @@ abstract class UserField extends CustomField
 
             $Field = $this->getOriginalObject();
 
-            foreach ((array)$Field as $UserData) {
-                $User = \Badoo\Jira\User::fromStdClass($UserData, $this->Issue, $this->Issue->getJira());
+            foreach ((array) $Field as $UserData) {
+                $User = \Mekras\Jira\User::fromStdClass(
+                    $UserData,
+                    $this->Issue,
+                    $this->Issue->getJira()
+                );
                 $this->value[$User->getName()] = $User;
             }
         }
@@ -51,28 +54,28 @@ abstract class UserField extends CustomField
     /**
      * Search user in JIRA.
      *
-     * @param \Badoo\Jira\User|string $user
+     * @param \Mekras\Jira\User|string $user
      *
-     * @return \Badoo\Jira\User|null
+     * @return \Mekras\Jira\User|null
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
-    protected function loadUser($user) : \Badoo\Jira\User
+    protected function loadUser($user): \Mekras\Jira\User
     {
-        if ($user instanceof \Badoo\Jira\User) {
+        if ($user instanceof \Mekras\Jira\User) {
             return $user;
         }
 
         if (is_string($user)) {
-            $users = \Badoo\Jira\User::search($user, $this->Issue->getJira());
+            $users = \Mekras\Jira\User::search($user, $this->Issue->getJira());
 
             if (!empty($users)) {
                 return reset($users);
             }
         }
 
-        throw new \Badoo\Jira\Exception\CustomField(
+        throw new \Mekras\Jira\Exception\CustomField(
             "User '{$user}' not found in Jira. Can't add it to '{$this->getName()}' field."
         );
     }
@@ -80,39 +83,41 @@ abstract class UserField extends CustomField
     /**
      * Get current list of users selected in a field value
      *
-     * @return \Badoo\Jira\User[]
+     * @return \Mekras\Jira\User[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getValue() : array
+    public function getValue(): array
     {
         return $this->getSelectedUsers();
     }
 
     /**
      * @param string[] $value - list of user names to lists in field
+     *
      * @return array
      */
-    public static function generateSetter($value) : array
+    public static function generateSetter($value): array
     {
         $users_to_select = [];
         foreach ($value as $item_name) {
             $users_to_select[] = ['name' => $item_name];
         }
 
-        return [ ['set' => $users_to_select] ];
+        return [['set' => $users_to_select]];
     }
 
     /**
      * Set field value to exact list of users
      *
-     * @param \Badoo\Jira\User[]|string[] $value - list of names of selected users, or User objects, or emails JIRA
-     *                                             can use to find users. You can mix the values.
+     * @param \Mekras\Jira\User[]|string[] $value - list of names of selected users, or User
+     *                                            objects, or emails JIRA can use to find users.
+     *                                            You can mix the values.
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
     public function setValue($value)
     {
@@ -133,8 +138,8 @@ abstract class UserField extends CustomField
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
     public function clear()
     {
@@ -144,12 +149,13 @@ abstract class UserField extends CustomField
     /**
      * Add user to field value
      *
-     * @param \Badoo\Jira\User|string $user - username, name or e-mail address as string or User object
+     * @param \Mekras\Jira\User|string $user - username, name or e-mail address as string or User
+     *                                       object
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
     public function addUser($user)
     {
@@ -169,12 +175,12 @@ abstract class UserField extends CustomField
     /**
      * Remove user from field value
      *
-     * @param \Badoo\Jira\User|string $user
+     * @param \Mekras\Jira\User|string $user
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
     public function removeUser($user)
     {
@@ -198,12 +204,12 @@ abstract class UserField extends CustomField
     /**
      * Check if user is already selected in field
      *
-     * @param \Badoo\Jira\User|string $user
+     * @param \Mekras\Jira\User|string $user
      *
      * @return bool - true when user is listed in current field value
      *
-     * @throws \Badoo\Jira\REST\Exception on JIRA API interaction error
-     * @throws \Badoo\Jira\Exception\CustomField when user does not exist in JIRA
+     * @throws \Mekras\Jira\REST\Exception on JIRA API interaction error
+     * @throws \Mekras\Jira\Exception\CustomField when user does not exist in JIRA
      */
     public function hasUser($user)
     {

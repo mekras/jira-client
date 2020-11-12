@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Component extends Section
 {
@@ -28,7 +28,7 @@ class Component extends Section
      *                         ...
      *                       ]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(int $id) : \stdClass
     {
@@ -47,7 +47,7 @@ class Component extends Section
      * @return \stdClass
      * @see Component::get() DocBlock for more info about format
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(string $project, string $name, array $optional_fields = []) : \stdClass
     {
@@ -86,7 +86,7 @@ class Component extends Section
      * @return \stdClass - updated component info
      * @see Component::get() DocBlock for more info about format
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function update(
         int $id,
@@ -104,7 +104,7 @@ class Component extends Section
      * @param int $id               - unique Component ID
      * @param int $move_issues_to   - apply this component to all issues, who had the deleted one
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(int $id, int $move_issues_to = 0) : void
     {

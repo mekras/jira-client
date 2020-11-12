@@ -4,11 +4,11 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class LinkType
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -24,13 +24,13 @@ class LinkType
      * Initialize LinkType object on data obtained from API
      *
      * @param \stdClass $LinkTypeInfo       - issue link type information received from JIRA API.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      */
-    public static function fromStdClass(\stdClass $LinkTypeInfo, \Badoo\Jira\REST\Client $Jira = null) : LinkType
+    public static function fromStdClass(\stdClass $LinkTypeInfo, \Mekras\Jira\REST\Client $Jira = null) : LinkType
     {
         $Instance = new static($LinkTypeInfo->id, $Jira);
         $Instance->OriginalObject = $LinkTypeInfo;
@@ -46,15 +46,15 @@ class LinkType
      * requests JIRA only when you really need the data (e.g. the first time you call $LinkType->getName()).
      *
      * @param int $id                       - ID of link type you want to get
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Badoo\Jira\REST\Client $Jira = null) : LinkType
+    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null) : LinkType
     {
         $Instance = new static($id, $Jira);
         $Instance->getOriginalObject();
@@ -62,10 +62,10 @@ class LinkType
         return $Instance;
     }
 
-    public function __construct(int $id = 0, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id = 0, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -74,7 +74,7 @@ class LinkType
 
     /**
      * @return \stdClass
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getOriginalObject() : \stdClass
     {
@@ -134,7 +134,7 @@ class LinkType
     }
 
     /**
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function save() : LinkType
     {

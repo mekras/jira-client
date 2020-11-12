@@ -1,14 +1,12 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CustomFields;
+namespace Mekras\Jira\CustomFields;
 
 /**
  * Class SingleSelectField
- * @package Badoo\Jira\CustomFields\Abstracts
  *
  * Wrapper class for 'single select' type custom field
  */
@@ -18,14 +16,14 @@ abstract class SingleSelectField extends CustomField
     protected $value;
 
     /** @return string[] - list of items available for this field. */
-    abstract public function getItemsList() : array;
+    abstract public function getItemsList(): array;
 
     /**
      * @return string
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getValue() : string
+    public function getValue(): string
     {
         if ($this->getOriginalObject() === null) {
             return '';
@@ -36,30 +34,32 @@ abstract class SingleSelectField extends CustomField
 
     /**
      * @param string $value
+     *
      * @return array
      */
-    public static function generateSetter($value) : array
+    public static function generateSetter($value): array
     {
         if ($value !== null) {
             $value = ['value' => $value];
         }
 
-        return [ [ 'set' => $value ] ];
+        return [['set' => $value]];
     }
 
     /**
      * @param string $value
+     *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\CustomField
+     * @throws \Mekras\Jira\Exception\CustomField
      */
     public function setValue($value)
     {
         if (isset($value) && !in_array($value, $this->getItemsList())) {
-            throw new \Badoo\Jira\Exception\CustomField(
+            throw new \Mekras\Jira\Exception\CustomField(
                 "Can't select '{$value}' item. "
-                    . "Available items for field '{$this->getName()}' are: '"
-                    . implode("', '", $this->getItemsList()) . "'\n"
+                . "Available items for field '{$this->getName()}' are: '"
+                . implode("', '", $this->getItemsList()) . "'\n"
             );
         }
 

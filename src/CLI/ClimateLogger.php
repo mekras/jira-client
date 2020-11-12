@@ -1,10 +1,9 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CLI;
+namespace Mekras\Jira\CLI;
 
 class ClimateLogger extends \Psr\Log\AbstractLogger
 {

@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class IssueAttachment extends Section
 {
@@ -38,7 +38,7 @@ class IssueAttachment extends Section
      *
      * @return \stdClass[] - list of files attached to issue
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(string $issue_key, bool $reload_cache = false) : array
     {
@@ -77,7 +77,7 @@ class IssueAttachment extends Section
      *                         'thumbnail'  => <thumbnail URL, string>
      *                       ]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(string $issue_key, string $file_path, ?string $file_name = null, ?string $file_type = null) : \stdClass
     {
@@ -98,7 +98,7 @@ class IssueAttachment extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $issue_key, int $id, bool $reload_cache = false) : \stdClass
     {
@@ -110,7 +110,7 @@ class IssueAttachment extends Section
             }
         }
 
-        throw new \Badoo\Jira\REST\Exception(
+        throw new \Mekras\Jira\REST\Exception(
             "Attachment with ID {$id} not found in issue {$issue_key}"
         );
     }

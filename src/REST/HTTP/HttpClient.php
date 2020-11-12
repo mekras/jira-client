@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\REST\HTTP;
+namespace Mekras\Jira\REST\HTTP;
 
-use Badoo\Jira\REST\Exception;
+use Mekras\Jira\REST\Exception;
 
 /**
  * Internal HTTP client.

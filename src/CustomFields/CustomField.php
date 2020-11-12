@@ -1,20 +1,19 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CustomFields;
+namespace Mekras\Jira\CustomFields;
 
 /**
  * Class CustomField
- * @package Badoo\Jira\CustomFields
  *
  * Base class for any JIRA custom field.
  *
  * When you implement particular custom field class, work with it become simple like that:
  *  $Field = <FeildClass>::forIssue(<issue_key>);   // Create object to work with field data.
- *  $current_value = $Field->getValue();            // get current field value for JIRA issue <issue_key>
+ *  $current_value = $Field->getValue();            // get current field value for JIRA issue
+ *  <issue_key>
  *  $Field->setValue($new_value);                   // change field value
  *  $Field->save();                                 // actually send changes to JIRA
  */
@@ -23,41 +22,45 @@ abstract class CustomField
     /** @var \stdClass|string|null */
     private $OriginalObject;
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /**
-     * @param string $issue_key
-     * @param \Badoo\Jira\REST\Client|null $Jira
+     * @param string                        $issue_key
+     * @param \Mekras\Jira\REST\Client|null $Jira
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forIssue(string $issue_key, \Badoo\Jira\REST\Client $Jira = null) : CustomField
-    {
-        $Issue = \Badoo\Jira\Issue::byKey($issue_key, ['key', static::ID], [], $Jira);
+    public static function forIssue(
+        string $issue_key,
+        \Mekras\Jira\REST\Client $Jira = null
+    ): CustomField {
+        $Issue = \Mekras\Jira\Issue::byKey($issue_key, ['key', static::ID], [], $Jira);
+
         return $Issue->getCustomField(static::class);
     }
 
-    public function __construct(\Badoo\Jira\Issue $Issue)
+    public function __construct(\Mekras\Jira\Issue $Issue)
     {
         $this->Issue = $Issue;
     }
 
     /**
      * Get field value as it is returned by JIRA API.
-     * The method transparently loads value from JIRA API when it is not cached locally by CustomField or parent Issue
-     * objects.
+     * The method transparently loads value from JIRA API when it is not cached locally by
+     * CustomField or parent Issue objects.
      *
-     * @param array $expand - list of additional info required to be expaneded to get our field data.
-     *                        Is empty in most cases
-     *                        @see \Badoo\Jira\REST\Section\Issue::get DocBlock for more info
+     * @param array $expand   - list of additional info required to be expaneded to get our field
+     *                        data. Is empty in most cases
      *
      * @return mixed
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::get DocBlock for more info
+     *
      */
     protected function getOriginalObject(array $expand = [])
     {
@@ -76,13 +79,14 @@ abstract class CustomField
     public function dropCache()
     {
         $this->OriginalObject = null;
+
         return $this;
     }
 
     /**
      * Get field issue. Current field's value is for this JIRA issue.
      */
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue(): \Mekras\Jira\Issue
     {
         return $this->Issue;
     }
@@ -90,7 +94,7 @@ abstract class CustomField
     /**
      * Check if field has no value.
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->getOriginalObject() === null;
     }
@@ -106,49 +110,52 @@ abstract class CustomField
     /**
      * Custom field's unique ID used in REST API responses and requests (e.g. customfield_<number>)
      */
-    public function getID() : string
+    public function getID(): string
     {
         return static::ID;
     }
 
     /**
-     * Numeric ID of custom field. The number after 'customfield_' prefix. You won't need it in most cases,
-     * as JIRA API uses IDs with prefix.
+     * Numeric ID of custom field. The number after 'customfield_' prefix. You won't need it in
+     * most cases, as JIRA API uses IDs with prefix.
      *
-     * @see \Badoo\Jira\CustomFields\CustomField::getID()
+     * @see \Mekras\Jira\CustomFields\CustomField::getID()
      */
-    public function getCustomID() : int
+    public function getCustomID(): int
     {
-        return (int)substr($this->getID(), 12); // customfield_12345 -> 12345
+        return (int) substr($this->getID(), 12); // customfield_12345 -> 12345
     }
 
     /**
      * Check if current user can edit this issue field.
-     * To do that user at least has to have enough permissions and field should be added to issue 'Edit' screen
+     * To do that user at least has to have enough permissions and field should be added to issue
+     * 'Edit' screen
      *
      * @return bool
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function isEditable() : bool
+    public function isEditable(): bool
     {
         return $this->Issue->isEditable($this->getID());
     }
 
     /**
      * Get rendered field value as it is shown in Jira UI.
+     *
      * @return string - HTML representation of field value.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getRenderedValue() : string
+    public function getRenderedValue(): string
     {
         return $this->Issue->getRenderedField($this->getID()) || '';
     }
 
     /**
-     * Get last known field value (at the moment issue information had been loaded from API last time).
-     * This value should be provided in native PHP structures (e.g. array, int, float) or in wrapper class objects
-     * (e.g. '\Badooo\Jira\User')
+     * Get last known field value (at the moment issue information had been loaded from API last
+     * time). This value should be provided in native PHP structures (e.g. array, int, float) or in
+     * wrapper class objects
+     * (e.g. '\Mekras\Jira\User')
      *
      * @return mixed - current field value, parsed by parseValue()
      */
@@ -157,27 +164,32 @@ abstract class CustomField
     /**
      * JIRA API expects particular structures for changing field values.
      * Each custom field type requires it's own structure.
-     * This method should convert simple data structure, like array of strings, into something expected by JIRA API.
+     * This method should convert simple data structure, like array of strings, into something
+     * expected by JIRA API.
      *
      * See implementations of custom field types as examples:
-     * @see CheckboxField
-     * @see TextField
-     * @see UserField
-     * @see SelectField
      *
      * @param mixed $value - new field value
      *
-     * @return array - JIRA API issue field update structure, e.g. [ [ 'set' => 'new text value' ] ]
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info on expected return value structure
+     * @return array - JIRA API issue field update structure, e.g. [ [ 'set' => 'new text value' ]
+     *               ]
+     * @see UserField
+     * @see SelectField
+     *
+     * @see CheckboxField
+     * @see TextField
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for more info on expected return value
+     *      structure
      */
-    abstract public static function generateSetter($value) : array;
+    abstract public static function generateSetter($value): array;
 
     /**
      * Set object's value using data with simple structure.
-     * Something simpler than common REST API \stdClass structures: array for 'checkbox' fields, string for 'text' fields,
-     * and so on.
-
+     * Something simpler than common REST API \stdClass structures: array for 'checkbox' fields,
+     * string for 'text' fields, and so on.
+     *
      * @param mixed $value - new field value.
+     *
      * @return $this
      */
     public function setValue($value)
@@ -191,22 +203,24 @@ abstract class CustomField
     /**
      * Save field value to JIRA. This actually calls ->save() on bound Issue object.
      *
-     * NOTE: when you use the same \Badoo\Jira\Issue object for several CustomField objects and change their values,
+     * NOTE: when you use the same \Mekras\Jira\Issue object for several CustomField objects and
+     * change their values,
      *       ->save() on one CustomField will cause actual update of all changed field values
      *
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
-     *
-     * @param array $properties - list of properties for issue edit request
-     * @param bool $notify_users - send notification about issue update to users.
+     * @param array $properties    - list of properties for issue edit request
+     * @param bool  $notify_users  - send notification about issue update to users.
      *                             Requires administrator privileges in issue's project.
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
+     *
      */
-    public function save(array $properties = [], bool $notify_users = true) : CustomField
+    public function save(array $properties = [], bool $notify_users = true): CustomField
     {
         $this->Issue->save($properties, $notify_users);
+
         return $this;
     }
 }

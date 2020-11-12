@@ -1,14 +1,13 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CFGenerator;
+namespace Mekras\Jira\CFGenerator;
 
 class SimpleTemplate implements ITemplate
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var string */
@@ -18,10 +17,10 @@ class SimpleTemplate implements ITemplate
     /** @var string */
     protected $template_path;
 
-    public function __construct(string $name, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(string $name, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->name = $name;
@@ -49,7 +48,7 @@ class SimpleTemplate implements ITemplate
     {
         $this->template_path = $path;
 
-        if (!\Badoo\Jira\Helpers\Files::exists($path)) {
+        if (!\Mekras\Jira\Helpers\Files::exists($path)) {
             trigger_error(
                 "Template file '{$path}' not found for template '{$this->name}'",
                 E_USER_WARNING
@@ -70,11 +69,11 @@ class SimpleTemplate implements ITemplate
         $options = [];
         if ($this->load_options) {
             foreach ($this->Jira->jql()->getFieldSuggestions($FieldInfo->name) as $OptionInfo) {
-                $capital_name = \Badoo\Jira\Helpers\Strings::toCapitalPHPLabel($OptionInfo->value);
+                $capital_name = \Mekras\Jira\Helpers\Strings::toCapitalPHPLabel($OptionInfo->value);
 
                 $options[$OptionInfo->value] = [
                     'capital_name'   => $capital_name,
-                    'camelcase_name' => \Badoo\Jira\Helpers\Strings::toCamelCasePHPLabel($OptionInfo->value),
+                    'camelcase_name' => \Mekras\Jira\Helpers\Strings::toCamelCasePHPLabel($OptionInfo->value),
                     'const_name'     => 'VALUE_' . ltrim($capital_name, '_'),
                     'value'          => $this->quoteOptionValue($OptionInfo->value),
                 ];

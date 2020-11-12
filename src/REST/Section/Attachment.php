@@ -4,9 +4,9 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
-class Attachment extends \Badoo\Jira\REST\Section\Section
+class Attachment extends \Mekras\Jira\REST\Section\Section
 {
     /**
      * Get attachment file metadata by file ID
@@ -17,7 +17,7 @@ class Attachment extends \Badoo\Jira\REST\Section\Section
      *
      * @return \stdClass - attachment metadata
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(int $id) : \stdClass
     {
@@ -31,7 +31,7 @@ class Attachment extends \Badoo\Jira\REST\Section\Section
      *
      * @param int $id - ID of file to delete
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(int $id) : void
     {

@@ -4,9 +4,9 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST;
+namespace Mekras\Jira\REST;
 
-use Badoo\Jira\REST\Section\Section;
+use Mekras\Jira\REST\Section\Section;
 
 class Client extends Section
 {
@@ -78,75 +78,75 @@ class Client extends Section
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\Jql
+     * @return \Mekras\Jira\REST\Section\Jql
      */
-    public function jql() : \Badoo\Jira\REST\Section\Jql
+    public function jql() : \Mekras\Jira\REST\Section\Jql
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('jql', \Badoo\Jira\REST\Section\Jql::class);
+        return $this->getSection('jql', \Mekras\Jira\REST\Section\Jql::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\Attachment
+     * @return \Mekras\Jira\REST\Section\Attachment
      */
-    public function attachment() : \Badoo\Jira\REST\Section\Attachment
+    public function attachment() : \Mekras\Jira\REST\Section\Attachment
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('attachment', \Badoo\Jira\REST\Section\Attachment::class);
+        return $this->getSection('attachment', \Mekras\Jira\REST\Section\Attachment::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\Project
+     * @return \Mekras\Jira\REST\Section\Project
      */
-    public function project() : \Badoo\Jira\REST\Section\Project
+    public function project() : \Mekras\Jira\REST\Section\Project
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('project', \Badoo\Jira\REST\Section\Project::class);
+        return $this->getSection('project', \Mekras\Jira\REST\Section\Project::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\Component
+     * @return \Mekras\Jira\REST\Section\Component
      */
-    public function component() : \Badoo\Jira\REST\Section\Component
+    public function component() : \Mekras\Jira\REST\Section\Component
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('component', \Badoo\Jira\REST\Section\Component::class);
+        return $this->getSection('component', \Mekras\Jira\REST\Section\Component::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\Issue
+     * @return \Mekras\Jira\REST\Section\Issue
      */
-    public function issue() : \Badoo\Jira\REST\Section\Issue
+    public function issue() : \Mekras\Jira\REST\Section\Issue
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issue', \Badoo\Jira\REST\Section\Issue::class);
+        return $this->getSection('issue', \Mekras\Jira\REST\Section\Issue::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\IssueType
+     * @return \Mekras\Jira\REST\Section\IssueType
      */
-    public function issueType() : \Badoo\Jira\REST\Section\IssueType
+    public function issueType() : \Mekras\Jira\REST\Section\IssueType
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuetype', \Badoo\Jira\REST\Section\IssueType::class);
+        return $this->getSection('issuetype', \Mekras\Jira\REST\Section\IssueType::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\IssueLink
+     * @return \Mekras\Jira\REST\Section\IssueLink
      */
-    public function issueLink() : \Badoo\Jira\REST\Section\IssueLink
+    public function issueLink() : \Mekras\Jira\REST\Section\IssueLink
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuelink', \Badoo\Jira\REST\Section\IssueLink::class);
+        return $this->getSection('issuelink', \Mekras\Jira\REST\Section\IssueLink::class);
     }
 
     /**
-     * @return \Badoo\Jira\REST\Section\IssueLinkType
+     * @return \Mekras\Jira\REST\Section\IssueLinkType
      */
-    public function issueLinkType() : \Badoo\Jira\REST\Section\IssueLinkType
+    public function issueLinkType() : \Mekras\Jira\REST\Section\IssueLinkType
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('issuelinktype', \Badoo\Jira\REST\Section\IssueLinkType::class);
+        return $this->getSection('issuelinktype', \Mekras\Jira\REST\Section\IssueLinkType::class);
     }
 
     /**
@@ -163,7 +163,7 @@ class Client extends Section
      *
      * @return \stdClass[] - API response, parsed as JSON. You need to use 'issues' key to get actual list of issues from response
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function search(string $jql, $fields = [], $expand = [], int $max_results = 50, int $start_at = 0, $validate_query = true)
     {
@@ -187,78 +187,78 @@ class Client extends Section
     /**
      * Get interface for operations with Jira issue fields
      */
-    public function field() : \Badoo\Jira\REST\Section\Field
+    public function field() : \Mekras\Jira\REST\Section\Field
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('field', \Badoo\Jira\REST\Section\Field::class);
+        return $this->getSection('field', \Mekras\Jira\REST\Section\Field::class);
     }
 
     /**
      * Get interface for operations with Jira resolutions
      */
-    public function resolution() : \Badoo\Jira\REST\Section\Resolution
+    public function resolution() : \Mekras\Jira\REST\Section\Resolution
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('resolution', \Badoo\Jira\REST\Section\Resolution::class);
+        return $this->getSection('resolution', \Mekras\Jira\REST\Section\Resolution::class);
     }
 
     /**
      * Get interface for operations with JIRA users
      */
-    public function user() : \Badoo\Jira\REST\Section\User
+    public function user() : \Mekras\Jira\REST\Section\User
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('user', \Badoo\Jira\REST\Section\User::class);
+        return $this->getSection('user', \Mekras\Jira\REST\Section\User::class);
     }
 
     /**
      * Get interface for operations with JIRA user groups
      */
-    public function group() : \Badoo\Jira\REST\Section\Group
+    public function group() : \Mekras\Jira\REST\Section\Group
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('group', \Badoo\Jira\REST\Section\Group::class);
+        return $this->getSection('group', \Mekras\Jira\REST\Section\Group::class);
     }
 
     /**
      * Get interface for operations with JIRA issue security levels
      */
-    public function securityLevel() : \Badoo\Jira\REST\Section\SecurityLevel
+    public function securityLevel() : \Mekras\Jira\REST\Section\SecurityLevel
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('securitylevel', \Badoo\Jira\REST\Section\SecurityLevel::class);
+        return $this->getSection('securitylevel', \Mekras\Jira\REST\Section\SecurityLevel::class);
     }
 
     /**
      * Get interface for operations with JIRA issue priorities
      */
-    public function priority() : \Badoo\Jira\REST\Section\Priority
+    public function priority() : \Mekras\Jira\REST\Section\Priority
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('priority', \Badoo\Jira\REST\Section\Priority::class);
+        return $this->getSection('priority', \Mekras\Jira\REST\Section\Priority::class);
     }
 
     /**
      * Get interface for operations with JIRA status categories
      */
-    public function statusCategory() : \Badoo\Jira\REST\Section\StatusCategory
+    public function statusCategory() : \Mekras\Jira\REST\Section\StatusCategory
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('statuscategory', \Badoo\Jira\REST\Section\StatusCategory::class);
+        return $this->getSection('statuscategory', \Mekras\Jira\REST\Section\StatusCategory::class);
     }
 
     /**
      * Get interface for operations with JIRA statuses
      */
-    public function status() : \Badoo\Jira\REST\Section\Status
+    public function status() : \Mekras\Jira\REST\Section\Status
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('status', \Badoo\Jira\REST\Section\Status::class);
+        return $this->getSection('status', \Mekras\Jira\REST\Section\Status::class);
     }
 
-    public function version() : \Badoo\Jira\REST\Section\Version
+    public function version() : \Mekras\Jira\REST\Section\Version
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getSection('version', \Badoo\Jira\REST\Section\Version::class);
+        return $this->getSection('version', \Mekras\Jira\REST\Section\Version::class);
     }
 }

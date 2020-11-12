@@ -1,10 +1,9 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira;
+namespace Mekras\Jira;
 
 class User
 {
@@ -16,40 +15,44 @@ class User
 
     public const AVATAR_XS = '16x16';
 
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
     protected $OriginalObject;
+
     /** @var string[] */
     protected $expanded = [];
 
     /** @var string */
     protected $name;
 
-    /** @var \Badoo\Jira\Group[] */
+    /** @var \Mekras\Jira\Group[] */
     protected $groups;
-    /** @var \Badoo\Jira\Issue */
+
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /**
      * Initialize User object on data from API
      *
-     * @param \stdClass $UserInfo - user information received from JIRA API.
-     * @param \Badoo\Jira\Issue $Issue - when current user somehow related to an issue: e.g. is Assignee or is listed
-     *                                   in some custom field.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param \stdClass                $UserInfo - user information received from JIRA API.
+     * @param \Mekras\Jira\Issue       $Issue    - when current user somehow related to an issue:
+     *                                           e.g. is Assignee or is listed in some custom
+     *                                           field.
+     * @param \Mekras\Jira\REST\Client $Jira     - JIRA API client to use instead of global one.
+     *                                           Enables you to access several JIRA instances from
+     *                                           one piece of code, or use different users for
+     *                                           different actions.
      *
      * @return static
      *
      */
     public static function fromStdClass(
         \stdClass $UserInfo,
-        \Badoo\Jira\Issue $Issue = null,
-        \Badoo\Jira\REST\Client $Jira = null
-    ) : User {
+        \Mekras\Jira\Issue $Issue = null,
+        \Mekras\Jira\REST\Client $Jira = null
+    ): User {
         $Instance = new static($UserInfo->name ?? $UserInfo->accountId, $Jira);
         $Instance->Issue = $Issue;
         $Instance->OriginalObject = $UserInfo;
@@ -62,16 +65,18 @@ class User
      *
      * This method makes an API request immediately, while
      *     $User = new User(<name>, <Client>);
-     * requests JIRA only when you really need the data (e.g. the first time you call $User->getDisplayName()).
+     * requests JIRA only when you really need the data (e.g. the first time you call
+     * $User->getDisplayName()).
      *
-     * @param string $user_name - name of user in JIRA. Don't mess with display name you see in UI!
-     * @param \Badoo\Jira\REST\Client $Jira
+     * @param string                   $user_name - name of user in JIRA. Don't mess with display
+     *                                            name you see in UI!
+     * @param \Mekras\Jira\REST\Client $Jira
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(string $user_name, \Badoo\Jira\REST\Client $Jira = null) : User
+    public static function get(string $user_name, \Mekras\Jira\REST\Client $Jira = null): User
     {
         $Instance = new static($user_name, $Jira);
         $Instance->getOriginalObject();
@@ -81,21 +86,23 @@ class User
 
     /**
      * Search for users by login. display name or email.
-     * This gives you a result similar to the one you get in 'Uses' administration page of JIRA Web UI.
+     * This gives you a result similar to the one you get in 'Uses' administration page of JIRA Web
+     * UI.
      *
-     * @param string $pattern - user login, display name or email
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                   $pattern - user login, display name or email
+     * @param \Mekras\Jira\REST\Client $Jira    - JIRA API client to use instead of global one.
+     *                                          Enables you to access several JIRA instances from
+     *                                          one piece of code, or use different users for
+     *                                          different actions.
      *
      * @return static[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function search(string $pattern, \Badoo\Jira\REST\Client $Jira = null) : array
+    public static function search(string $pattern, \Mekras\Jira\REST\Client $Jira = null): array
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $users = $Jira->user()->search($pattern);
@@ -112,20 +119,21 @@ class User
     /**
      * Search for user by exact match in email address
      *
-     * @param string $email - user email
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                   $email - user email
+     * @param \Mekras\Jira\REST\Client $Jira  - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception - on JIRA API interaction errors
-     * @throws \Badoo\Jira\Exception\User - when no user with given email found in JIRA
+     * @throws \Mekras\Jira\REST\Exception - on JIRA API interaction errors
+     * @throws \Mekras\Jira\Exception\User - when no user with given email found in JIRA
      */
-    public static function byEmail(string $email, \Badoo\Jira\REST\Client $Jira = null) : User
+    public static function byEmail(string $email, \Mekras\Jira\REST\Client $Jira = null): User
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $users = $Jira->user()->search($email);
@@ -136,7 +144,7 @@ class User
             }
         }
 
-        throw new \Badoo\Jira\Exception\User(
+        throw new \Mekras\Jira\Exception\User(
             "User with email '{$email}' not found in Jira"
         );
     }
@@ -144,15 +152,17 @@ class User
     /**
      * User constructor.
      *
-     * @param string $name - name of user in JIRA. Don't mess with display name you see in UI!
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
-     *                                        Enables you to access several JIRA instances from one piece of code,
-     *                                        or use different users for different actions.
+     * @param string                   $name  - name of user in JIRA. Don't mess with display name
+     *                                        you see in UI!
+     * @param \Mekras\Jira\REST\Client $Jira  - JIRA API client to use instead of global one.
+     *                                        Enables you to access several JIRA instances from one
+     *                                        piece of code, or use different users for different
+     *                                        actions.
      */
-    public function __construct(string $name, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(string $name, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->name = $name;
@@ -164,9 +174,9 @@ class User
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    protected function getOriginalObject(array $expand = []) : \stdClass
+    protected function getOriginalObject(array $expand = []): \stdClass
     {
         $new_expand = false;
         foreach ($expand as $item) {
@@ -177,7 +187,11 @@ class User
         }
 
         if (!isset($this->OriginalObject) || $new_expand) {
-            $this->OriginalObject = $this->Jira->user()->get($this->getName(), array_keys($this->expanded), true);
+            $this->OriginalObject = $this->Jira->user()->get(
+                $this->getName(),
+                array_keys($this->expanded),
+                true
+            );
             $this->groups = null;
         }
 
@@ -205,32 +219,32 @@ class User
         return $this->getOriginalObject()->avatarUrls->{$size} ?? null;
     }
 
-    public function getKey() : string
+    public function getKey(): string
     {
         return $this->getOriginalObject()->key;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function getDisplayName() : string
+    public function getDisplayName(): string
     {
         return $this->getOriginalObject()->displayName;
     }
 
-    public function getEmail() : string
+    public function getEmail(): string
     {
         // Email field can be omitted in some JIRA API responses (e.g. in components)
         if (!isset($this->getOriginalObject()->emailAddress)) {
             $this->OriginalObject = null; // drop cache to force data reload
         }
 
-        return (string)$this->getOriginalObject()->emailAddress;
+        return (string) $this->getOriginalObject()->emailAddress;
     }
 
-    public function isActive() : bool
+    public function isActive(): bool
     {
         return $this->getOriginalObject()->active;
     }
@@ -242,11 +256,11 @@ class User
      *
      * @return bool - true when user is member of any of given groups
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function isMemberOf($group_names) : bool
+    public function isMemberOf($group_names): bool
     {
-        $group_names = (array)$group_names;
+        $group_names = (array) $group_names;
         foreach ($this->getGroups() as $Group) {
             if (in_array($Group->getName(), $group_names)) {
                 return true;
@@ -259,15 +273,17 @@ class User
     /**
      * List all groups user is member of
      *
-     * @return \Badoo\Jira\Group[]
+     * @return \Mekras\Jira\Group[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getGroups() : array
+    public function getGroups(): array
     {
         // Groups list can be omitted in some JIRA API responses (e.g. in comments)
         if (!isset($this->groups)) {
-            $UserInfo = $this->getOriginalObject(['groups']); // force user data reload to initialize groups list
+            $UserInfo = $this->getOriginalObject(
+                ['groups']
+            ); // force user data reload to initialize groups list
 
             $this->groups = [];
             if (isset($UserInfo->groups)) {
@@ -285,19 +301,20 @@ class User
      * Start or stop watching issue (add/remove myself from issue's watchers list)
      *
      * @param string $issue_key - key of issue to start watching
-     * @param bool $watch - should current user watch the issue?
+     * @param bool   $watch     - should current user watch the issue?
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function watchIssue(string $issue_key, bool $watch = true) : User
+    public function watchIssue(string $issue_key, bool $watch = true): User
     {
         if ($watch) {
             $this->Jira->issue()->watchers()->add($issue_key, $this->getName());
         } else {
             $this->Jira->issue()->watchers()->remove($issue_key, $this->getName());
         }
+
         return $this;
     }
 
@@ -309,11 +326,12 @@ class User
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function assign(string $issue_key) : User
+    public function assign(string $issue_key): User
     {
         $this->Jira->issue()->assign($issue_key, $this->getName());
+
         return $this;
     }
 }

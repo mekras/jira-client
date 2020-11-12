@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class User extends Section
 {
@@ -46,7 +46,7 @@ class User extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(
         string $name,
@@ -84,7 +84,7 @@ class User extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function update(
         string $name,
@@ -120,7 +120,7 @@ class User extends Section
      *
      * @param string $name - user login to identify whom you want to update
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function remove(string $name) : void
     {
@@ -140,7 +140,7 @@ class User extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $name, array $expand = [], bool $reload_cache = false) : \stdClass
     {
@@ -173,7 +173,7 @@ class User extends Section
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function search(
         string $pattern,

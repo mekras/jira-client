@@ -4,33 +4,33 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
-class WatchersList extends \Badoo\Jira\UsersList
+class WatchersList extends \Mekras\Jira\UsersList
 {
     protected $initialized = false;
     protected $loaded = false;
 
     /**
      * @param array $users_info
-     * @param \Badoo\Jira\Issue $Issue
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\Issue $Issue
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception
+     * @throws \Mekras\Jira\Exception
      */
-    public static function fromStdClass(array $users_info, \Badoo\Jira\Issue $Issue = null, \Badoo\Jira\REST\Client $Jira = null) : \Badoo\Jira\UsersList
+    public static function fromStdClass(array $users_info, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null) : \Mekras\Jira\UsersList
     {
         if (!isset($Issue)) {
-            throw new \Badoo\Jira\Exception("Watchers list requires parent Issue object to work properly");
+            throw new \Mekras\Jira\Exception("Watchers list requires parent Issue object to work properly");
         }
 
         $users = [];
         foreach ($users_info as $UserInfo) {
-            $users[] = \Badoo\Jira\User::fromStdClass($UserInfo, $Issue, $Jira);
+            $users[] = \Mekras\Jira\User::fromStdClass($UserInfo, $Issue, $Jira);
         }
 
         $Instance = new static($users, $Jira);
@@ -42,28 +42,28 @@ class WatchersList extends \Badoo\Jira\UsersList
 
     /**
      * @param string $issue_key
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return WatchersList
      *
-     * @throws \Badoo\Jira\Exception
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forIssue(string $issue_key, \Badoo\Jira\REST\Client $Jira = null) : WatchersList
+    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira = null) : WatchersList
     {
-        $Issue = new \Badoo\Jira\Issue($issue_key, $Jira);
+        $Issue = new \Mekras\Jira\Issue($issue_key, $Jira);
         return $Issue->getWatchers();
     }
 
     /**
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function clearList() : \Badoo\Jira\UsersList
+    public function clearList() : \Mekras\Jira\UsersList
     {
         if ($this->initialized) {
             foreach ($this->getUsers() as $User) {
@@ -72,12 +72,12 @@ class WatchersList extends \Badoo\Jira\UsersList
         }
 
         $this->loaded = false;
-        return \Badoo\Jira\UsersList::clearList();
+        return \Mekras\Jira\UsersList::clearList();
     }
 
     /**
-     * @return \Badoo\Jira\User[]
-     * @throws \Badoo\Jira\REST\Exception
+     * @return \Mekras\Jira\User[]
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getUsers() : array
     {
@@ -85,7 +85,7 @@ class WatchersList extends \Badoo\Jira\UsersList
             $watchers = $this->Jira->issue()->watchers()->list($this->Issue->getKey());
 
             foreach ($watchers as $UserInfo) {
-                $Watcher = \Badoo\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
+                $Watcher = \Mekras\Jira\User::fromStdClass($UserInfo, $this->Issue, $this->Jira);
                 parent::addUsers($Watcher);
             }
 
@@ -102,13 +102,13 @@ class WatchersList extends \Badoo\Jira\UsersList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function addUsersByName(string ...$names) : WatchersList
     {
         $users = [];
         foreach ($names as $name) {
-            $users[] = new \Badoo\Jira\User($name, $this->Jira);
+            $users[] = new \Mekras\Jira\User($name, $this->Jira);
         }
         return $this->addUsers(...$users);
     }
@@ -116,13 +116,13 @@ class WatchersList extends \Badoo\Jira\UsersList
     /**
      * Add user to list of issue's watchers
      *
-     * @param \Badoo\Jira\User ...$users
+     * @param \Mekras\Jira\User ...$users
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function addUsers(\Badoo\Jira\User ...$users) : \Badoo\Jira\UsersList
+    public function addUsers(\Mekras\Jira\User ...$users) : \Mekras\Jira\UsersList
     {
         if ($this->initialized) {
             foreach ($users as $User) {
@@ -130,7 +130,7 @@ class WatchersList extends \Badoo\Jira\UsersList
             }
         }
 
-        return \Badoo\Jira\UsersList::addUsers(...$users);
+        return \Mekras\Jira\UsersList::addUsers(...$users);
     }
 
     /**
@@ -140,13 +140,13 @@ class WatchersList extends \Badoo\Jira\UsersList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function removeUsersByName(string ...$names) : WatchersList
     {
         $users = [];
         foreach ($names as $name) {
-            $users[] = new \Badoo\Jira\User($name, $this->Jira);
+            $users[] = new \Mekras\Jira\User($name, $this->Jira);
         }
         ;
         return $this->removeUsers($users);
@@ -155,13 +155,13 @@ class WatchersList extends \Badoo\Jira\UsersList
     /**
      * Remove user from list of issue's watchers
      *
-     * @param \Badoo\Jira\User ...$users
+     * @param \Mekras\Jira\User ...$users
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function removeUsers(\Badoo\Jira\User ...$users) : \Badoo\Jira\UsersList
+    public function removeUsers(\Mekras\Jira\User ...$users) : \Mekras\Jira\UsersList
     {
         if ($this->initialized) {
             foreach ($users as $User) {
@@ -169,6 +169,6 @@ class WatchersList extends \Badoo\Jira\UsersList
             }
         }
 
-        return \Badoo\Jira\UsersList::removeUsers(...$users);
+        return \Mekras\Jira\UsersList::removeUsers(...$users);
     }
 }

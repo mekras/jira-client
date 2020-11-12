@@ -1,17 +1,16 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira;
+namespace Mekras\Jira;
 
 class UsersList
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /** @var User[] */
@@ -19,7 +18,7 @@ class UsersList
     /** @var User[] */
     protected $by_email = [];
 
-    public static function fromStdClass(array $users_info, \Badoo\Jira\Issue $Issue = null, \Badoo\Jira\REST\Client $Jira = null) : UsersList
+    public static function fromStdClass(array $users_info, \Mekras\Jira\Issue $Issue = null, \Mekras\Jira\REST\Client $Jira = null) : UsersList
     {
         $users = [];
         foreach ($users_info as $UserInfo) {
@@ -34,14 +33,14 @@ class UsersList
 
     /**
      * @param User[] $users                 - users in list
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      */
-    public function __construct(array $users, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(array $users, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->addUsers(...$users);

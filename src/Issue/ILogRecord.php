@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 /**
  * Interface ILogRecord
@@ -15,9 +15,9 @@ interface ILogRecord
 {
     /**
      * Log record parent's issue.
-     * @return \Badoo\Jira\Issue
+     * @return \Mekras\Jira\Issue
      */
-    public function getIssue() : \Badoo\Jira\Issue;
+    public function getIssue() : \Mekras\Jira\Issue;
 
     /**
      * Log record creation time.

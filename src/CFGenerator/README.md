@@ -1,4 +1,4 @@
-# Badoo JIRA Custom fields classes generator
+# JIRA Custom fields classes generator
 
 Here is the generator, which can load list of custom fields from JIRA and create classes for them
 The main idea is to free yourself from handwriting bunch of similar code
@@ -18,14 +18,14 @@ Here is an example of code for single field class generation.
 ```php
 // Initizlize API client
 
-$Jira = new \Badoo\Jira\REST\Client;
+$Jira = new \Mekras\Jira\REST\Client;
 $Jira
     ->setJiraUrl('https://jira.example.com/')
     ->setAuth('user', 'token/password');
     
 // Create instance of generator 
 
-$Generator = new \Badoo\Jira\CFGenerator\Generator($Jira);
+$Generator = new \Mekras\Jira\CFGenerator\Generator($Jira);
 
 // Set it up
 $Generator
@@ -49,7 +49,7 @@ If you plan to use native PHP templates with the renderer provided with Generato
 
 ```php
 // Template name is used only in error messages and allows to narrow the field of error when you face it
-$Template = new \Badoo\Jira\CFGenerator\SimpleTemplate('MyCustomTemplate', $Jira);
+$Template = new \Mekras\Jira\CFGenerator\SimpleTemplate('MyCustomTemplate', $Jira);
  
 // When field has unlimited values and JQL search line does not suggest anything for field in 
 // JIRA WEB UI - this is just a waste of time. Think if you need it.
@@ -72,8 +72,8 @@ $Generator->mapTypeToTemplate('com.atlassian.jira.plugins...', $Template);
 
 ### Use custom template engine
 
-Generator expects not a \Badoo\Jira\CFGenerator\SimpleTemplate class as a template. 
-It expects \Badoo\Jira\CFGenerator\ITemplate
+Generator expects not a \Mekras\Jira\CFGenerator\SimpleTemplate class as a template. 
+It expects \Mekras\Jira\CFGenerator\ITemplate
 
 Once you implemented it - you can map the field or field type to your very special template,
 written on awesome template engine you use.

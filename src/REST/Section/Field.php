@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Field extends Section
 {
@@ -26,7 +26,7 @@ class Field extends Section
      * @param array $add_properties - additional properties for field.
      *                                They may depend on field type you are trying to create.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(string $name, string $description, string $type, array $add_properties = []) : void
     {
@@ -57,7 +57,7 @@ class Field extends Section
      * @return \stdClass[] - list of fields, both system and custom, indexed by IDs
      *                       (e.g. 'description' or 'customfield_12345')
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(bool $reload_cache = false) : array
     {
@@ -91,7 +91,7 @@ class Field extends Section
      *
      * @return \stdClass[] - list of system fields indexed by field ID (e.g. 'description')
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listSystem(bool $reload_cache = false) : array
     {
@@ -110,7 +110,7 @@ class Field extends Section
      * @param bool $reload_cache - force data reload
      *
      * @return \stdClass[] - list of custom fields indexed by field ID (e.g. 'customfield_12345')
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listCustom(bool $reload_cache = false) : array
     {
@@ -127,14 +127,14 @@ class Field extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $id, bool $reload_cache = false) : \stdClass
     {
         $fields = $this->list($reload_cache);
 
         if (!isset($fields[$id])) {
-            throw new \Badoo\Jira\REST\Exception("Field with ID '{$id}' not found in JIRA");
+            throw new \Mekras\Jira\REST\Exception("Field with ID '{$id}' not found in JIRA");
         }
 
         return $fields[$id];
@@ -151,7 +151,7 @@ class Field extends Section
      *
      * @return \stdClass[] - list of fields with given name
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function search(string $name, bool $case_sensitive = true, bool $reload_cache = false) : array
     {

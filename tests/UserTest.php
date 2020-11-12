@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\Tests;
+namespace Mekras\Jira\Tests;
 
-use Badoo\Jira\User;
+use Mekras\Jira\User;
 
 /**
  * Tests for User class.
  *
- * @covers \Badoo\Jira\User
+ * @covers \Mekras\Jira\User
  */
 class UserTest extends BaseTestCase
 {

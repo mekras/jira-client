@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\Tests;
+namespace Mekras\Jira\Tests;
 
 use PHPUnit\Framework\TestCase;
 

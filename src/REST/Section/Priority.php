@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Priority extends Section
 {
@@ -27,7 +27,7 @@ class Priority extends Section
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list($reload_cache = false) : array
     {
@@ -52,7 +52,7 @@ class Priority extends Section
      *
      * @return \stdClass|\stdClass[]|string|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(int $id, bool $reload_cache = false) : \stdClass
     {
@@ -80,7 +80,7 @@ class Priority extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      *
      */
     public function searchByName(string $priority_name, bool $case_sensitive = true, bool $reload_cache = false) : ?\stdClass

@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Project extends Section
 {
@@ -18,7 +18,7 @@ class Project extends Section
      *
      * @return \stdClass - project info
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get($project, array $expand = [])
     {
@@ -39,7 +39,7 @@ class Project extends Section
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list() : array
     {
@@ -56,7 +56,7 @@ class Project extends Section
      * @return \stdClass[] - list of Component info objects
      * @see Component::get() for mor info about data structure
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listComponents($project) : array
     {
@@ -72,7 +72,7 @@ class Project extends Section
      *
      * @return \stdClass[] - list of Version info objects
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listVersions($project) : array
     {
@@ -89,7 +89,7 @@ class Project extends Section
      *
      * @return \stdClass|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getLatestVersion($project) : ?\stdClass
     {
@@ -116,7 +116,7 @@ class Project extends Section
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listStatuses($project) : array
     {

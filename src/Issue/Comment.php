@@ -4,17 +4,17 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class Comment
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
     protected $OriginalObject;
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /** @var int $id */
@@ -27,11 +27,11 @@ class Comment
      * Initialize Comment object on data obtained from API
      *
      * @param \stdClass $CommentInfo   - issue comment information received from JIRA API.
-     * @param \Badoo\Jira\Issue $Issue - when current Comment object represents current comment of some issue.
+     * @param \Mekras\Jira\Issue $Issue - when current Comment object represents current comment of some issue.
      *
      * @return static
      */
-    public static function fromStdClass(\stdClass $CommentInfo, \Badoo\Jira\Issue $Issue) : Comment
+    public static function fromStdClass(\stdClass $CommentInfo, \Mekras\Jira\Issue $Issue) : Comment
     {
         $Instance = new static($CommentInfo->id, $Issue);
         $Instance->OriginalObject = $CommentInfo;
@@ -47,13 +47,13 @@ class Comment
      * requests JIRA only when you really need the data (e.g. the first time you call $Comment->getText()).
      *
      * @param int $id           - ID of comment you want to get
-     * @param \Badoo\Jira\Issue - issue that contains the comment
+     * @param \Mekras\Jira\Issue - issue that contains the comment
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Badoo\Jira\Issue $Issue)
+    public static function get(int $id, \Mekras\Jira\Issue $Issue)
     {
         $Instance = new static($id, $Issue);
         $Instance->getOriginalObject();
@@ -61,7 +61,7 @@ class Comment
         return $Instance;
     }
 
-    public function __construct(int $id, \Badoo\Jira\Issue $Issue)
+    public function __construct(int $id, \Mekras\Jira\Issue $Issue)
     {
         $this->id = $id;
         $this->Issue = $Issue;
@@ -86,7 +86,7 @@ class Comment
         $this->cache = [];
     }
 
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue() : \Mekras\Jira\Issue
     {
         return $this->Issue;
     }
@@ -134,13 +134,13 @@ class Comment
         return $timestamp;
     }
 
-    public function getAuthor() : \Badoo\Jira\User
+    public function getAuthor() : \Mekras\Jira\User
     {
         $User = $this->cache['Author'] ?? null;
 
         if (!isset($User)) {
             $UserInfo = $this->getOriginalObject()->author;
-            $User = \Badoo\Jira\User::fromStdClass($UserInfo);
+            $User = \Mekras\Jira\User::fromStdClass($UserInfo);
 
             $this->cache['Author'] = $User;
         }
@@ -148,13 +148,13 @@ class Comment
         return $User;
     }
 
-    public function getUpdateAuthor() : \Badoo\Jira\User
+    public function getUpdateAuthor() : \Mekras\Jira\User
     {
         $User = $this->cache['UpdateAuthor'] ?? null;
 
         if (!isset($User)) {
             $UserInfo = $this->getOriginalObject()->updateAuthor;
-            $User = \Badoo\Jira\User::fromStdClass($UserInfo);
+            $User = \Mekras\Jira\User::fromStdClass($UserInfo);
 
             $this->cache['UpdateAuthor'] = $User;
         }

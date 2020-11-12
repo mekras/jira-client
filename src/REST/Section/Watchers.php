@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Watchers extends Section
 {
@@ -17,7 +17,7 @@ class Watchers extends Section
      *
      * @return \stdClass[] - list of <Jira user info> objects
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(string $issue_key)
     {
@@ -38,7 +38,7 @@ class Watchers extends Section
      * @param string $issue_key
      * @param string $user_login
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function add(string $issue_key, string $user_login) : void
     {
@@ -53,7 +53,7 @@ class Watchers extends Section
      * @param string $issue_key
      * @param string $user_login
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function remove(string $issue_key, string $user_login) : void
     {

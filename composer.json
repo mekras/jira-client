@@ -40,7 +40,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Badoo\\Jira\\": "src/"
+            "Mekras\\Jira\\": "src/"
         }
     },
     "suggest": {
@@ -50,11 +50,12 @@
         "nyholm/psr7": "^1.2",
         "php-http/multipart-stream-builder": "^1.1",
         "phpunit/phpunit": "^8.2.5",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "symfony/cache": "^5.1"
     },
     "autoload-dev": {
         "psr-4": {
-            "Badoo\\Jira\\Tests\\": "tests/"
+            "Mekras\\Jira\\Tests\\": "tests/"
         }
     }
 }

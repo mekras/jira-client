@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 /**
  * Class LogRecordItem
@@ -45,7 +45,7 @@ class LogRecordItem
         return $this->OriginalObject;
     }
 
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue() : \Mekras\Jira\Issue
     {
         return $this->LogRecord->getIssue();
     }

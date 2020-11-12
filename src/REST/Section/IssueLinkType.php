@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class IssueLinkType extends Section
 {
@@ -27,7 +27,7 @@ class IssueLinkType extends Section
      *
      * @return \stdClass[] - list of all known issue types indexed by IDs
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(bool $reload_cache = false) : array
     {
@@ -55,7 +55,7 @@ class IssueLinkType extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(
         string $name,
@@ -84,7 +84,7 @@ class IssueLinkType extends Section
      *
      * @return \stdClass - link type info, see ::create method DocBlock for format description.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(int $link_type_id, bool $reload_cache = false) : \stdClass
     {
@@ -109,7 +109,7 @@ class IssueLinkType extends Section
      *
      * @return \stdClass - link type info, see ::create method DocBlock for format description.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function update(
         int $link_type_id,
@@ -146,7 +146,7 @@ class IssueLinkType extends Section
      *
      * @param int $link_id - ID of link to delete
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(int $link_id) : void
     {

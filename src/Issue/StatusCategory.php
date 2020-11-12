@@ -4,11 +4,11 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class StatusCategory
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -21,7 +21,7 @@ class StatusCategory
      * Initialize StatusCategory object on data obtained from API
      *
      * @param \stdClass $CategoryInfo       - issue type information received from JIRA API.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
@@ -29,7 +29,7 @@ class StatusCategory
      */
     public static function fromStdClass(
         \stdClass $CategoryInfo,
-        \Badoo\Jira\REST\Client $Jira = null
+        \Mekras\Jira\REST\Client $Jira = null
     ) : StatusCategory {
         $Instance = new static((int)$CategoryInfo->id, $Jira);
 
@@ -46,15 +46,15 @@ class StatusCategory
      * requests JIRA only when you really need the data (e.g. the first time you call $StatusCategory->getName()).
      *
      * @param int $id                       - ID of status category you want to get
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function get(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         $Instance = new static($id, $Jira);
         $Instance->getOriginalObject();
@@ -62,10 +62,10 @@ class StatusCategory
         return $Instance;
     }
 
-    public function __construct(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -74,7 +74,7 @@ class StatusCategory
 
     /**
      * @return \stdClass
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getOriginalObject()
     {

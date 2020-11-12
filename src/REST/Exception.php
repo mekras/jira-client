@@ -4,9 +4,9 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST;
+namespace Mekras\Jira\REST;
 
-class Exception extends \Badoo\Jira\Exception
+class Exception extends \Mekras\Jira\Exception
 {
     protected $api_response = null;
 

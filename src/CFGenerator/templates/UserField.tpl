@@ -8,7 +8,7 @@ if (!empty($namespace)) {
 }
 ?>
 
-class <?= $class_name ?> extends \Badoo\Jira\CustomFields\UserField
+class <?= $class_name ?> extends \Mekras\Jira\CustomFields\UserField
 {
     const ID   = '<?= $field_id ?>';
     const NAME = '<?= $field_name ?>';

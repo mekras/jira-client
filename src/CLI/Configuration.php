@@ -1,10 +1,9 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CLI;
+namespace Mekras\Jira\CLI;
 
 class Configuration
 {
@@ -16,7 +15,7 @@ class Configuration
 
     protected function readCredentials(string $file_path) : array
     {
-        $creds = \Badoo\Jira\Helpers\Files::fileGetContents($file_path);
+        $creds = \Mekras\Jira\Helpers\Files::fileGetContents($file_path);
         $creds = rtrim($creds, "\n"); // drop newlines after password
 
         list($user, $password) = explode(':', $creds, 2);
@@ -134,9 +133,9 @@ class Configuration
         return $this->Config['JIRA']['timeout'] ?? 60;
     }
 
-    public function getJiraClient() : \Badoo\Jira\REST\Client
+    public function getJiraClient() : \Mekras\Jira\REST\Client
     {
-        $Jira = new \Badoo\Jira\REST\Client($this->getJiraURL());
+        $Jira = new \Mekras\Jira\REST\Client($this->getJiraURL());
         $Jira->getRawClient()
             ->setAuth(
                 $this->getJiraUser(),

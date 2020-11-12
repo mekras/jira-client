@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\Cache;
+namespace Mekras\Jira\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 

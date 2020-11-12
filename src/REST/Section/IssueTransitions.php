@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class IssueTransitions extends Section
 {
@@ -19,7 +19,7 @@ class IssueTransitions extends Section
      *
      * @return \stdClass[] - list of transitions available
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function list(string $issue_key, bool $expand_fields = false) : array
     {
@@ -44,7 +44,7 @@ class IssueTransitions extends Section
      *
      * @return \stdClass - info for transition with given ID
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $issue_key, int $transition_id, bool $expand_fields = false) : \stdClass
     {
@@ -60,7 +60,7 @@ class IssueTransitions extends Section
 
         if (empty($transitions)) {
             $user = $this->jira->getLogin();
-            throw new \Badoo\Jira\REST\Exception(
+            throw new \Mekras\Jira\REST\Exception(
                 "Transition '{$transition_id}' of '{$issue_key}' is not available for '{$user}' in current issue status"
             );
         }
@@ -72,14 +72,14 @@ class IssueTransitions extends Section
      * Perform transition for issue.
      *
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-doTransition
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for parameters description
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for parameters description
      *
      * @param string $issue_key     - perform transition for this issue.
      * @param int    $transition_id - unique transition numeric ID.
      * @param array  $fields        - this parameter has the same meaning as in Issue->edit()
      * @param array  $update        - this parameter has the same meaning as in Issue->edit()
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function do(string $issue_key, int $transition_id, array $fields = [], array $update = []) : void
     {
@@ -112,7 +112,7 @@ class IssueTransitions extends Section
      * @param array $fields
      * @param array $update
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function do_safe(string $issue_key, int $transition_id, array $fields = [], array $update = []) : void
     {
@@ -138,7 +138,7 @@ class IssueTransitions extends Section
      *
      * NOTE: this is synthetic method. JIRA API has no appropriate method for ignoring fields that can't be set.
      *
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for parameters description
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for parameters description
      *
      * @param string $issue_key - key of issue to be progressed
      * @param string $step_name - transition (step) name. E.g. the text of a button in Jira Web interface.
@@ -147,7 +147,7 @@ class IssueTransitions extends Section
      * @param bool   $step_same_status - perform transition even if it leads to the same issue status (e.g. from Open to Open)
      * @param bool   $use_do_safe - use ::do_safe method, filter out fields that can't be set during transition.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      *
      */
     public function step(string $issue_key, string $step_name, array $fields = [], array $update = [], $use_do_safe = false, bool $step_same_status = false) : void
@@ -175,13 +175,13 @@ class IssueTransitions extends Section
                     return;
                 }
 
-                throw new \Badoo\Jira\REST\Exception(
+                throw new \Mekras\Jira\REST\Exception(
                     "Issue '{$IssueInfo->key}' is already in '{$target_status_name}' status"
                 );
             }
         }
 
-        throw new \Badoo\Jira\REST\Exception(
+        throw new \Mekras\Jira\REST\Exception(
             "Can't make '{$step_name}' step for issue '{$IssueInfo->key}' in status '{$IssueInfo->fields->status->name}'."
             . " Workflow Transition with name '{$step_name}' is not available in this status."
             . " List of issue steps available in current status: '" . implode("', '", $transition_names) . "'"

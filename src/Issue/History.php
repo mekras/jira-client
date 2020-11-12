@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 /**
  * Class History
@@ -13,14 +13,14 @@ namespace Badoo\Jira\Issue;
  */
 class History
 {
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
     /** @var HistoryRecord[] */
     protected $records = [];
 
-    public static function forIssue(string $issue_key, \Badoo\Jira\REST\Client $Jira) : \Badoo\Jira\Issue\History
+    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira) : \Mekras\Jira\Issue\History
     {
-        $Issue = \Badoo\Jira\Issue::byKey($issue_key, [], [\Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG], $Jira);
+        $Issue = \Mekras\Jira\Issue::byKey($issue_key, [], [\Mekras\Jira\REST\Section\Issue::EXP_CHANGELOG], $Jira);
         return $Issue->getHistory();
     }
 
@@ -28,11 +28,11 @@ class History
      * Initialize History object on data loaded from API
      *
      * @param \stdClass[] $records - list of history log records (issue->changelog->histories)
-     * @param \Badoo\Jira\Issue $Issue
+     * @param \Mekras\Jira\Issue $Issue
      *
      * @return History
      */
-    public static function fromStdClass(array $records, \Badoo\Jira\Issue $Issue)
+    public static function fromStdClass(array $records, \Mekras\Jira\Issue $Issue)
     {
         $Instance = new self();
         $Instance->Issue = $Issue;
@@ -62,7 +62,7 @@ class History
         return array_reverse($this->records);
     }
 
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue() : \Mekras\Jira\Issue
     {
         return $this->Issue;
     }

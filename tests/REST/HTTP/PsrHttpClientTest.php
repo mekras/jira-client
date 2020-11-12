@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Badoo\Jira\Tests\REST\HTTP;
+namespace Mekras\Jira\Tests\REST\HTTP;
 
-use Badoo\Jira\REST\HTTP\PsrHttpClient;
+use Mekras\Jira\REST\HTTP\PsrHttpClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,7 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Tests for PsrHttpClient
  *
- * @covers \Badoo\Jira\REST\HTTP\PsrHttpClient
+ * @covers \Mekras\Jira\REST\HTTP\PsrHttpClient
  */
 class PsrHttpClientTest extends TestCase
 {

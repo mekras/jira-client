@@ -3,11 +3,11 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST;
+namespace Mekras\Jira\REST;
 
-use Badoo\Jira\Cache\NullCache;
-use Badoo\Jira\REST\HTTP\CurlClient;
-use Badoo\Jira\REST\HTTP\HttpClient;
+use Mekras\Jira\REST\HTTP\CurlClient;
+use Mekras\Jira\REST\HTTP\HttpClient;
+use Mekras\Jira\Cache\NullCache;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
@@ -47,7 +47,7 @@ class ClientRaw
     /**
      * TODO Describe this.
      *
-     * @deprecated Will be changed to private in 2.0.
+     * @deprecated Will be deleted in 2.0.
      */
     public const REQ_POST = 'POST';
 
@@ -233,7 +233,7 @@ class ClientRaw
      *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $api_method, array $arguments = [], bool $raw = false)
     {
@@ -243,17 +243,16 @@ class ClientRaw
     /**
      * Request Jira REST API with HTTP POST request type.
      *
-     * @param string $api_method - API method path (e.g. issue/<key>)
-     * @param mixed  $arguments  - request data (parameters)
-     * @param bool   $raw        - don't parse response as JSON, just return raw response body
-     *                           string.
+     * @param string $apiMethod API method path (e.g. issue/<key>).
+     * @param mixed  $arguments Request data (parameters).
+     * @param bool   $raw       Don't parse response as JSON, just return raw response body string.
      *
      * @return string|\stdClass|\stdClass[]|null
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function post(string $api_method, $arguments = [], bool $raw = false)
+    public function post(string $apiMethod, $arguments = [], bool $raw = false)
     {
-        return $this->request(self::REQ_POST, $api_method, $arguments, $raw);
+        return $this->request('POST', $apiMethod, $arguments, $raw);
     }
 
     /**
@@ -265,7 +264,7 @@ class ClientRaw
      *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function multipart(string $api_method, array $arguments, bool $raw = false)
     {
@@ -281,7 +280,7 @@ class ClientRaw
      *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function put(string $api_method, array $arguments = [], bool $raw = false)
     {
@@ -297,7 +296,7 @@ class ClientRaw
      *                           string.
      *
      * @return string|\stdClass|\stdClass[]|null
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(string $api_method, array $arguments = [], bool $raw = false)
     {
@@ -344,7 +343,7 @@ class ClientRaw
      *                                           (array, \stdClass) or null for responses with
      *                                           empty body
      *
-     * @throws \Badoo\Jira\REST\Exception - on JSON parse errors, on warning HTTP codes and other
+     * @throws \Mekras\Jira\REST\Exception - on JSON parse errors, on warning HTTP codes and other
      *                                    errors.
      */
     private function request(
@@ -408,7 +407,7 @@ class ClientRaw
 
         $is_json = strpos($contentType, 'application/json') === 0;
         if ($is_json && $json_error) {
-            throw new \Badoo\Jira\REST\Exception(
+            throw new \Mekras\Jira\REST\Exception(
                 "Jira REST API interaction error, failed to parse JSON: " . json_last_error_msg()
                 . ". Raw API response: " . var_export($resultRaw, 1)
             );
@@ -421,7 +420,7 @@ class ClientRaw
         }
 
         if ($json_error) {
-            throw new \Badoo\Jira\REST\Exception(
+            throw new \Mekras\Jira\REST\Exception(
                 "Jira REST API responded with non-JSON data. " .
                 "Use <raw> parameter if you want to get the result as a string"
             );
@@ -454,19 +453,19 @@ class ClientRaw
         $is_json = strpos($content_type, 'application/json') === 0;
 
         if ($http_code === 401 && $is_html) {
-            throw new \Badoo\Jira\REST\Exception\Authorization(
+            throw new \Mekras\Jira\REST\Exception\Authorization(
                 "Jira API authorization failed, please check credentials"
             );
         }
 
         if ($http_code === 403 && $is_html) {
-            throw new \Badoo\Jira\REST\Exception\Authorization(
+            throw new \Mekras\Jira\REST\Exception\Authorization(
                 "Access to the API method is forbidden. You either have not enough privileges or the capcha shown to your user"
             );
         }
 
         if ($http_code >= 400 && !$is_json) {
-            throw new \Badoo\Jira\REST\Exception(
+            throw new \Mekras\Jira\REST\Exception(
                 "Jira REST API responded with code {$http_code} and content type {$content_type}. API answer: " . var_export(
                     $response_raw,
                     1
@@ -479,7 +478,7 @@ class ClientRaw
         }
 
         if (!empty($response->errorMessages)) {
-            $Error = new \Badoo\Jira\REST\Exception(
+            $Error = new \Mekras\Jira\REST\Exception(
                 "Jira REST API call error: " . implode('; ', $response->errorMessages)
             );
             $Error->setApiResponse($response);
@@ -487,7 +486,7 @@ class ClientRaw
         }
 
         if ($http_code >= 400) {
-            $Error = new \Badoo\Jira\REST\Exception($this->renderExceptionMessage($response));
+            $Error = new \Mekras\Jira\REST\Exception($this->renderExceptionMessage($response));
             $Error->setApiResponse($response);
 
             throw $Error;

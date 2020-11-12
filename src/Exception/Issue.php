@@ -1,12 +1,11 @@
 <?php
 /**
- * @package Jira
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Exception;
+namespace Mekras\Jira\Exception;
 
-class Issue extends \Badoo\Jira\Exception
+class Issue extends \Mekras\Jira\Exception
 {
     const ERROR_CODE_UNKNOWN_COMPONENT   = 0x01;
     const ERROR_CODE_UNKNOWN_FIELD       = 0x02;

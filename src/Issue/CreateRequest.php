@@ -1,14 +1,13 @@
 <?php
 /**
  * @package REST
- * @author Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 /**
  * Class CreateRequest
- * @package Badoo\Jira\Issue
  *
  * Usage example:
  *
@@ -26,7 +25,7 @@ namespace Badoo\Jira\Issue;
  */
 class CreateRequest
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var array - list of fields to set in create request */
@@ -40,17 +39,20 @@ class CreateRequest
 
     /**
      * IDs of issue components
+     *
      * @var int[]
      */
     protected $components = [];
 
     /**
-     * @var bool[] - label names are used as keys. 'true' value means label should be added to a new issue.
+     * @var bool[] - label names are used as keys. 'true' value means label should be added to a
+     *      new issue.
      */
     protected $labels = [];
 
     /**
      * Full list of fields (both custom and system) available on issue create screen.
+     *
      * @var array
      */
     protected $available_fields = [];
@@ -58,18 +60,23 @@ class CreateRequest
     /**
      * CreateRequest constructor.
      *
-     * @param string $project_key - key of project for new issue (e.g. EX, TEST, IOS)
-     * @param string|int $issue_type - textual name or ID of type for issue you are going to create (e.g. 'Bug' or 34)
+     * @param string                        $project_key - key of project for new issue (e.g. EX,
+     *                                                   TEST, IOS)
+     * @param string|int                    $issue_type  - textual name or ID of type for issue you
+     *                                                   are going to create (e.g. 'Bug' or 34)
      *
-     * @param \Badoo\Jira\REST\Client|null $Jira
+     * @param \Mekras\Jira\REST\Client|null $Jira
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function __construct(string $project_key, $issue_type, \Badoo\Jira\REST\Client $Jira = null)
-    {
+    public function __construct(
+        string $project_key,
+        $issue_type,
+        \Mekras\Jira\REST\Client $Jira = null
+    ) {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
         $this->Jira = $Jira;
 
@@ -77,7 +84,7 @@ class CreateRequest
 
         $TypeInfo = $this->loadIssueTypeInfo($issue_type);
 
-        $this->fields['issuetype'] = ['id' => (string)$TypeInfo->id];
+        $this->fields['issuetype'] = ['id' => (string) $TypeInfo->id];
         $this->issue_type_name = $TypeInfo->name;
 
         $this->loadAvailableFields();
@@ -88,10 +95,10 @@ class CreateRequest
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
-    protected function loadIssueTypeInfo($issue_type) : \stdClass
+    protected function loadIssueTypeInfo($issue_type): \stdClass
     {
         if (is_numeric($issue_type)) {
             $TypeInfo = $this->Jira->issueType()->get($issue_type);
@@ -100,18 +107,18 @@ class CreateRequest
         }
 
         if (!isset($TypeInfo)) {
-            throw new \Badoo\Jira\Exception\Issue(
+            throw new \Mekras\Jira\Exception\Issue(
                 "Unknown issue type '{$issue_type}' for project '{$this->getProject()}'",
-                \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_TYPE
+                \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_TYPE
             );
         }
 
         return $TypeInfo;
     }
 
-    protected function isCustomField($field_key) : bool
+    protected function isCustomField($field_key): bool
     {
-        return (bool)preg_match('/customfield_\d+/', $field_key);
+        return (bool) preg_match('/customfield_\d+/', $field_key);
     }
 
     /**
@@ -119,7 +126,7 @@ class CreateRequest
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function getFieldsForCreate()
     {
@@ -127,14 +134,14 @@ class CreateRequest
         $CreateMetaInfo = $this->Jira->issue()->getCreateMeta(
             $this->getProject(),
             $this->getIssueTypeID(),
-            \Badoo\Jira\REST\Section\Issue::EXP_CREATEMETA_FIELDS
+            \Mekras\Jira\REST\Section\Issue::EXP_CREATEMETA_FIELDS
         );
 
         return $CreateMetaInfo[0]->issuetypes[0]->fields;
     }
 
     /**
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     protected function loadAvailableFields()
     {
@@ -151,25 +158,29 @@ class CreateRequest
     }
 
     /**
-     * Parse field meta information from Jira REST response and generate special attributes/data for further usage.
+     * Parse field meta information from Jira REST response and generate special attributes/data
+     * for further usage.
      *
      * @param string    $field_id
      * @param \stdClass $FieldInfo
+     *
      * @return array with following information:
      *                  [
-     *                      'key' => <unique field ID>,      // like 'reporter' or 'customfield_1234'
+     *                      'key' => <unique field ID>,      // like 'reporter' or
+     *                      'customfield_1234'
      *                      'type' => <field value type>,    // 'array', 'string', 'number', etc.
-     *                      'limited_values' => <true|false> // whether the field has limited set of possible values
+     *                      'limited_values' => <true|false> // whether the field has limited set
+     *                      of possible values
      *                      'allowed_values' => <list of allowed values|null>
      *                  ]
      */
-    protected function generateFieldMetaInfo($field_id, $FieldInfo) : array
+    protected function generateFieldMetaInfo($field_id, $FieldInfo): array
     {
         $is_custom = $this->isCustomField($field_id);
 
-        $field_type         = $FieldInfo->schema->type;
+        $field_type = $FieldInfo->schema->type;
         $has_limited_values = isset($FieldInfo->allowedValues);
-        $values_range       = null;
+        $values_range = null;
 
         // List of allowed values is generated only for custom fields, since system fields have different structure.
         if ($is_custom && $has_limited_values) {
@@ -187,11 +198,11 @@ class CreateRequest
         }
 
         return [
-            'key'            => $field_id,
-            'type'           => $field_type,
+            'key' => $field_id,
+            'type' => $field_type,
             'limited_values' => $has_limited_values,
             'allowed_values' => $values_range,
-            'custom'         => $is_custom,
+            'custom' => $is_custom,
         ];
     }
 
@@ -199,9 +210,10 @@ class CreateRequest
      * Check that given field has limited set of possible values.
      *
      * @param string $field_name
+     *
      * @return bool
      */
-    protected function hasLimitedValues($field_name) : bool
+    protected function hasLimitedValues($field_name): bool
     {
         return $this->available_fields[$field_name]['limited_values'] ?? false;
     }
@@ -215,7 +227,7 @@ class CreateRequest
      *
      * @return bool
      */
-    protected function isValueAllowed($field_name, $value_to_check) : bool
+    protected function isValueAllowed($field_name, $value_to_check): bool
     {
         $allowed_values = $this->available_fields[$field_name]['allowed_values'];
 
@@ -231,6 +243,7 @@ class CreateRequest
                     $is_allowed = false;
                 }
             }
+
             return $is_allowed;
         } else {
             return true;
@@ -239,10 +252,11 @@ class CreateRequest
 
     /**
      * @param int|int[]|string|string[] $values
+     *
      * @return array - generated field value ready to be sent to Jira REST API
      *                 (for fields with several values, like checkboxes).
      */
-    protected function generateArrayFieldValue($values) : array
+    protected function generateArrayFieldValue($values): array
     {
         if (!is_array($values)) {
             $values = [$values];
@@ -260,35 +274,40 @@ class CreateRequest
     }
 
     /**
-     * @param int|string $component - component unique Jira ID or symbolic name (like 12345 or 'Refactoring').
+     * @param int|string $component - component unique Jira ID or symbolic name (like 12345 or
+     *                              'Refactoring').
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue on attempt to add unknown component
+     * @throws \Mekras\Jira\Exception\Issue on attempt to add unknown component
      */
     protected function addComponent($component)
     {
         if (is_numeric($component)) {
-            $component_id = (int)$component;
+            $component_id = (int) $component;
 
             try {
-                $Component = new \Badoo\Jira\Component($component_id, $this->Jira);
+                $Component = new \Mekras\Jira\Component($component_id, $this->Jira);
                 $Component->getName(); // force API request
-            } catch (\Badoo\Jira\REST\Exception $e) {
-                throw new \Badoo\Jira\Exception\Issue(
+            } catch (\Mekras\Jira\REST\Exception $e) {
+                throw new \Mekras\Jira\Exception\Issue(
                     "Can't get component with ID '{$component_id}' from Jira: {$e->getMessage()}",
-                    \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_COMPONENT
+                    \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_COMPONENT
                 );
             }
         } else {
-            $component = trim((string)$component);
+            $component = trim((string) $component);
 
             try {
-                $Component = \Badoo\Jira\Component::byName($this->getProject(), $component, $this->Jira);
-            } catch (\Badoo\Jira\Exception $e) {
-                throw new \Badoo\Jira\Exception\Issue(
+                $Component = \Mekras\Jira\Component::byName(
+                    $this->getProject(),
+                    $component,
+                    $this->Jira
+                );
+            } catch (\Mekras\Jira\Exception $e) {
+                throw new \Mekras\Jira\Exception\Issue(
                     "Unknown component '{$component}' for project '{$this->getProject()}'",
-                    \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_COMPONENT
+                    \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_COMPONENT
                 );
             }
         }
@@ -300,6 +319,7 @@ class CreateRequest
 
     /**
      * @param string|int $value
+     *
      * @return array - generated field value ready to be sent to Jira REST API
      *                 (for fields with single value, but limited set of values)
      */
@@ -308,17 +328,17 @@ class CreateRequest
         return ['value' => $value];
     }
 
-    public function getProject() : string
+    public function getProject(): string
     {
         return $this->fields['project']['key'] ?? '';
     }
 
-    public function getIssueTypeID() : int
+    public function getIssueTypeID(): int
     {
         return $this->fields['issuetype']['id'];
     }
 
-    public function getIssueTypeName() : string
+    public function getIssueTypeName(): string
     {
         return $this->issue_type_name;
     }
@@ -328,8 +348,8 @@ class CreateRequest
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function setPriority($priority)
     {
@@ -340,9 +360,9 @@ class CreateRequest
         }
 
         if (!isset($PriorityInfo)) {
-            throw new \Badoo\Jira\Exception\Issue(
+            throw new \Mekras\Jira\Exception\Issue(
                 "Unknown priority '{$priority}'",
-                \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_PRIORITY
+                \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_PRIORITY
             );
         }
 
@@ -351,40 +371,46 @@ class CreateRequest
 
     /**
      * @param string $summary
+     *
      * @return $this
      */
-    public function setSummary(string $summary) : CreateRequest
+    public function setSummary(string $summary): CreateRequest
     {
         $this->fields['summary'] = $summary;
+
         return $this;
     }
 
-    public function getSummary() : string
+    public function getSummary(): string
     {
         return $this->fields['summary'] ?? '';
     }
 
     /**
      * @param string $assignee
+     *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setAssignee(string $assignee) : CreateRequest
+    public function setAssignee(string $assignee): CreateRequest
     {
         $assignee = trim($assignee);
+
         return $this->setFieldValue('Assignee', ['name' => $assignee]);
     }
 
     /**
-     * @param string|\Badoo\Jira\Issue $issue - object of parent issue or just plain issue key as string
+     * @param string|\Mekras\Jira\Issue $issue - object of parent issue or just plain issue key as
+     *                                         string
+     *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setParentIssue($issue) : CreateRequest
+    public function setParentIssue($issue): CreateRequest
     {
-        if ($issue instanceof \Badoo\Jira\Issue) {
+        if ($issue instanceof \Mekras\Jira\Issue) {
             $issue = $issue->getKey();
         }
 
@@ -393,13 +419,15 @@ class CreateRequest
 
     /**
      * @param string $description
+     *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setDescription(string $description) : CreateRequest
+    public function setDescription(string $description): CreateRequest
     {
         $description = trim($description);
+
         return $this->setFieldValue('Description', $description);
     }
 
@@ -408,9 +436,9 @@ class CreateRequest
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setLabels(string ...$labels) : CreateRequest
+    public function setLabels(string ...$labels): CreateRequest
     {
         return $this->setFieldValue("Labels", $labels);
     }
@@ -420,11 +448,11 @@ class CreateRequest
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setSecurityLevel(int $level_id) : CreateRequest
+    public function setSecurityLevel(int $level_id): CreateRequest
     {
-        return $this->setFieldValue('Security Level', ['id' => (string)$level_id]);
+        return $this->setFieldValue('Security Level', ['id' => (string) $level_id]);
     }
 
     /**
@@ -432,20 +460,22 @@ class CreateRequest
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setDueDate($ts) : CreateRequest
+    public function setDueDate($ts): CreateRequest
     {
         return $this->setDateField('Due Date', $ts);
     }
 
     /**
-     * @param string $field_name - имя поля, как оно отображается в интерфейсе Jira (Assignee, Build_Name, ...)
-     * @param mixed $value
-     * @param bool $skip_unknown - do not throw exception for unknown field name. Just do nothing and return $this.
+     * @param string $field_name   - имя поля, как оно отображается в интерфейсе Jira (Assignee,
+     *                             Build_Name, ...)
+     * @param mixed  $value
+     * @param bool   $skip_unknown - do not throw exception for unknown field name. Just do nothing
+     *                             and return $this.
      *
      * @return $this
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function setFieldValue($field_name, $value, $skip_unknown = false)
     {
@@ -454,9 +484,9 @@ class CreateRequest
                 return $this;
             }
 
-            throw new \Badoo\Jira\Exception\Issue(
+            throw new \Mekras\Jira\Exception\Issue(
                 "Unknown field '{$field_name}' for '{$this->issue_type_name}' issue in project '{$this->getProject()}'",
-                \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_FIELD
+                \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_FIELD
             );
         }
 
@@ -465,9 +495,9 @@ class CreateRequest
         // Perform value generation only for custom fields, since system ones have different complex structure.
         if ($this->isCustomField($field_key) && $this->hasLimitedValues($field_name)) {
             if (!$this->isValueAllowed($field_name, $value)) {
-                throw new \Badoo\Jira\Exception\Issue(
+                throw new \Mekras\Jira\Exception\Issue(
                     "Value '{$value}' is impossible for custom field '{$field_name}'",
-                    \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_FIELD_VALUE
+                    \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_FIELD_VALUE
                 );
             }
 
@@ -489,35 +519,39 @@ class CreateRequest
     }
 
     /**
-     * @param string $field_name - field to set
-     * @param int|string $date_ts - timestamp of date to set the field
+     * @param string     $field_name - field to set
+     * @param int|string $date_ts    - timestamp of date to set the field
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
-    public function setDateField($field_name, $date_ts) : CreateRequest
+    public function setDateField($field_name, $date_ts): CreateRequest
     {
         $date = date('Y-m-d', $date_ts);
+
         return $this->setFieldValue($field_name, $date);
     }
 
     /**
      * @param int|string ...$components
+     *
      * @return $this
      *
-     * @throws \Badoo\Jira\Exception\Issue when unknown component found in list
+     * @throws \Mekras\Jira\Exception\Issue when unknown component found in list
      */
     public function addComponents(...$components)
     {
         foreach ($components as $component) {
             $this->addComponent($component);
         }
+
         return $this;
     }
 
     /**
      * @param string|string[] $labels - list of labels (or single label) to be added to a new issue.
+     *
      * @return $this
      */
     public function addLabels($labels)
@@ -534,12 +568,12 @@ class CreateRequest
     }
 
     /**
-     * @return \Badoo\Jira\Issue
+     * @return \Mekras\Jira\Issue
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue for unexpected JIRA response.
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue for unexpected JIRA response.
      */
-    public function send() : \Badoo\Jira\Issue
+    public function send(): \Mekras\Jira\Issue
     {
         $fields = $this->fields;
 
@@ -548,7 +582,7 @@ class CreateRequest
         if (!empty($this->components)) {
             $components = [];
             foreach ($this->components as $component_id) {
-                $components[] = ['id' => (string)$component_id];
+                $components[] = ['id' => (string) $component_id];
             }
             $fields['components'] = $components;
         }
@@ -563,12 +597,17 @@ class CreateRequest
         $result = $this->Jira->issue()->create($fields);
 
         if (isset($result->key)) {
-            return \Badoo\Jira\Issue::fromStdClass($result, ['id', 'key', 'self'], [], $this->Jira);
+            return \Mekras\Jira\Issue::fromStdClass(
+                $result,
+                ['id', 'key', 'self'],
+                [],
+                $this->Jira
+            );
         } else {
-            throw new \Badoo\Jira\Exception\Issue(
+            throw new \Mekras\Jira\Exception\Issue(
                 "Something went wrong during new issue creation in project {$this->getProject()}. "
                 . "Unexpected response from JIRA API: " . var_export($result, true),
-                \Badoo\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_ERROR
+                \Mekras\Jira\Exception\Issue::ERROR_CODE_UNKNOWN_ERROR
             );
         }
     }

@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Group extends Section
 {
@@ -36,7 +36,7 @@ class Group extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(
         string $name
@@ -61,7 +61,7 @@ class Group extends Section
      * @param string|null $swap_group - transfer restrictions to another group (replace deleted group settings to
      *                                  this one to keep comments/worklogs viewable after remove)
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function remove(string $name, string $swap_group = null) : void
     {
@@ -87,7 +87,7 @@ class Group extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(string $name, bool $reload_cache = false) : \stdClass
     {
@@ -112,7 +112,7 @@ class Group extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listUsers(
         string $name,
@@ -147,7 +147,7 @@ class Group extends Section
      *
      * @return \stdClass[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function listAllUsers(
         string $name,
@@ -195,7 +195,7 @@ class Group extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function addUser(string $groupname, string $username) : \stdClass
     {
@@ -218,7 +218,7 @@ class Group extends Section
      * @param string $groupname - a name of group you want to remove user from
      * @param string $username - login of user to remove
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function removeUser(string $groupname, string $username) : void
     {

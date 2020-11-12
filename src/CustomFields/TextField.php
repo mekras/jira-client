@@ -1,14 +1,12 @@
 <?php
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\CustomFields;
+namespace Mekras\Jira\CustomFields;
 
 /**
  * Class TextField
- * @package Badoo\Jira\CustomFields\Abstracts
  *
  * Wrapper class for 'text' type custom field
  */
@@ -17,23 +15,24 @@ abstract class TextField extends CustomField
     /**
      * @return string
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getValue()
     {
-        return (string)$this->getOriginalObject();
+        return (string) $this->getOriginalObject();
     }
 
     /**
      * @param string $value
+     *
      * @return array
      */
-    public static function generateSetter($value) : array
+    public static function generateSetter($value): array
     {
         if ($value !== null) {
-            $value = (string)$value;
+            $value = (string) $value;
         }
 
-        return [ ['set' => $value] ];
+        return [['set' => $value]];
     }
 }

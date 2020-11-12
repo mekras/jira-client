@@ -4,11 +4,11 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\Issue;
+namespace Mekras\Jira\Issue;
 
 class LinksList
 {
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     /** @var Link[] */
@@ -18,15 +18,15 @@ class LinksList
      * Initialize LinksList object on data of Issue->fields->issuelinks obtained from API
      *
      * @param \stdClass[] $links            - links list information as it is provided in Issue->fields->issueLinks
-     * @param \Badoo\Jira\Issue $Issue      - when current LinksList object represents current links list of some issue.
+     * @param \Mekras\Jira\Issue $Issue      - when current LinksList object represents current links list of some issue.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception\Link
+     * @throws \Mekras\Jira\Exception\Link
      */
     public static function fromStdClass(
         array $links,
-        \Badoo\Jira\Issue $Issue
+        \Mekras\Jira\Issue $Issue
     ) : LinksList {
         $Instance = new static($Issue);
 
@@ -42,22 +42,22 @@ class LinksList
      * Get list of links connected to issue identified by key.
      *
      * @param string $issue_key             - key of issue to list links for.
-     * @param \Badoo\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
+     * @param \Mekras\Jira\REST\Client $Jira - JIRA API client to use instead of global one.
      *                                        Enables you to access several JIRA instances from one piece of code,
      *                                        or use different users for different actions.
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public static function forIssue(string $issue_key, \Badoo\Jira\REST\Client $Jira = null) : LinksList
+    public static function forIssue(string $issue_key, \Mekras\Jira\REST\Client $Jira = null) : LinksList
     {
-        $Issue = \Badoo\Jira\Issue::byKey($issue_key, ['issuelinks'], [], $Jira);
+        $Issue = \Mekras\Jira\Issue::byKey($issue_key, ['issuelinks'], [], $Jira);
         return $Issue->getLinksList();
     }
 
-    public function __construct(\Badoo\Jira\Issue $Issue)
+    public function __construct(\Mekras\Jira\Issue $Issue)
     {
         $this->Issue = $Issue;
     }
@@ -72,7 +72,7 @@ class LinksList
         return $this;
     }
 
-    public function getIssue() : \Badoo\Jira\Issue
+    public function getIssue() : \Mekras\Jira\Issue
     {
         return $this->Issue;
     }
@@ -85,7 +85,7 @@ class LinksList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function addInward(string $issue_key, string $link_type, string $comment = '', array $visibility = []) : LinksList
     {
@@ -113,7 +113,7 @@ class LinksList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function addOutward(string $issue_key, string $link_type, string $comment = '', array $visibility = []) : LinksList
     {
@@ -136,8 +136,8 @@ class LinksList
      *
      * @return Link[]
      *
-     * @throws \Badoo\Jira\Exception\Link
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getLinks($type = '', bool $case_sensitive = true) : array
     {
@@ -195,8 +195,8 @@ class LinksList
     /**
      * @return Link[]
      *
-     * @throws \Badoo\Jira\Exception\Link
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getLinksInward() : array
     {
@@ -213,8 +213,8 @@ class LinksList
     /**
      * @return Link[]
      *
-     * @throws \Badoo\Jira\Exception\Link
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getLinksOutward() : array
     {
@@ -237,8 +237,8 @@ class LinksList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
      */
     public function removeLink(string $issue_key, $link_type = '', bool $case_sensitive = true) : LinksList
     {
@@ -282,8 +282,8 @@ class LinksList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
      */
     public function removeLinkInward(string $issue_key, $link_type = '', bool $case_sensitive = true) : LinksList
     {
@@ -327,8 +327,8 @@ class LinksList
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Link
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Link
      */
     public function removeLinkOutward(string $issue_key, $link_type = '', bool $case_sensitive = true) : LinksList
     {

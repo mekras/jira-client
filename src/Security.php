@@ -1,14 +1,13 @@
 <?php
 /**
- * @package Jira
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira;
+namespace Mekras\Jira;
 
 class Security
 {
-    /** @var \Badoo\Jira\REST\Client */
+    /** @var \Mekras\Jira\REST\Client */
     protected $Jira;
 
     /** @var \stdClass */
@@ -17,15 +16,15 @@ class Security
     /** @var int */
     protected $id;            // 10000
 
-    /** @var \Badoo\Jira\Issue */
+    /** @var \Mekras\Jira\Issue */
     protected $Issue;
 
     public static function fromStdClass(
         \stdClass $SecurityLevel,
-        \Badoo\Jira\Issue $Issue = null,
-        \Badoo\Jira\REST\Client $Jira = null
-    ) : Security {
-        $Instance = new static((int)$SecurityLevel->id, $Jira);
+        \Mekras\Jira\Issue $Issue = null,
+        \Mekras\Jira\REST\Client $Jira = null
+    ): Security {
+        $Instance = new static((int) $SecurityLevel->id, $Jira);
 
         $Instance->OriginalObject = $SecurityLevel;
         $Instance->Issue = $Issue;
@@ -33,7 +32,7 @@ class Security
         return $Instance;
     }
 
-    public static function get(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public static function get(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         $Instance = new static($id, $Jira);
         $Instance->getOriginalObject();
@@ -41,10 +40,10 @@ class Security
         return $Instance;
     }
 
-    public function __construct(int $id, \Badoo\Jira\REST\Client $Jira = null)
+    public function __construct(int $id, \Mekras\Jira\REST\Client $Jira = null)
     {
         if (!isset($Jira)) {
-            $Jira = \Badoo\Jira\REST\Client::instance();
+            $Jira = \Mekras\Jira\REST\Client::instance();
         }
 
         $this->id = $id;
@@ -60,27 +59,27 @@ class Security
         return $this->OriginalObject;
     }
 
-    public function getIssue() : ?\Badoo\Jira\Issue
+    public function getIssue(): ?\Mekras\Jira\Issue
     {
         return $this->Issue;
     }
 
-    public function getId() : int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->getOriginalObject()->name;
     }
 
-    public function getDescription() : string
+    public function getDescription(): string
     {
         return $this->getOriginalObject()->description ?? '';
     }
 
-    public function getSelf() : string
+    public function getSelf(): string
     {
         return $this->getOriginalObject()->self;
     }

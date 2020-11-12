@@ -1,12 +1,11 @@
 <?php
 /**
- * @package Jira
- * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
+ * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira;
+namespace Mekras\Jira;
 
-use Badoo\Jira\REST\Client;
+use Mekras\Jira\REST\Client;
 
 /**
  * Class Issue
@@ -26,7 +25,7 @@ class Issue
      *               Everything, which is not classified as custom fields. */
     protected $cached_data = [];
 
-    /** @var \Badoo\Jira\CustomFields\CustomField[] - cached objects for issue's custom fields */
+    /** @var \Mekras\Jira\CustomFields\CustomField[] - cached objects for issue's custom fields */
     protected $custom_fields = [];
 
     /** @var string[] - list of expands for issue. REST API request with 'expand' parameter makes API to add additional
@@ -42,7 +41,7 @@ class Issue
 
     /**
      * @var array - list of field updates to be sent to JIRA API on ->save() call
-     * @see \Badoo\Jira\REST\Section\Issue::edit for more info on structure of data stored here
+     * @see \Mekras\Jira\REST\Section\Issue::edit for more info on structure of data stored here
      *      ($update parameter)
      */
     protected $update_fields = [];
@@ -60,9 +59,9 @@ class Issue
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
-     * @see \Badoo\Jira\REST\Section\Issue::get()
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::get()
      *
      */
     public static function byKey(
@@ -95,9 +94,9 @@ class Issue
      *
      * @return static[]
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
-     * @see \Badoo\Jira\REST\Section\Issue::search()
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::search()
      *
      */
     public static function byKeys(
@@ -117,7 +116,7 @@ class Issue
 
     /**
      * Perform brief check of given \stdClass object for correctness and initialize
-     * \Badoo\Jira\Issue object on it.
+     * \Mekras\Jira\Issue object on it.
      *
      * @param \stdClass $BaseIssue
      * @param string[]  $fields               - <BaseIssue> object was loaded only with this fields
@@ -130,7 +129,7 @@ class Issue
      *
      * @return static
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public static function fromStdClass(
         \stdClass $BaseIssue,
@@ -139,11 +138,11 @@ class Issue
         Client $Jira = null
     ): Issue {
         if (empty($BaseIssue->key)) {
-            throw new \Badoo\Jira\Exception\Issue('Provided data does not contain attribute "key"');
+            throw new \Mekras\Jira\Exception\Issue('Provided data does not contain attribute "key"');
         }
 
         if (!empty($fields) && !empty($expand)) {
-            throw new \Badoo\Jira\Exception\Issue(
+            throw new \Mekras\Jira\Exception\Issue(
                 'Issue object does not support partial fields load in combination with non-empty \'expand\' parameter.' .
                 ' Use any of them, but no both to make Issue do optimal requests to JIRA API.' .
                 ' More info is in documentation at https://github.com/badoo/jira-client.git'
@@ -205,9 +204,9 @@ class Issue
      *
      * @return static[] - list of issues are fit the search request.
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
-     * @see \Badoo\Jira\REST\Section\Issue::search()
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::search()
      */
     public static function search(
         string $jql,
@@ -238,7 +237,7 @@ class Issue
      * Issue constructor.
      *
      * WARNING: new Issue(<key>) can be used in many places to return lists of issues.
-     *          This means \Badoo\Jira\Issue class constructor should be 'light' and should not
+     *          This means \Mekras\Jira\Issue class constructor should be 'light' and should not
      *          perform full initialization with REST API requests within to not cause performance
      *          degradation.
      *
@@ -248,13 +247,13 @@ class Issue
      *                                        piece of code, or use different users for different
      *                                        actions.
      *
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function __construct(string $issue_key, Client $Jira = null)
     {
         $issue_key = trim($issue_key);
         if ($issue_key === '') {
-            throw new \Badoo\Jira\Exception\Issue("Can't create Issue object with empty issue key");
+            throw new \Mekras\Jira\Exception\Issue("Can't create Issue object with empty issue key");
         }
 
         if (!isset($Jira)) {
@@ -274,7 +273,7 @@ class Issue
         string $text,
         ?array $visibility = [],
         bool $expand_rendered = false
-    ): \Badoo\Jira\Issue\Comment {
+    ): \Mekras\Jira\Issue\Comment {
         $CommentInfo = $this->Jira->issue()->comment()->create(
             $this->getKey(),
             $text,
@@ -283,7 +282,7 @@ class Issue
         );
         $this->dropCache();
 
-        $Comment = \Badoo\Jira\Issue\Comment::fromStdClass($CommentInfo, $this);
+        $Comment = \Mekras\Jira\Issue\Comment::fromStdClass($CommentInfo, $this);
 
         return $Comment;
     }
@@ -340,10 +339,10 @@ class Issue
      * @param string $version_name
      * @param bool   $create - create new version in Jira, if it does not already exist.
      *
-     * @return \Badoo\Jira\Version
+     * @return \Mekras\Jira\Version
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Version
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Version
      */
     public function addVersion($version_name, $create = false)
     {
@@ -357,15 +356,15 @@ class Issue
         }
 
         // Create a new version in Jira project if it is needed.
-        if ($create && !\Badoo\Jira\Version::exists(
+        if ($create && !\Mekras\Jira\Version::exists(
                 $this->getProject(),
                 $version_name,
                 $this->getJira()
             )) {
-            $VersionToAdd = new \Badoo\Jira\Version(0, $this->getJira());
+            $VersionToAdd = new \Mekras\Jira\Version(0, $this->getJira());
             $VersionToAdd->setProject($this->getProject())->setName($version_name)->save();
         } else {
-            $VersionToAdd = \Badoo\Jira\Version::byName(
+            $VersionToAdd = \Mekras\Jira\Version::byName(
                 $this->getProject(),
                 $version_name,
                 $this->getJira()
@@ -389,7 +388,7 @@ class Issue
         string $file_path,
         ?string $file_name = null,
         ?string $file_type = null
-    ): \Badoo\Jira\Issue\File {
+    ): \Mekras\Jira\Issue\File {
         return $this->getAttachments()->attach($file_path, $file_name, $file_type);
     }
 
@@ -411,10 +410,10 @@ class Issue
      *                          Example: [ [ 'set' => [ 'id' => 1234' ] ]
      *
      * @return $this
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for more info
      *
      */
-    public function edit(string $field_id, array $update): \Badoo\Jira\Issue
+    public function edit(string $field_id, array $update): \Mekras\Jira\Issue
     {
         $this->update_fields[$field_id] = $update;
 
@@ -424,16 +423,16 @@ class Issue
     /**
      * Get issue's assignee user information. 'null' is returned for unassigned issues.
      *
-     * @return \Badoo\Jira\User|null
+     * @return \Mekras\Jira\User|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getAssignee(): ?User
     {
         $Assignee = $this->getCachedData('Assignee');
 
         if (!isset($Assignee) && isset($this->getBaseIssue()->fields->assignee)) {
-            $Assignee = \Badoo\Jira\User::fromStdClass(
+            $Assignee = \Mekras\Jira\User::fromStdClass(
                 $this->getFieldValue('assignee'),
                 $this,
                 $this->Jira
@@ -444,13 +443,13 @@ class Issue
         return $Assignee;
     }
 
-    public function getAttachments(): \Badoo\Jira\Issue\Attachments
+    public function getAttachments(): \Mekras\Jira\Issue\Attachments
     {
         $cache_key = 'Attachments';
         $Attachments = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
             $attachments_list = $this->getFieldValue('attachment') ?? [];
-            $Attachments = \Badoo\Jira\Issue\Attachments::fromStdClass($attachments_list, $this);
+            $Attachments = \Mekras\Jira\Issue\Attachments::fromStdClass($attachments_list, $this);
 
             $this->cacheData($cache_key, $Attachments);
         }
@@ -465,11 +464,11 @@ class Issue
      *
      * @param int $id
      *
-     * @return \Badoo\Jira\Issue\Comment
+     * @return \Mekras\Jira\Issue\Comment
      */
-    public function getComment(int $id): \Badoo\Jira\Issue\Comment
+    public function getComment(int $id): \Mekras\Jira\Issue\Comment
     {
-        return new \Badoo\Jira\Issue\Comment($id, $this);
+        return new \Mekras\Jira\Issue\Comment($id, $this);
     }
 
     /**
@@ -478,9 +477,9 @@ class Issue
      * @param bool $reload_cache - request API for fresh issue comments ignoring internal class
      *                           cache
      *
-     * @return \Badoo\Jira\Issue\Comment[]
+     * @return \Mekras\Jira\Issue\Comment[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getComments(bool $reload_cache = false): array
     {
@@ -492,7 +491,7 @@ class Issue
 
             $comments = [];
             foreach ($comments_list as $CommentInfo) {
-                $Comment = \Badoo\Jira\Issue\Comment::fromStdClass($CommentInfo, $this);
+                $Comment = \Mekras\Jira\Issue\Comment::fromStdClass($CommentInfo, $this);
                 $comments[$Comment->getID()] = $Comment;
             }
 
@@ -507,7 +506,7 @@ class Issue
      *
      * @return Component[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getComponents()
     {
@@ -530,8 +529,8 @@ class Issue
     /**
      * @return int - issue creation time unix timestamp
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function getCreatedDate(): int
     {
@@ -541,11 +540,11 @@ class Issue
     /**
      * @param string $field_class - class name of CustomField to get
      *
-     * @return \Badoo\Jira\CustomFields\CustomField
+     * @return \Mekras\Jira\CustomFields\CustomField
      */
     public function getCustomField($field_class)
     {
-        /** @var \Badoo\Jira\CustomFields\CustomField $CustomField */
+        /** @var \Mekras\Jira\CustomFields\CustomField $CustomField */
         $CustomField = $this->custom_fields[$field_class] ?? null;
 
         if (!isset($CustomField)) {
@@ -564,8 +563,8 @@ class Issue
      * @param array  $expand
      *
      * @return int
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function getDateField(string $field_id, array $expand = []): int
     {
@@ -579,7 +578,7 @@ class Issue
             $ts = strtotime($time);
 
             if ($ts === false) {
-                throw new \Badoo\Jira\Exception\Issue(
+                throw new \Mekras\Jira\Exception\Issue(
                     "Can't parse '{$field_id}' field value as time string, strtotime('{$time}') returned 'false'"
                 );
             }
@@ -594,7 +593,7 @@ class Issue
     /**
      * @return string
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getDescription(): string
     {
@@ -604,8 +603,8 @@ class Issue
     /**
      * @return int
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function getDueDate(): int
     {
@@ -615,7 +614,7 @@ class Issue
     /**
      * @return array
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getEditMeta(): array
     {
@@ -634,7 +633,7 @@ class Issue
      *
      * @return mixed
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getFieldValue(string $field_id, array $expand = [])
     {
@@ -645,15 +644,15 @@ class Issue
         return $this->getBaseIssue($expand)->fields->{$field_id} ?? null;
     }
 
-    public function getHistory(): \Badoo\Jira\Issue\History
+    public function getHistory(): \Mekras\Jira\Issue\History
     {
         $cache_key = 'History';
         $History = $this->getCachedData($cache_key);
         if (!isset($History)) {
             $records = $this->getBaseIssue(
-                [\Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG]
+                [\Mekras\Jira\REST\Section\Issue::EXP_CHANGELOG]
             )->changelog->histories;
-            $History = \Badoo\Jira\Issue\History::fromStdClass($records, $this);
+            $History = \Mekras\Jira\Issue\History::fromStdClass($records, $this);
             $this->cacheData($cache_key, $History);
         }
 
@@ -663,7 +662,7 @@ class Issue
     /**
      * @return int
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getId(): int
     {
@@ -697,7 +696,7 @@ class Issue
     /**
      * @return string[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getLabels(): array
     {
@@ -710,11 +709,11 @@ class Issue
      * @param bool $reload_cache - force data update. Get the freshest data possible from Jira API,
      *                           instead of using cache.
      *
-     * @return \Badoo\Jira\Issue\Comment|null
+     * @return \Mekras\Jira\Issue\Comment|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getLastComment($reload_cache = false): ?\Badoo\Jira\Issue\Comment
+    public function getLastComment($reload_cache = false): ?\Mekras\Jira\Issue\Comment
     {
         $comments = $this->getComments($reload_cache);
         $LastComment = end($comments);
@@ -725,14 +724,14 @@ class Issue
         return $LastComment;
     }
 
-    public function getLinksList(): \Badoo\Jira\Issue\LinksList
+    public function getLinksList(): \Mekras\Jira\Issue\LinksList
     {
         $cache_key = 'Links';
 
         $LinksList = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
             $links = $this->getFieldValue('issuelinks') ?? [];
-            $LinksList = \Badoo\Jira\Issue\LinksList::fromStdClass($links, $this);
+            $LinksList = \Mekras\Jira\Issue\LinksList::fromStdClass($links, $this);
 
             $this->cacheData($cache_key, $LinksList);
         }
@@ -743,8 +742,8 @@ class Issue
     /**
      * @return static|null
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getParentIssue(): ?Issue
     {
@@ -779,11 +778,11 @@ class Issue
     }
 
     /**
-     * @return \Badoo\Jira\Issue\Priority|null
+     * @return \Mekras\Jira\Issue\Priority|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getPriority(): ?\Badoo\Jira\Issue\Priority
+    public function getPriority(): ?\Mekras\Jira\Issue\Priority
     {
         $cache_key = 'Priority';
 
@@ -792,7 +791,7 @@ class Issue
             $PriorityInfo = $this->getFieldValue('priority');
 
             if (isset($PriorityInfo)) {
-                $Priority = \Badoo\Jira\Issue\Priority::fromStdClass(
+                $Priority = \Mekras\Jira\Issue\Priority::fromStdClass(
                     $PriorityInfo,
                     $this,
                     $this->Jira
@@ -827,12 +826,12 @@ class Issue
      *
      * @return string|null - null when no field with such ID found for issue.
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getRenderedField(string $field_id): ?string
     {
         return $this->getBaseIssue(
-                [\Badoo\Jira\REST\Section\Issue::EXP_RENDERED_FIELDS]
+                [\Mekras\Jira\REST\Section\Issue::EXP_RENDERED_FIELDS]
             )->renderedFields->{$field_id} ?? null;
     }
 
@@ -840,16 +839,16 @@ class Issue
      * Get issue's reporter user information. 'null' is returned for issues, where reporter is not
      * displayed.
      *
-     * @return \Badoo\Jira\User|null
+     * @return \Mekras\Jira\User|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getReporter(): ?User
     {
         $Reporter = $this->getCachedData('Reporter');
 
         if (!isset($Reporter) && $this->getFieldValue('reporter') !== null) {
-            $Reporter = \Badoo\Jira\User::fromStdClass(
+            $Reporter = \Mekras\Jira\User::fromStdClass(
                 $this->getFieldValue('reporter'),
                 $this,
                 $this->Jira
@@ -863,11 +862,11 @@ class Issue
     /**
      * Get current issue resolution. Returns null for unresolved issues.
      *
-     * @return \Badoo\Jira\Issue\Resolution|null
+     * @return \Mekras\Jira\Issue\Resolution|null
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getResolution(): ?\Badoo\Jira\Issue\Resolution
+    public function getResolution(): ?\Mekras\Jira\Issue\Resolution
     {
         $cache_key = 'Resolution';
 
@@ -876,7 +875,7 @@ class Issue
             $ResolutionInfo = $this->getFieldValue('resolution');
 
             if (isset($ResolutionInfo)) {
-                $Resolution = \Badoo\Jira\Issue\Resolution::fromStdClass(
+                $Resolution = \Mekras\Jira\Issue\Resolution::fromStdClass(
                     $ResolutionInfo,
                     $this,
                     $this->Jira
@@ -895,8 +894,8 @@ class Issue
     /**
      * @return int - issue resolution time unix timestamp (resolved at).
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function getResolutionDate(): int
     {
@@ -908,7 +907,7 @@ class Issue
      *
      * @throws REST\Exception
      */
-    public function getSecurity(): ?\Badoo\Jira\Security
+    public function getSecurity(): ?\Mekras\Jira\Security
     {
         $cache_key = 'Security';
 
@@ -917,7 +916,7 @@ class Issue
             $PriorityInfo = $this->getFieldValue('security');
 
             if (isset($PriorityInfo)) {
-                $Security = \Badoo\Jira\Security::fromStdClass($PriorityInfo, $this, $this->Jira);
+                $Security = \Mekras\Jira\Security::fromStdClass($PriorityInfo, $this, $this->Jira);
             } else {
                 // Issue has no priority. Yes, this is possible.
                 $Security = null;
@@ -932,7 +931,7 @@ class Issue
     /**
      * @return string
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getSelfUrl(): string
     {
@@ -947,17 +946,17 @@ class Issue
     }
 
     /**
-     * @return \Badoo\Jira\Issue\Status
+     * @return \Mekras\Jira\Issue\Status
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getStatus(): \Badoo\Jira\Issue\Status
+    public function getStatus(): \Mekras\Jira\Issue\Status
     {
         $cache_key = 'Status';
 
         $Status = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
-            $Status = \Badoo\Jira\Issue\Status::fromStdClass(
+            $Status = \Mekras\Jira\Issue\Status::fromStdClass(
                 $this->getFieldValue('status'),
                 $this,
                 $this->Jira
@@ -969,12 +968,12 @@ class Issue
     }
 
     /**
-     * @return \Badoo\Jira\Issue[]
+     * @return \Mekras\Jira\Issue[]
      *
      * @return static[]
      *
-     * @throws \Badoo\Jira\Exception\Issue
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getSubIssues(): array
     {
@@ -984,7 +983,7 @@ class Issue
     /**
      * @return string
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getSummary(): string
     {
@@ -997,17 +996,17 @@ class Issue
     }
 
     /**
-     * @return \Badoo\Jira\Issue\Type
+     * @return \Mekras\Jira\Issue\Type
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
-    public function getType(): \Badoo\Jira\Issue\Type
+    public function getType(): \Mekras\Jira\Issue\Type
     {
         $cache_key = 'Type';
 
         $Type = $this->getCachedData($cache_key);
         if (!$this->isCached($cache_key)) {
-            $Type = \Badoo\Jira\Issue\Type::fromStdClass(
+            $Type = \Mekras\Jira\Issue\Type::fromStdClass(
                 $this->getFieldValue('issuetype'),
                 $this,
                 $this->Jira
@@ -1021,8 +1020,8 @@ class Issue
     /**
      * @return int - issue update time unix timestamp
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception\Issue
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception\Issue
      */
     public function getUpdatedDate()
     {
@@ -1035,9 +1034,9 @@ class Issue
     }
 
     /**
-     * @return \Badoo\Jira\Version[]
+     * @return \Mekras\Jira\Version[]
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function getVersions(): array
     {
@@ -1049,7 +1048,7 @@ class Issue
             foreach ((array) $this->getFieldValue('fixVersions') as $VersionInfo) {
                 // Don't know why, but list of versions associated with issue has no 'projectId' field.
                 $VersionInfo->projectId = $project_id;
-                $Versions[] = \Badoo\Jira\Version::fromStdClass(
+                $Versions[] = \Mekras\Jira\Version::fromStdClass(
                     $VersionInfo,
                     $this,
                     $this->getJira()
@@ -1064,12 +1063,12 @@ class Issue
     /**
      * Get list of issue watchers
      *
-     * @return \Badoo\Jira\Issue\WatchersList
+     * @return \Mekras\Jira\Issue\WatchersList
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @throws \Badoo\Jira\Exception
+     * @throws \Mekras\Jira\REST\Exception
+     * @throws \Mekras\Jira\Exception
      */
-    public function getWatchers(): \Badoo\Jira\Issue\WatchersList
+    public function getWatchers(): \Mekras\Jira\Issue\WatchersList
     {
         $cache_key = 'Watchers';
 
@@ -1077,7 +1076,7 @@ class Issue
         if (!isset($WatchersList)) {
             $watchers = $this->Jira->issue()->watchers()->list($this->getKey());
 
-            $WatchersList = \Badoo\Jira\Issue\WatchersList::fromStdClass(
+            $WatchersList = \Mekras\Jira\Issue\WatchersList::fromStdClass(
                 $watchers,
                 $this,
                 $this->getJira()
@@ -1097,7 +1096,7 @@ class Issue
     /**
      * @return bool - true when issue has at least one subtask
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function hasSubIssues(): bool
     {
@@ -1110,7 +1109,7 @@ class Issue
      *
      * @return bool - true means you can update this issue field's value
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function isEditable(string $field_id): bool
     {
@@ -1130,7 +1129,7 @@ class Issue
     /**
      * @return bool - true when issue has a parent
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function isSubIssue(): bool
     {
@@ -1172,11 +1171,11 @@ class Issue
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @see \Badoo\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::edit DocBlock for more info about parameters meaning
      *
      */
-    public function save(array $properties = [], $notify_users = true): \Badoo\Jira\Issue
+    public function save(array $properties = [], $notify_users = true): \Mekras\Jira\Issue
     {
         if (empty($this->update_fields)) {
             return $this;
@@ -1325,7 +1324,7 @@ class Issue
      *
      * @return $this
      */
-    public function setResolution(int $id): \Badoo\Jira\Issue
+    public function setResolution(int $id): \Mekras\Jira\Issue
     {
         return $this->edit(
             'resolution',
@@ -1340,7 +1339,7 @@ class Issue
      *
      * @return $this
      */
-    public function setSecurity(int $id): \Badoo\Jira\Issue
+    public function setSecurity(int $id): \Mekras\Jira\Issue
     {
         return $this->edit(
             "security",
@@ -1379,13 +1378,13 @@ class Issue
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception - when JIRA rejected to do issue transition.
+     * @throws \Mekras\Jira\REST\Exception - when JIRA rejected to do issue transition.
      */
     public function step(
         string $step_name,
         bool $step_same_status = false,
         bool $safe_transition = false
-    ): \Badoo\Jira\Issue {
+    ): \Mekras\Jira\Issue {
         $this->Jira->issue()->transitions()->step(
             $this->getKey(),
             $step_name,
@@ -1411,9 +1410,9 @@ class Issue
      *
      * @return $this
      *
-     * @throws \Badoo\Jira\REST\Exception - when JIRA rejected to do issue transition.
+     * @throws \Mekras\Jira\REST\Exception - when JIRA rejected to do issue transition.
      */
-    public function transition(int $transition_id, $safe_transition = false): \Badoo\Jira\Issue
+    public function transition(int $transition_id, $safe_transition = false): \Mekras\Jira\Issue
     {
         if ($safe_transition) {
             $this->Jira->issue()->transitions()->do_safe(
@@ -1489,8 +1488,8 @@ class Issue
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
-     * @see \Badoo\Jira\REST\Section\Issue::EXP_CHANGELOG
+     * @throws \Mekras\Jira\REST\Exception
+     * @see \Mekras\Jira\REST\Section\Issue::EXP_CHANGELOG
      *
      */
     protected function getBaseIssue(array $expand = []): \stdCLass

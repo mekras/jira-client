@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\UTests\Helpers;
+namespace Mekras\Jira\UTests\Helpers;
 
 class StringsTest extends \PHPUnit\Framework\TestCase
 {
@@ -27,10 +27,10 @@ class StringsTest extends \PHPUnit\Framework\TestCase
      */
     public function testToPhpLabel(string $source, string $replace, string $expected)
     {
-        $result = \Badoo\Jira\Helpers\Strings::toPHPLabel($source, $replace);
+        $result = \Mekras\Jira\Helpers\Strings::toPHPLabel($source, $replace);
 
         self::assertEquals($expected, $result, 'Incorrect text to PHP label conversion result');
-        self::assertTrue(\Badoo\Jira\Helpers\Strings::isValidPHPLabel($result), "the conversion result '{$result}' is not a valid PHP label");
+        self::assertTrue(\Mekras\Jira\Helpers\Strings::isValidPHPLabel($result), "the conversion result '{$result}' is not a valid PHP label");
     }
 
     public function providerIsValidLabel()
@@ -53,7 +53,7 @@ class StringsTest extends \PHPUnit\Framework\TestCase
      */
     public function testIsValidLabel(string $to_test, bool $expected_result)
     {
-        $is_valid = \Badoo\Jira\Helpers\Strings::isValidPHPLabel($to_test);
+        $is_valid = \Mekras\Jira\Helpers\Strings::isValidPHPLabel($to_test);
 
         $in = $expected_result ? '' : 'in';
         self::assertEquals($expected_result, $is_valid, "Wring result for {$in}valid PHP label '{$to_test}''");
@@ -63,7 +63,7 @@ class StringsTest extends \PHPUnit\Framework\TestCase
     {
         $from = ' 1 some text';
 
-        $capitals = \Badoo\Jira\Helpers\Strings::toCapitalPHPLabel($from);
+        $capitals = \Mekras\Jira\Helpers\Strings::toCapitalPHPLabel($from);
 
         self::assertEquals('_1_SOME_TEXT', $capitals);
     }
@@ -72,7 +72,7 @@ class StringsTest extends \PHPUnit\Framework\TestCase
     {
         $from = ' 1 some text';
 
-        $capitals = \Badoo\Jira\Helpers\Strings::toCamelCasePHPLabel($from);
+        $capitals = \Mekras\Jira\Helpers\Strings::toCamelCasePHPLabel($from);
 
         self::assertEquals('_1SomeText', $capitals);
     }

@@ -4,7 +4,7 @@
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
-namespace Badoo\Jira\REST\Section;
+namespace Mekras\Jira\REST\Section;
 
 class Version extends Section
 {
@@ -20,7 +20,7 @@ class Version extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function create(
         $project,
@@ -52,7 +52,7 @@ class Version extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function update(
         int $id,
@@ -72,7 +72,7 @@ class Version extends Section
      * @param string|null $move_affected_to - replace deleted version with another one in affectedVersion field
      *                                        null value just deletes version from field
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function delete(int $id, string $move_fixed_to = null, string $move_affected_to = null) : void
     {
@@ -100,7 +100,7 @@ class Version extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function move(int $id, $position = null, $after = null) : \stdClass
     {
@@ -124,7 +124,7 @@ class Version extends Section
      *
      * @return \stdClass
      *
-     * @throws \Badoo\Jira\REST\Exception
+     * @throws \Mekras\Jira\REST\Exception
      */
     public function get(int $id) : \stdClass
     {
