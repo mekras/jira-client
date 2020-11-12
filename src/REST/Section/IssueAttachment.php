@@ -1,59 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST\Section;
 
-class IssueAttachment extends Section
+final class IssueAttachment extends Section
 {
-    protected $attachments = [];
-
-    protected function cacheAttachments(\stdClass $IssueInfo) : array
-    {
-        $attachments = $IssueInfo->fields->attachment ?? [];
-
-        $this->attachments[$IssueInfo->key] = $attachments;
-        $this->attachments[$IssueInfo->id] = $attachments;
-
-        return $attachments;
-    }
-
-    protected function getCached(string $issue_key) : ?array
-    {
-        return $this->attachments[$issue_key] ?? null;
-    }
-
-    /**
-     * List all issue attachments.
-     *
-     * NOTE: this is synthetic method, JIRA API has no special method for listing issue attachments.
-     *       They are listed as part of issue in 'attachment' field
-     *
-     * @param string $issue_key
-     * @param bool $reload_cache - force internal cache reload.
-     *                             When you try to load attachments for the same issue twice, it will cause only one
-     *                             real API request if <reload_cache> is false
-     *
-     * @return \stdClass[] - list of files attached to issue
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function list(string $issue_key, bool $reload_cache = false) : array
-    {
-        $attachments = $this->getCached($issue_key);
-
-        if (!isset($attachments) || $reload_cache) {
-            $IssueInfo = $this->rawClient->get(
-                "issue/{$issue_key}",
-                [ 'fields' => "id,key,attachment"]
-            );
-            $attachments = $this->cacheAttachments($IssueInfo);
-        }
-
-        return $attachments;
-    }
+    private $attachments = [];
 
     /**
      * Attach new file to issue
@@ -79,10 +36,17 @@ class IssueAttachment extends Section
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function create(string $issue_key, string $file_path, ?string $file_name = null, ?string $file_type = null) : \stdClass
-    {
+    public function create(
+        string $issue_key,
+        string $file_path,
+        ?string $file_name = null,
+        ?string $file_type = null
+    ): \stdClass {
         $File = new \CURLFile($file_path, $file_type, $file_name);
-        $response = $this->rawClient->multipart("issue/{$issue_key}/attachments", ['file' => $File]);
+        $response = $this->rawClient->multipart(
+            "issue/{$issue_key}/attachments",
+            ['file' => $File]
+        );
 
         return reset($response);
     }
@@ -93,19 +57,19 @@ class IssueAttachment extends Section
      * NOTE: this is synthetic method, JIRA API has no special method
      *
      * @param string $issue_key
-     * @param int $id
-     * @param bool $reload_cache
+     * @param int    $id
+     * @param bool   $reload_cache
      *
      * @return \stdClass
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function get(string $issue_key, int $id, bool $reload_cache = false) : \stdClass
+    public function get(string $issue_key, int $id, bool $reload_cache = false): \stdClass
     {
         $attachments = $this->list($issue_key, $reload_cache);
 
         foreach ($attachments as $AttachmentInfo) {
-            if ((int)$AttachmentInfo->id === $id) {
+            if ((int) $AttachmentInfo->id === $id) {
                 return $AttachmentInfo;
             }
         }
@@ -113,5 +77,51 @@ class IssueAttachment extends Section
         throw new \Mekras\Jira\REST\Exception(
             "Attachment with ID {$id} not found in issue {$issue_key}"
         );
+    }
+
+    /**
+     * List all issue attachments.
+     *
+     * NOTE: this is synthetic method, JIRA API has no special method for listing issue
+     * attachments.
+     *       They are listed as part of issue in 'attachment' field
+     *
+     * @param string $issue_key
+     * @param bool   $reload_cache - force internal cache reload.
+     *                             When you try to load attachments for the same issue twice, it
+     *                             will cause only one real API request if <reload_cache> is false
+     *
+     * @return \stdClass[] - list of files attached to issue
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function list(string $issue_key, bool $reload_cache = false): array
+    {
+        $attachments = $this->getCached($issue_key);
+
+        if (!isset($attachments) || $reload_cache) {
+            $IssueInfo = $this->rawClient->get(
+                "issue/{$issue_key}",
+                ['fields' => "id,key,attachment"]
+            );
+            $attachments = $this->cacheAttachments($IssueInfo);
+        }
+
+        return $attachments;
+    }
+
+    private function cacheAttachments(\stdClass $IssueInfo): array
+    {
+        $attachments = $IssueInfo->fields->attachment ?? [];
+
+        $this->attachments[$IssueInfo->key] = $attachments;
+        $this->attachments[$IssueInfo->id] = $attachments;
+
+        return $attachments;
+    }
+
+    private function getCached(string $issue_key): ?array
+    {
+        return $this->attachments[$issue_key] ?? null;
     }
 }

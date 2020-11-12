@@ -1,6 +1,8 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author  Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
@@ -8,7 +10,7 @@ namespace Mekras\Jira\REST\Section;
 
 use Mekras\Jira\Cache\CacheUtils;
 
-class Issue extends Section
+final class Issue extends Section
 {
     /**
      * Expansion groups. Additional information for issue to be requested from Jira API.
@@ -17,13 +19,16 @@ class Issue extends Section
      *
      * @see Issue::get() DocBlock for more information.
      */
-    const
-        EXP_CHANGELOG = 'changelog',
-        EXP_RENDERED_FIELDS = 'renderedFields',
-        EXP_CREATEMETA_FIELDS = 'projects.issuetypes.fields';
+    public const EXP_CHANGELOG = 'changelog';
 
-    /** @var array */
-    protected $edit_meta = [];
+    public const EXP_CREATEMETA_FIELDS = 'projects.issuetypes.fields';
+
+    public const EXP_RENDERED_FIELDS = 'renderedFields';
+
+    /**
+     * @var array<mixed>
+     */
+    private $editMeta = [];
 
     /**
      * Assign issue to a user
@@ -298,12 +303,12 @@ class Issue extends Section
      */
     public function getEditMeta(string $issue_key): array
     {
-        if (!isset($this->edit_meta[$issue_key])) {
+        if (!isset($this->editMeta[$issue_key])) {
             $response = $this->rawClient->get("issue/{$issue_key}/editmeta");
-            $this->edit_meta[$issue_key] = get_object_vars($response->fields);
+            $this->editMeta[$issue_key] = get_object_vars($response->fields);
         }
 
-        return $this->edit_meta[$issue_key];
+        return $this->editMeta[$issue_key];
     }
 
     /**

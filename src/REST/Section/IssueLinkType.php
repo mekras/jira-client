@@ -1,21 +1,95 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST\Section;
 
-class IssueLinkType extends Section
+/**
+ * TODO ???
+ *
+ * @since x.x
+ */
+final class IssueLinkType extends Section
 {
-    /** @var \stdClass[] */
-    protected $link_types_list = [];
-    /** @var bool */
-    protected $all_cached = false;
+    /**
+     * @var bool
+     */
+    private $allCached = false;
 
-    protected function cacheLinkType(\stdClass $LinkTypeInfo)
+    /**
+     * @var \stdClass[]
+     */
+    private $linkTypesList = [];
+
+    /**
+     * Create a link between two issues.
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLinkType-createIssueLinkType
+     *
+     * @param string $name    - link type name
+     * @param string $outward - text to display for inward issue
+     * @param string $inward  - text to display for outward issue
+     *
+     * @return \stdClass
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function create(
+        string $name,
+        string $inward,
+        string $outward
+    ): \stdClass {
+        $args = [
+            'name' => $name,
+            'inward' => $inward,
+            'outward' => $outward,
+        ];
+
+        $LinkTypeInfo = $this->rawClient->post('issueLinkType', $args);
+        $this->cacheLinkType($LinkTypeInfo);
+
+        return $LinkTypeInfo;
+    }
+
+    /**
+     * Delete a link between issues
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLink-deleteIssueLink
+     *
+     * @param int $link_id - ID of link to delete
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function delete(int $link_id): void
     {
-        $this->link_types_list[$LinkTypeInfo->id] = $LinkTypeInfo;
+        $this->rawClient->delete("issueLinkType/{$link_id}");
+    }
+
+    /**
+     * Get info for specific link type
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLinkType-getIssueLinkType
+     *
+     * @param int  $link_type_id - ID of link type to get
+     * @param bool $reload_cache - ignore cache and load fresh data from API
+     *
+     * @return \stdClass - link type info, see ::create method DocBlock for format description.
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function get(int $link_type_id, bool $reload_cache = false): \stdClass
+    {
+        $LinkTypeInfo = $this->linkTypesList[$link_type_id] ?? null;
+        if (!isset($LinkTypeInfo) || $reload_cache) {
+            $LinkTypeInfo = $this->rawClient->get("issueLinkType/{$link_type_id}");
+            $this->cacheLinkType($LinkTypeInfo);
+        }
+
+        return $LinkTypeInfo;
     }
 
     /**
@@ -29,72 +103,19 @@ class IssueLinkType extends Section
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function list(bool $reload_cache = false) : array
+    public function list(bool $reload_cache = false): array
     {
-        if (!$this->all_cached || $reload_cache) {
+        if (!$this->allCached || $reload_cache) {
             $response = $this->rawClient->get('issueLinkType');
 
             foreach ($response->issueLinkTypes as $LinkTypeInfo) {
                 $this->cacheLinkType($LinkTypeInfo);
             }
 
-            $this->all_cached = true;
+            $this->allCached = true;
         }
 
-        return $this->link_types_list;
-    }
-
-    /**
-     * Create a link between two issues.
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLinkType-createIssueLinkType
-     *
-     * @param string $name      - link type name
-     * @param string $outward   - text to display for inward issue
-     * @param string $inward    - text to display for outward issue
-     *
-     * @return \stdClass
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function create(
-        string $name,
-        string $inward,
-        string $outward
-    ) : \stdClass {
-        $args = [
-            'name'      => $name,
-            'inward'    => $inward,
-            'outward'   => $outward,
-        ];
-
-        $LinkTypeInfo = $this->rawClient->post('issueLinkType', $args);
-        $this->cacheLinkType($LinkTypeInfo);
-
-        return $LinkTypeInfo;
-    }
-
-    /**
-     * Get info for specific link type
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLinkType-getIssueLinkType
-     *
-     * @param int $link_type_id - ID of link type to get
-     * @param bool $reload_cache - ignore cache and load fresh data from API
-     *
-     * @return \stdClass - link type info, see ::create method DocBlock for format description.
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function get(int $link_type_id, bool $reload_cache = false) : \stdClass
-    {
-        $LinkTypeInfo = $this->link_types_list[$link_type_id] ?? null;
-        if (!isset($LinkTypeInfo) || $reload_cache) {
-            $LinkTypeInfo = $this->rawClient->get("issueLinkType/{$link_type_id}");
-            $this->cacheLinkType($LinkTypeInfo);
-        }
-
-        return $LinkTypeInfo;
+        return $this->linkTypesList;
     }
 
     /**
@@ -102,10 +123,12 @@ class IssueLinkType extends Section
      *
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLinkType-updateIssueLinkType
      *
-     * @param int $link_type_id - ID of link type to get
-     * @param string $name      - new link type name. Empty string means 'do not update'.
-     * @param string $outward   - new text to display for inward issue. Empty string means 'do not update'.
-     * @param string $inward    - new text to display for outward issue. Empty string means 'do not update'.
+     * @param int    $link_type_id - ID of link type to get
+     * @param string $name         - new link type name. Empty string means 'do not update'.
+     * @param string $outward      - new text to display for inward issue. Empty string means 'do
+     *                             not update'.
+     * @param string $inward       - new text to display for outward issue. Empty string means 'do
+     *                             not update'.
      *
      * @return \stdClass - link type info, see ::create method DocBlock for format description.
      *
@@ -116,11 +139,11 @@ class IssueLinkType extends Section
         string $name = '',
         string $inward = '',
         string $outward = ''
-    ) : \stdClass {
+    ): \stdClass {
         $args = [
-            'name'      => $name,
-            'inward'    => $inward,
-            'outward'   => $outward,
+            'name' => $name,
+            'inward' => $inward,
+            'outward' => $outward,
         ];
 
         if (isset($name)) {
@@ -139,17 +162,8 @@ class IssueLinkType extends Section
         return $this->rawClient->put("issueLinkType/{$link_type_id}", $args);
     }
 
-    /**
-     * Delete a link between issues
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issueLink-deleteIssueLink
-     *
-     * @param int $link_id - ID of link to delete
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function delete(int $link_id) : void
+    private function cacheLinkType(\stdClass $LinkTypeInfo): void
     {
-        $this->rawClient->delete("issueLinkType/{$link_id}");
+        $this->linkTypesList[$LinkTypeInfo->id] = $LinkTypeInfo;
     }
 }

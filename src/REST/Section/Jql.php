@@ -1,12 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST\Section;
 
-class Jql extends Section
+final class Jql extends Section
 {
     /**
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/jql/autocompletedata-getFieldAutoCompleteForQueryString
@@ -43,6 +45,7 @@ class Jql extends Section
         }
 
         $Response = $this->rawClient->get('jql/autocompletedata/suggestions', $parameters);
+
         return $Response->results;
     }
 }

@@ -1,30 +1,42 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST\Section;
 
-class Group extends Section
+final class Group extends Section
 {
-    protected $groups = [];
-    protected $users = [];
+    private $groups = [];
 
-    protected function cacheGroup(\stdClass $GroupInfo)
-    {
-        $this->groups[$GroupInfo->name] = $GroupInfo;
-    }
+    private $users = [];
 
-    protected function cacheGroupUsers(string $group_name, array $users)
+    /**
+     * Add user to group
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-addUserToGroup
+     *
+     * @param string $groupname - a name of group you want to add new user to
+     * @param string $username  - login of user to add
+     *
+     * @return \stdClass
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function addUser(string $groupname, string $username): \stdClass
     {
-        $this->users[$group_name] = $users;
-    }
+        $GroupInfo = $this->rawClient->post(
+            'group/user?' . http_build_query(['groupname' => $groupname]),
+            ['name' => $username]
+        );
 
-    protected function dropCache(string $name)
-    {
-        unset($this->groups[$name]);
-        unset($this->users[$name]);
+        unset($this->users[$groupname]);
+        $this->cacheGroup($GroupInfo);
+
+        return $GroupInfo;
     }
 
     /**
@@ -40,7 +52,7 @@ class Group extends Section
      */
     public function create(
         string $name
-    ) : \stdClass {
+    ): \stdClass {
         $GroupInfo = $this->rawClient->post(
             'group',
             [
@@ -49,32 +61,8 @@ class Group extends Section
         );
 
         $this->cacheGroup($GroupInfo);
+
         return $GroupInfo;
-    }
-
-    /**
-     * Remove exiting JIRA user group, optionally transfering its restrictions to another group
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-removeGroup
-     *
-     * @param string $name - unique group name to be removed
-     * @param string|null $swap_group - transfer restrictions to another group (replace deleted group settings to
-     *                                  this one to keep comments/worklogs viewable after remove)
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function remove(string $name, string $swap_group = null) : void
-    {
-        $parameters = [
-            'groupname' => $name
-        ];
-
-        if (!empty($swap_group)) {
-            $parameters['swapGroup'] = $swap_group;
-        }
-
-        $this->rawClient->delete('group', $parameters);
-        $this->dropCache($name);
     }
 
     /**
@@ -82,14 +70,14 @@ class Group extends Section
      *
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-getGroup
      *
-     * @param string    $name - unique group key to identify what you want to get
-     * @param bool      $reload_cache - force cache reload and get the fresh data from JIRA
+     * @param string $name         - unique group key to identify what you want to get
+     * @param bool   $reload_cache - force cache reload and get the fresh data from JIRA
      *
      * @return \stdClass
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function get(string $name, bool $reload_cache = false) : \stdClass
+    public function get(string $name, bool $reload_cache = false): \stdClass
     {
         $GroupInfo = $this->groups[$name] ?? null;
         if (!isset($GroupInfo) || $reload_cache) {
@@ -101,49 +89,17 @@ class Group extends Section
     }
 
     /**
-     * Get list of users in group with pagination of max 50 user in a response
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-getUsersFromGroup
-     *
-     * @param string    $name - group name
-     * @param int       $start_at - starts from 0
-     * @param int       $max_results - maximum value is 50
-     * @param bool      $include_inactive - list inactive group members as well
-     *
-     * @return \stdClass
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function listUsers(
-        string $name,
-        int $start_at = 0,
-        int $max_results = 50,
-        bool $include_inactive = false
-    ) : \stdClass {
-        $users = $this->rawClient->get(
-            'group/member',
-            [
-                'groupname'       => $name,
-                'startAt'         => $start_at,
-                'maxResults'      => $max_results,
-                'includeInactive' => $include_inactive ? 'true' : 'false',
-            ]
-        );
-
-        return $users;
-    }
-
-    /**
      * Get full list of users in group.
      * Causes several sequental requests when group has more than 50 members
      *
      * WARNING: huge groups (hundreds of users, including inactive) can take long time to load.
      *          E.g. group with 400 users can take up to 6 seconds, use with caution.
      *
-     * @param string $name              - name of group
-     * @param bool   $include_inactive  - list inactive group members as well
-     * @param bool   $reload_cache      - force cache reload. Client caches groups info to prevent duplicate requests,
-     *                                    considering groups info changes rarely
+     * @param string $name                - name of group
+     * @param bool   $include_inactive    - list inactive group members as well
+     * @param bool   $reload_cache        - force cache reload. Client caches groups info to
+     *                                    prevent duplicate requests, considering groups info
+     *                                    changes rarely
      *
      * @return \stdClass[]
      *
@@ -153,7 +109,7 @@ class Group extends Section
         string $name,
         bool $include_inactive = false,
         bool $reload_cache = false
-    ) : array {
+    ): array {
         if (!isset($this->users[$name]) || $reload_cache) {
             $this->users[$name] = [];
 
@@ -182,32 +138,67 @@ class Group extends Section
                 $users[$name] = $UserInfo;
             }
         }
+
         return $users;
     }
 
     /**
-     * Add user to group
+     * Get list of users in group with pagination of max 50 user in a response
      *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-addUserToGroup
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-getUsersFromGroup
      *
-     * @param string $groupname - a name of group you want to add new user to
-     * @param string $username - login of user to add
+     * @param string $name             - group name
+     * @param int    $start_at         - starts from 0
+     * @param int    $max_results      - maximum value is 50
+     * @param bool   $include_inactive - list inactive group members as well
      *
      * @return \stdClass
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function addUser(string $groupname, string $username) : \stdClass
-    {
-        $GroupInfo = $this->rawClient->post(
-            'group/user?' . http_build_query(['groupname' => $groupname]),
-            ['name' => $username]
+    public function listUsers(
+        string $name,
+        int $start_at = 0,
+        int $max_results = 50,
+        bool $include_inactive = false
+    ): \stdClass {
+        $users = $this->rawClient->get(
+            'group/member',
+            [
+                'groupname' => $name,
+                'startAt' => $start_at,
+                'maxResults' => $max_results,
+                'includeInactive' => $include_inactive ? 'true' : 'false',
+            ]
         );
 
-        unset($this->users[$groupname]);
-        $this->cacheGroup($GroupInfo);
+        return $users;
+    }
 
-        return $GroupInfo;
+    /**
+     * Remove exiting JIRA user group, optionally transfering its restrictions to another group
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-removeGroup
+     *
+     * @param string      $name         - unique group name to be removed
+     * @param string|null $swap_group   - transfer restrictions to another group (replace deleted
+     *                                  group settings to this one to keep comments/worklogs
+     *                                  viewable after remove)
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function remove(string $name, string $swap_group = null): void
+    {
+        $parameters = [
+            'groupname' => $name,
+        ];
+
+        if (!empty($swap_group)) {
+            $parameters['swapGroup'] = $swap_group;
+        }
+
+        $this->rawClient->delete('group', $parameters);
+        $this->dropCache($name);
     }
 
     /**
@@ -216,22 +207,33 @@ class Group extends Section
      * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/group-removeUserFromGroup
      *
      * @param string $groupname - a name of group you want to remove user from
-     * @param string $username - login of user to remove
+     * @param string $username  - login of user to remove
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function removeUser(string $groupname, string $username) : void
+    public function removeUser(string $groupname, string $username): void
     {
         $this->rawClient->delete(
             'group/user',
             [
                 'groupname' => $groupname,
-                'username' => $username
+                'username' => $username,
             ]
         );
 
         if (isset($this->users[$groupname])) {
             unset($this->users[$groupname][$username]);
         }
+    }
+
+    private function cacheGroup(\stdClass $GroupInfo): void
+    {
+        $this->groups[$GroupInfo->name] = $GroupInfo;
+    }
+
+    private function dropCache(string $name): void
+    {
+        unset($this->groups[$name]);
+        unset($this->users[$name]);
     }
 }

@@ -19,7 +19,7 @@ use Psr\SimpleCache\CacheInterface;
  *
  * @since x.x
  */
-class Section
+abstract class Section
 {
     /**
      * Raw Jira client.
@@ -81,7 +81,7 @@ class Section
     protected function getSection(string $sectionKey, string $sectionClass): self
     {
         if (!isset($this->sections[$sectionKey])) {
-            $Section = new $sectionClass($this->rawClient, $sectionKey);
+            $Section = new $sectionClass($this->rawClient);
             $this->sections[$sectionKey] = $Section;
         }
 

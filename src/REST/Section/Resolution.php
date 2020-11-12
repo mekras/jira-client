@@ -1,21 +1,47 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * @package REST
  * @author Denis Korenevskiy <denkoren@corp.badoo.com>
  */
 
 namespace Mekras\Jira\REST\Section;
 
-class Resolution extends Section
+final class Resolution extends Section
 {
-    /** @var array */
-    protected $resolutions_list = [];
-    /** @var bool */
-    protected $all_cached = false;
+    /**
+     * @var bool
+     */
+    private $allCached = false;
 
-    protected function cacheResolutionInfo(\stdClass $ResolutionInfo)
+    /**
+     * @var array
+     */
+    private $resolutionsList = [];
+
+    /**
+     * Get particular resolution info identified by it's unique ID
+     *
+     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/resolution-getResolution
+     *
+     * @param int  $id           - ID of resolution you want to load
+     * @param bool $reload_cache - force API request to get fresh data from JIRA
+     *
+     * @return \stdClass
+     *
+     * @throws \Mekras\Jira\REST\Exception
+     */
+    public function get(int $id, bool $reload_cache = false): \stdClass
     {
-        $this->resolutions_list[(int)$ResolutionInfo->id];
+        $ResolutionInfo = $this->resolutionsList[$id] || null;
+
+        if (!isset($ResolutionInfo) || $reload_cache) {
+            $ResolutionInfo = $this->rawClient->get("/resolution/{$id}");
+            $this->cacheResolutionInfo($ResolutionInfo);
+        }
+
+        return $ResolutionInfo;
     }
 
     /**
@@ -29,39 +55,20 @@ class Resolution extends Section
      *
      * @throws \Mekras\Jira\REST\Exception
      */
-    public function list(bool $reload_cache = false) : array
+    public function list(bool $reload_cache = false): array
     {
-        if (!$this->all_cached || $reload_cache) {
+        if (!$this->allCached || $reload_cache) {
             foreach ($this->rawClient->get('/resolution') as $ResolutionInfo) {
                 $this->cacheResolutionInfo($ResolutionInfo);
             }
-            $this->all_cached = true;
+            $this->allCached = true;
         }
 
-        return $this->resolutions_list;
+        return $this->resolutionsList;
     }
 
-    /**
-     * Get particular resolution info identified by it's unique ID
-     *
-     * @see https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/resolution-getResolution
-     *
-     * @param int $id - ID of resolution you want to load
-     * @param bool $reload_cache - force API request to get fresh data from JIRA
-     *
-     * @return \stdClass
-     *
-     * @throws \Mekras\Jira\REST\Exception
-     */
-    public function get(int $id, bool $reload_cache = false) : \stdClass
+    private function cacheResolutionInfo(\stdClass $ResolutionInfo): void
     {
-        $ResolutionInfo = $this->resolutions_list[$id] || null;
-
-        if (!isset($ResolutionInfo) || $reload_cache) {
-            $ResolutionInfo = $this->rawClient->get("/resolution/{$id}");
-            $this->cacheResolutionInfo($ResolutionInfo);
-        }
-
-        return $ResolutionInfo;
+        $this->resolutionsList[(int) $ResolutionInfo->id];
     }
 }
